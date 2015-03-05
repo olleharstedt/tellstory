@@ -1,14 +1,8 @@
 (*
+ * Render random texts from XML-file.
  *
- * Render info space stations and space ships.
- * 
- * XML for translations.
- * Functor to simulate a "interface" ANIMALTYPE for those parts that
- * are specific for each animal.
- * The target is to create sentences? Or data? Visualized?
- *
- * @since 2014-10-29
- * @author Olle Härstedt <olleharstedt at yahoo dot com>
+ * @since 2015-03-05
+ * @author Olle Härstedt
  *)
 
 open Printf
