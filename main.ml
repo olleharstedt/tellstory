@@ -19,85 +19,6 @@ exception No_such_lang of string
 exception No_such_direct_node of string
 exception No_filename
 
-(**
- * The four races
- *)
-type race = Rabbit | Bird | Lion | Rat
-
-(**
- * Languages
- *)
-type lang = En | Sv
-
-(**
- * Config
- *)
-type config = {
-  lang : lang;
-  race : race;
-  xml : Xml.xml
-}
-
-(**
- * Sentence type
- * Building blocks of a rendered ship
- *)
-type sentence = {
-  name : string;
-  template : string; 
-  variables : string list
-}
-
-(**
- * String of lang
- *
- * @param l lang
- * @return string
- *)
-let string_of_lang l = match l with
-    En -> "en"
-  | Sv -> "sv"
-
-(**
- * Lang of string
- *
- * @param s string
- * @return lang
- *)
-let lang_of_string s = match s with
-    "en" -> En
-  | "sv" -> Sv
-  | _ -> raise (No_such_lang s)
-
-(**
- * Insert variables into template place-holders
- * A place holder is a %
- *
- * @param sen sentence
- * @return string
- *)
-let render_sentence sen = 
-  let r = Str.regexp "\\%" in
-  let rec replace s l = match l with
-      [] -> s
-    | x::xs -> replace (Str.replace_first r x s) xs
-  in
-  replace sen.template sen.variables
-;;
-
-(**
- * Race of int
- *
- * @param n int
- * @return race
- *)
-let race_of_int n = match n with
-    1 -> Rabbit
-  | 2 -> Bird
-  | 3 -> Lion
-  | 4 -> Rat
-  | _ -> assert false
-
 (** Return number from 1 to n *)
 let dice n = 
   Random.int n + 1
@@ -175,6 +96,8 @@ let choose_alt sentence =
 
 (**
  * Print a sentence with random alt.
+ *
+ * @param sentence Xml.xml
  *)
 let print_sentence sentence =
   let sen = fetch_content (sentence) in
