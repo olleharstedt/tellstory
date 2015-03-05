@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <sentence>
+    This is a 
+    <alt> sentence.</alt>
+    <alt> joke.</alt>
+    <alt> big nothing.</alt>
+  </sentence>
+  <sentence>
+    This is another 
+    <alt> sentence.</alt>
+    <alt> joke.</alt>
+    <alt> big nothing.</alt>
+  </sentence>
+</story>
