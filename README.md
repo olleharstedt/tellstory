@@ -18,4 +18,18 @@ When an alternative is chosen, you can set a flag to be used later:
       <alt> joke.</alt>
     </sentence>
 
-A flag can _only_ be set once!
+A flag can _only_ be set once! The following story will throw an exception:
+
+    <story>
+      <sentence>
+        This is a 
+        <alt setFlag="flag1"> sentence.</alt>
+      </sentence>
+      <sentence>
+        This is another 
+        <alt setFlag="flag1"> sentence.</alt>
+      </sentence>
+    </story>
+
+    Problem with sentence 'This is another'
+    Fatal error: exception Main.Flag_already_set("flag1")
