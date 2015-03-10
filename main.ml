@@ -14,6 +14,7 @@ exception No_such_direct_node of string
 exception No_filename
 exception Too_many_attributes of string
 exception Flag_already_set of string
+exception Sentence_problem of string * exn
 
 (* Hash table to store flags, with flag name as key *)
 let flags = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
@@ -134,18 +135,17 @@ let store_flags flags_list = match flags_list with
  * @param sentence Xml.xml
  *)
 let print_sentence sentence =
-  let sen = fetch_content (sentence) in
+  let sen = String.trim (fetch_content (sentence)) in
   try (
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
     let flags_list = get_flags alt in
     store_flags flags_list;
     let cont = fetch_content alt in
-    (String.trim sen) ^ cont
+    sen ^ cont
   )
   with 
     ex -> 
-      print_endline ("Error in sentence " ^ sen);
-      raise ex
+      raise (Sentence_problem (sen, ex))
 
 (**
  * Print all sentences in story
@@ -166,5 +166,12 @@ let _ =
 
   let xml = Xml.parse_file filename in
   let story = fetch_node xml "story" in
-  let string_story = print_sentences story in
+  let string_story = try (
+    print_sentences story
+  )
+  with 
+    Sentence_problem (sen, ex) ->
+      print_endline ("Problem with sentence '" ^ sen ^ "'");
+      raise ex
+  in
   print_endline string_story
