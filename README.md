@@ -43,7 +43,18 @@ A flag is used to conditionally print a sentence:
         <alt> joke.</alt>
       </sentence>
       <sentence ifFlagIsSet="flag1">
-        This is another 
-        <alt> sentence.</alt>
+        This is another sentence.
       </sentence>
     </story>
+
+It's possible to have an empty sentence and just <alt>:s, like this:
+
+    <story>
+      <sentence>
+        <alt>Some alternative.</alt>
+        <alt>Something else entirely.</alt>
+      </sentence>
+    </story>
+
+
+Use `<br />` to insert a line break.
