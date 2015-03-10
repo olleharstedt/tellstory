@@ -85,7 +85,8 @@ let fetch_nodes xml tag =
 let fetch_content xml = match xml with
     Xml.PCData s -> s
   | Xml.Element (_, _, Xml.PCData text :: _) -> text
-  | Xml.Element (tag, _, _) -> raise (No_node_content tag)
+  | Xml.Element (tag, _, _) -> "" (* TODO: Abort here or not? *)
+  (*| Xml.Element (tag, _, _) -> raise (No_node_content tag)*)
 
 (**
  * Get ifFlagIsSet condition for sentence
@@ -110,15 +111,18 @@ let fetch_node_content xml node =
 (**
  * Choose one of the alt:s in a sentence.
  *
- * @param sentence Xml.xml
+ * @param sentence Xml.xml list, first element is actual sentence, rest is alt:s
  * @return xml option
  *)
-let choose_alt sentence =
-  if (List.length sentence = 1) then
-    None
-  else
-    let nr = (List.length sentence) - 1 in
-    Some (List.nth sentence (dice nr))
+let choose_alt sentence = match sentence with
+  | Xml.PCData _ :: [] -> None
+  | Xml.PCData _ :: only_one :: []-> Some only_one
+  | Xml.PCData _ :: tail ->
+      let nr = (List.length tail) in
+      Some (List.nth tail (dice nr - 1))
+  | all_xmls ->
+      let nr = (List.length all_xmls) in
+      Some (List.nth all_xmls (dice nr - 1))
 
 (**
  * Check if alt has a flag attribute and return it
@@ -226,4 +230,6 @@ let _ =
       print_endline ("Problem with sentence '" ^ sen ^ "'");
       raise ex
   in
-  print_endline string_story
+  print_endline "";
+  print_endline string_story;
+  print_endline ""
