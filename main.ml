@@ -14,10 +14,23 @@ exception No_such_direct_node of string
 exception No_filename
 exception Too_many_attributes of string
 exception Flag_already_set of string
+exception Illegal_attribute_name of string
+exception Error_parsing_xml
 exception Sentence_problem of string * exn
 
 (* Hash table to store flags, with flag name as key *)
-let flags = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
+let flags_tbl = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
+
+(* List of attributes allowed in <sentence> tag *)
+let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
+let _ =
+  Hashtbl.add allowed_sentence_attributes "ifFlagIsSet" true
+
+(* List of attributes allowed in <alt> tag *)
+let allowed_alt_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
+let _ =
+  Hashtbl.add allowed_alt_attributes "setFlag" true
+
 
 (** Return number from 1 to n *)
 let dice n = 
@@ -58,7 +71,7 @@ let fetch_node xml tag_name =
  *)
 let fetch_nodes xml tag =
   match xml with
-    Xml.Element (tag, [], nodes) -> nodes
+    Xml.Element (tag, _, nodes) -> nodes
   | _ -> raise (No_such_direct_node tag)
 
 (**
@@ -75,6 +88,15 @@ let fetch_content xml = match xml with
   | Xml.Element (tag, _, _) -> raise (No_node_content tag)
 
 (**
+ * Get ifFlagIsSet condition for sentence
+ *
+ * @param xml sent          Sentence
+ * @return string option    flag name
+ *)
+let getFlagCondition sent =
+  ()
+
+(**
  * Fetch the content of an Xml node
  *
  * @param xml Xml.xml
@@ -89,10 +111,14 @@ let fetch_node_content xml node =
  * Choose one of the alt:s in a sentence.
  *
  * @param sentence Xml.xml
+ * @return xml option
  *)
 let choose_alt sentence =
-  let nr = (List.length sentence) - 1 in
-  List.nth sentence (dice nr)
+  if (List.length sentence = 1) then
+    None
+  else
+    let nr = (List.length sentence) - 1 in
+    Some (List.nth sentence (dice nr))
 
 (**
  * Check if alt has a flag attribute and return it
@@ -102,13 +128,14 @@ let choose_alt sentence =
  *)
 let get_flags alt = 
   let flags = match alt with
-      Xml.Element (_, ["setFlag", str], _) ->  Some str
+    | Xml.Element (_, ["setFlag", str], _) ->  Some str
+    | Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)
     | Xml.Element (_, x::xs, [Xml.PCData alt_content]) -> raise (Too_many_attributes ("alt: " ^ alt_content))
     | _ -> None
   in
   (* Split flag into list *)
   let flags_list = match flags with
-      None -> None
+    | None -> None
     | Some fs -> Some (Str.split (Str.regexp "[ \t]+") fs)
   in
   flags_list
@@ -117,44 +144,69 @@ let get_flags alt =
  * Store flags in flags hash map
  *
  * @param flags_list string list
+ * @return unit
  *)
 let store_flags flags_list = match flags_list with
     None -> ()
   | Some fl ->
     List.iter (fun s ->
-      (* Check if flag is already stored. If so, abort *)
-      if Hashtbl.mem flags s then 
+      (* Check if flag is already set. If so, abort *)
+      if Hashtbl.mem flags_tbl s then 
         raise (Flag_already_set s) 
       else
-        Hashtbl.add flags s true
+        Hashtbl.add flags_tbl s true
     ) fl
 
 (**
  * Print a sentence with random alt.
  *
  * @param sentence Xml.xml
+ * @return string
  *)
 let print_sentence sentence =
   let sen = String.trim (fetch_content (sentence)) in
   try (
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
-    let flags_list = get_flags alt in
-    store_flags flags_list;
-    let cont = fetch_content alt in
-    sen ^ cont
+    match alt with
+      | None -> sen
+      | Some alt ->
+        let flags_list = get_flags alt in
+        store_flags flags_list;
+        let cont = fetch_content alt in
+        sen ^ cont
   )
   with 
     ex -> 
       raise (Sentence_problem (sen, ex))
 
 (**
- * Print all sentences in story
+ * Convert all sentences to strings
  *
  * @param story XML
+ * @return string
  *)
 let print_sentences story =
   let sentences = fetch_nodes story "sentence" in
-  let string_sentences = List.map (fun s -> (print_sentence s) ^ " ") sentences in
+  let string_sentences = List.map (fun s -> 
+    let sen = String.trim (fetch_content s) in
+    match s with
+      | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) -> 
+        (* All flags in list must be set to print sentence *)
+        let flag_list = Str.split (Str.regexp "[ \t]+") flags in
+        let all_flags_are_set = List.for_all (fun flag ->
+          Hashtbl.mem flags_tbl flag
+        ) flag_list in
+        if all_flags_are_set then 
+          (print_sentence s) ^ " "
+        else 
+          ""
+      | Xml.Element ("sentence", [attr, flags], _) ->  
+        raise (Sentence_problem (sen, Illegal_attribute_name attr))
+      | Xml.Element ("sentence", x::xs, _) -> 
+        raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
+      | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
+      | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
+  ) sentences in
   List.fold_left (^) "" string_sentences
 
 (* Main *)
@@ -170,7 +222,7 @@ let _ =
     print_sentences story
   )
   with 
-    Sentence_problem (sen, ex) ->
+    | Sentence_problem (sen, ex) ->
       print_endline ("Problem with sentence '" ^ sen ^ "'");
       raise ex
   in
