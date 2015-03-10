@@ -12,6 +12,11 @@ exception Not_implemented
 exception No_such_lang of string
 exception No_such_direct_node of string
 exception No_filename
+exception Too_many_attributes of string
+exception Flag_already_set of string
+
+(* Hash table to store flags, with flag name as key *)
+let flags = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
 
 (** Return number from 1 to n *)
 let dice n = 
@@ -89,16 +94,64 @@ let choose_alt sentence =
   List.nth sentence (dice nr)
 
 (**
+ * Check if alt has a flag attribute and return it
+ *
+ * @param alt XML
+ * @return string list option
+ *)
+let get_flags alt = 
+  let flags = match alt with
+      Xml.Element (_, ["setFlag", str], _) ->  Some str
+    | Xml.Element (_, x::xs, [Xml.PCData alt_content]) -> raise (Too_many_attributes ("alt: " ^ alt_content))
+    | _ -> None
+  in
+  (* Split flag into list *)
+  let flags_list = match flags with
+      None -> None
+    | Some fs -> Some (Str.split (Str.regexp "[ \t]+") fs)
+  in
+  flags_list
+  
+(** 
+ * Store flags in flags hash map
+ *
+ * @param flags_list string list
+ *)
+let store_flags flags_list = match flags_list with
+    None -> ()
+  | Some fl ->
+    List.iter (fun s ->
+      (* Check if flag is already stored. If so, abort *)
+      if Hashtbl.mem flags s then 
+        raise (Flag_already_set s) 
+      else
+        Hashtbl.add flags s true
+    ) fl
+
+(**
  * Print a sentence with random alt.
  *
  * @param sentence Xml.xml
  *)
 let print_sentence sentence =
   let sen = fetch_content (sentence) in
-  let alt = choose_alt (fetch_nodes (sentence) "alt") in
-  let cont = fetch_content alt in
-  (String.trim sen) ^ cont
+  try (
+    let alt = choose_alt (fetch_nodes (sentence) "alt") in
+    let flags_list = get_flags alt in
+    store_flags flags_list;
+    let cont = fetch_content alt in
+    (String.trim sen) ^ cont
+  )
+  with 
+    ex -> 
+      print_endline ("Error in sentence " ^ sen);
+      raise ex
 
+(**
+ * Print all sentences in story
+ *
+ * @param story XML
+ *)
 let print_sentences story =
   let sentences = fetch_nodes story "sentence" in
   let string_sentences = List.map (fun s -> (print_sentence s) ^ " ") sentences in
