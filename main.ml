@@ -71,8 +71,19 @@ let fetch_node xml tag_name =
  *)
 let fetch_nodes xml tag =
   match xml with
-    Xml.Element (tag, _, nodes) -> nodes
-  | _ -> raise (No_such_direct_node tag)
+    | Xml.Element (tag, _, nodes) -> nodes
+    | _ -> raise (No_such_direct_node tag)
+
+(**
+ * Fetch all xml children of xml, regardless of tag name
+ *
+ * @param xml Xml.xml
+ * @return xml list option
+ *)
+let fetch_children xml =
+  match xml with
+  | Xml.Element (tag, _, nodes) -> nodes
+  | Xml.PCData _ -> []
 
 (**
  * Fetch the text content of a node, like
@@ -190,7 +201,7 @@ let print_sentence sentence =
  * @return string
  *)
 let print_sentences story =
-  let sentences = fetch_nodes story "sentence" in
+  let sentences = fetch_children story in
   let string_sentences = List.map (fun s -> 
     let sen = String.trim (fetch_content s) in
     match s with
@@ -209,6 +220,7 @@ let print_sentences story =
       | Xml.Element ("sentence", x::xs, _) -> 
         raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
+      | Xml.Element ("br", _, _) -> "\n\n"
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
   ) sentences in
   List.fold_left (^) "" string_sentences
@@ -220,7 +232,13 @@ let _ =
 
   Random.self_init ();
 
-  let xml = Xml.parse_file filename in
+  let xml = try Xml.parse_file filename with 
+    | Xml.Error (msg, pos) ->
+        print_endline ("Error while parsing XML file '" ^ filename ^ "'");
+        print_int (Xml.line pos);
+        print_endline (": " ^ Xml.error_msg msg);
+        exit 0;
+  in
   let story = fetch_node xml "story" in
   let string_story = try (
     print_sentences story
