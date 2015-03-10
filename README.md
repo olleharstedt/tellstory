@@ -47,7 +47,7 @@ A flag is used to conditionally print a sentence:
       </sentence>
     </story>
 
-It's possible to have an empty sentence and just <alt>:s, like this:
+It's possible to have an empty sentence and just `<alt>`s, like this:
 
     <story>
       <sentence>
