@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <sentence>
+    Ni går på en
+    <alt> väg.</alt>
+    <alt> stig.</alt>
+    <alt> skogsstig.</alt>
+    <alt> motorväg.</alt>
+    <alt> romersk väg.</alt>
+  </sentence>
+  <sentence>
+    Efter en
+    <alt> minut</alt>
+    <alt> timme</alt>
+    <alt> dag</alt>
+  </sentence>
+  <sentence>
+    kommer ni fram till 
+    <alt> ett hus.</alt>
+    <alt> en stuga.</alt>
+    <alt> en bod.</alt>
+    <alt> ett hotell.</alt>
+    <alt> en polisstation.</alt>
+    <alt> skatteverket.</alt>
+  </sentence>
+  <sentence>
+    Inuti sitter en
+    <alt> gammal</alt>
+    <alt> ung</alt>
+  </sentence>
+  <sentence>
+    <alt setFlag="woman">kvinna.</alt>
+    <alt setFlag="man">man.</alt>
+  </sentence>
+  <sentence ifFlagIsSet="woman">
+    Hon säger:
+  </sentence>
+  <sentence ifFlagIsSet="man">
+    Han säger:
+  </sentence>
+  <sentence>
+    "Tiden är ute. Han ni förberett allt?"
+    <alt></alt>
+  </sentence>
+  <sentence>
+    <alt>Nej, det har ni inte.</alt>
+    <alt>Ja, det har ni.</alt>
+  </sentence>
+  <sentence ifFlagIsSet="man">
+    Mannen reser sig upp och
+  </sentence>
+  <sentence ifFlagIsSet="woman">
+    Kvinnan reser sig upp och
+  </sentence>
+  <sentence>
+    <alt setFlag="noweapons">ser på er.</alt>
+    <alt setFlag="noweapons">tittar ner på golvet.</alt>
+    <alt setFlag="noweapons">blundar.</alt>
+    <alt setFlag="noweapons">andas långsamt.</alt>
+    <alt setFlag="weapons">frågar om ni är beväpnade.</alt>
+  </sentence>
+
+  <!-- Weapon scenario -->
+  <sentence ifFlagIsSet="weapons">
+    Ni drar era vapen.
+    <alt> En lång strid följer.</alt>
+    <alt> En kort strid följer.</alt>
+  </sentence>
+  <sentence ifFlagIsSet="weapons">
+    <alt>En person dör.</alt>
+    <alt>Två personer dör.</alt>
+    <alt>Två personer skadas.</alt>
+  </sentence>
+
+  <!-- No weapons scenario -->
+  <sentence ifFlagIsSet="noweapons">
+    Ni frågar om ni gjort något fel.
+    <alt setFlag="noletter"> "Nej. Allt stämmer."</alt>
+    <alt setFlag="letter"> "Ja."</alt>
+    <alt setFlag="letter"> "Se här."</alt>
+    <alt setFlag="noletter"> "Inget är fel."</alt>
+    <alt setFlag="noletter"> "Vad spelar det för roll?"</alt>
+  </sentence>
+
+  <!-- Letter scenario -->
+  <sentence ifFlagIsSet="letter man">
+    Han räcker fram ett brev.
+  </sentence>
+  <sentence ifFlagIsSet="letter woman">
+    Hon räcker fram ett brev.
+  </sentence>
+  <sentence ifFlagIsSet="letter">
+    Ni läser det
+    <alt> och förstår allt.</alt>
+    <alt> men förstår inte.</alt>
+    <alt> och börjar gråta.</alt>
+    <alt> och skrattar lättat.</alt>
+  </sentence>
+
+  <br />
+
+  <sentence ifFlagIsSet="letter">
+    Nästa dag går ni vidare för att återlämna brevet.
+  </sentence>
+  <sentence ifFlagIsSet="noletter">
+    Nästa dag går ni vidare med en känsla av att ha glömt något.
+  </sentence>
+  <sentence ifFlagIsSet="weapons">
+    Nästa dag torkar ni av blodet från era vapen och går vidare.
+  </sentence>
+</story>
