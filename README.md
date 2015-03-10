@@ -33,3 +33,17 @@ A flag can _only_ be set once! The following story will throw an exception:
 
     Problem with sentence 'This is another'
     Fatal error: exception Main.Flag_already_set("flag1")
+
+A flag is used to conditionally print a sentence:
+
+    <story>
+      <sentence>
+        This is a 
+        <alt setFlag="flag1"> sentence.</alt>
+        <alt> joke.</alt>
+      </sentence>
+      <sentence ifFlagIsSet="flag1">
+        This is another 
+        <alt> sentence.</alt>
+      </sentence>
+    </story>
