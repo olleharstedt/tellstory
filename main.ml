@@ -206,7 +206,9 @@ let parse_macro xml = match xml with
       {name; macro_alts}
   | Xml.Element ("macro", [], _) ->
       raise (Macro_exception "Macro has no name attribute")
-  | _ -> 
+  | Xml.Element ("macro", _, []) ->
+      raise (Macro_exception "Macro has no alts")
+  | _ ->
       raise (Macro_exception "Macro definition is fucked, yo")
 
 (** Store macro in macro hash table. Raise exception if macro with this name
