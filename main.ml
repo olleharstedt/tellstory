@@ -33,7 +33,7 @@ let _ =
 
 
 (** Return number from 1 to n *)
-let dice n = 
+let dice n =
   Random.int n + 1
 
 (**
@@ -43,7 +43,7 @@ let dice n =
  * @param node string
  * @return Xml.Element
  *)
-let fetch_node xml tag_name = 
+let fetch_node xml tag_name =
 
   (**
    * Search xml_list for tag
@@ -55,13 +55,13 @@ let fetch_node xml tag_name =
   let rec search_xml_list xml_list tag_name = match xml_list with
       [] -> raise Not_found
     | x::xs -> match x with
-        Xml.Element (tag, _, _) -> 
+        Xml.Element (tag, _, _) ->
           if tag = tag_name then x else search_xml_list xs tag_name
       | Xml.PCData _ -> search_xml_list xs tag_name
   in
-  match xml with 
+  match xml with
     Xml.Element (tag, attrs, []) -> assert false
-  | Xml.Element (tag, attrs, children) -> 
+  | Xml.Element (tag, attrs, children) ->
       (* TODO: iter depth and bredth *)
       if tag = tag_name then xml else search_xml_list children tag_name
   | Xml.PCData text -> assert false
@@ -141,7 +141,7 @@ let choose_alt sentence = match sentence with
  * @param alt XML
  * @return string list option
  *)
-let get_flags alt = 
+let get_flags alt =
   let flags = match alt with
     | Xml.Element (_, ["setFlag", str], _) ->  Some str
     | Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)
@@ -154,8 +154,8 @@ let get_flags alt =
     | Some fs -> Some (Str.split (Str.regexp "[ \t]+") fs)
   in
   flags_list
-  
-(** 
+
+(**
  * Store flags in flags hash map
  *
  * @param flags_list string list
@@ -166,8 +166,8 @@ let store_flags flags_list = match flags_list with
   | Some fl ->
     List.iter (fun s ->
       (* Check if flag is already set. If so, abort *)
-      if Hashtbl.mem flags_tbl s then 
-        raise (Flag_already_set s) 
+      if Hashtbl.mem flags_tbl s then
+        raise (Flag_already_set s)
       else
         Hashtbl.add flags_tbl s true
     ) fl
@@ -190,8 +190,8 @@ let print_sentence sentence =
         let cont = fetch_content alt in
         sen ^ cont
   )
-  with 
-    ex -> 
+  with
+    ex ->
       raise (Sentence_problem (sen, ex))
 
 (**
@@ -202,22 +202,22 @@ let print_sentence sentence =
  *)
 let print_sentences story =
   let sentences = fetch_children story in
-  let string_sentences = List.map (fun s -> 
+  let string_sentences = List.map (fun s ->
     let sen = String.trim (fetch_content s) in
     match s with
-      | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) -> 
+      | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) ->
         (* All flags in list must be set to print sentence *)
         let flag_list = Str.split (Str.regexp "[ \t]+") flags in
         let all_flags_are_set = List.for_all (fun flag ->
           Hashtbl.mem flags_tbl flag
         ) flag_list in
-        if all_flags_are_set then 
+        if all_flags_are_set then
           (print_sentence s) ^ " "
-        else 
+        else
           ""
-      | Xml.Element ("sentence", [attr, flags], _) ->  
+      | Xml.Element ("sentence", [attr, flags], _) ->
         raise (Sentence_problem (sen, Illegal_attribute_name attr))
-      | Xml.Element ("sentence", x::xs, _) -> 
+      | Xml.Element ("sentence", x::xs, _) ->
         raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
       | Xml.Element ("br", _, _) -> "\n\n"
@@ -232,7 +232,7 @@ let _ =
 
   Random.self_init ();
 
-  let xml = try Xml.parse_file filename with 
+  let xml = try Xml.parse_file filename with
     | Xml.Error (msg, pos) ->
         print_endline ("Error while parsing XML file '" ^ filename ^ "'");
         print_int (Xml.line pos);
@@ -243,7 +243,7 @@ let _ =
   let string_story = try (
     print_sentences story
   )
-  with 
+  with
     | Sentence_problem (sen, ex) ->
       print_endline ("Problem with sentence '" ^ sen ^ "'");
       raise ex

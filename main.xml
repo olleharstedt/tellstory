@@ -2,14 +2,9 @@
 <story>
   <sentence>
     This is a 
-    <alt> sentence.</alt>
-    <alt> joke.</alt>
-    <alt> big nothing.</alt>
+    <alt setFlag="flag1"> sentence.</alt>
   </sentence>
-  <sentence>
+  <sentence ifFlagIsSet="flag1">
     This is another 
-    <alt> sentence.</alt>
-    <alt> joke.</alt>
-    <alt> big nothing.</alt>
   </sentence>
 </story>
