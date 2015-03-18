@@ -1,6 +1,7 @@
 Small program to render random texts from XML-file. See main.xml for example usage. More features planned.
 
-Features:
+Sentence and alt
+----------------
 
 A sentence will choose from the different alternatives:
 
@@ -18,6 +19,11 @@ It's possible to have an empty sentence and just `<alt>`s, like this:
         <alt>Something else entirely.</alt>
       </sentence>
     </story>
+
+Linebreaks
+----------
+
+Use `<br />` to insert a line break.
 
 Flags
 -----
@@ -58,9 +64,6 @@ A flag is used to conditionally print a sentence:
         This is only print if flag1 is set.
       </sentence>
     </story>
-
-
-Use `<br />` to insert a line break.
 
 Macros
 ------
