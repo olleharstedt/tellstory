@@ -58,3 +58,7 @@ It's possible to have an empty sentence and just `<alt>`s, like this:
 
 
 Use `<br />` to insert a line break.
+
+== Macros ==
+
+Name must be unique.

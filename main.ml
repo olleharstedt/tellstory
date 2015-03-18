@@ -18,6 +18,19 @@ exception Illegal_attribute_name of string
 exception Error_parsing_xml
 exception Unknown_tag of string
 exception Sentence_problem of string * exn
+exception Macro_exception of string
+
+(** Data types for storing macros *)
+type macro_alt = {
+  content : string
+}
+
+type macro = {
+  name : string;
+  macro_alts : macro_alt list
+}
+
+let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
 
 (* Hash table to store flags, with flag name as key *)
 let flags_tbl = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
@@ -173,6 +186,38 @@ let store_flags flags_list = match flags_list with
         Hashtbl.add flags_tbl s true
     ) fl
 
+(** Parse macro alts
+ *
+ * @param alts Xml.Element list
+ * @return alt list
+ *)
+let parse_macro_alts alts =
+  List.map (fun alt -> match alt with
+    | Xml.Element ("alt", [], [Xml.PCData content]) ->
+        {content}
+    | _ ->
+        raise (Macro_exception "Illegal alt in macro")
+  ) alts
+
+(** Parse macro *)
+let parse_macro xml = match xml with
+  | Xml.Element ("macro", [("name", name)], alts) ->
+      let macro_alts = parse_macro_alts alts in
+      {name; macro_alts}
+  | Xml.Element ("macro", [], _) ->
+      raise (Macro_exception "Macro has no name attribute")
+  | _ -> 
+      raise (Macro_exception "Macro definition is fucked, yo")
+
+(** Store macro in macro hash table. Raise exception if macro with this name
+ * already exists.
+ *)
+let store_macro macro =
+  if Hashtbl.mem macro_tbl macro.name then
+    raise (Macro_exception ("Macro with name " ^ macro.name ^ " already exists"))
+  else
+    Hashtbl.add macro_tbl macro.name macro
+
 (**
  * Print a sentence with random alt.
  *
@@ -223,8 +268,10 @@ let print_sentences story =
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
       | Xml.Element ("br", _, _) -> "\n\n"
       | Xml.Element ("macro", _, _) ->
-          (* do stuff *)
-          ""
+          (* store macro *)
+          let macro = parse_macro s in
+          store_macro macro;
+          "" (* Return empty string *)
       | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
   ) sentences in
