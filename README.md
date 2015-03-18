@@ -61,4 +61,22 @@ Use `<br />` to insert a line break.
 
 == Macros ==
 
-Name must be unique.
+Name must be unique. Define a macro with tag `<macro name="macroName">`. The macro can then be used on many places instead of alt:s. Use a macro with `<alt useMacro="macroName"></alt>`.
+
+Example:
+
+    <story>
+
+      <macro name="material">
+        <alt>stone</alt>
+        <alt>wood</alt>
+        <alt>bronce</alt>
+        <alt>copper</alt>
+      </macro>
+
+      <sentence>
+        This thing is made out of
+        <alt useMacro="material"></alt>
+      </sentence>
+
+    </story>
