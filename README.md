@@ -6,16 +6,28 @@ A sentence will choose from the different alternatives:
 
     <sentence>
       This is a
-      <alt> sentence.</alt>
-      <alt> joke.</alt>
+      <alt>sentence.</alt>
+      <alt>joke.</alt>
     </sentence>
+
+It's possible to have an empty sentence and just `<alt>`s, like this:
+
+    <story>
+      <sentence>
+        <alt>Some alternative.</alt>
+        <alt>Something else entirely.</alt>
+      </sentence>
+    </story>
+
+Flags
+-----
 
 When an alternative is chosen, you can set a flag to be used later:
 
     <sentence>
       This is a
-      <alt setFlag="flag1"> sentence.</alt>
-      <alt> joke.</alt>
+      <alt setFlag="flag1">sentence.</alt>
+      <alt>joke.</alt>
     </sentence>
 
 A flag can _only_ be set once! The following story will throw an exception:
@@ -23,11 +35,11 @@ A flag can _only_ be set once! The following story will throw an exception:
     <story>
       <sentence>
         This is a 
-        <alt setFlag="flag1"> sentence.</alt>
+        <alt setFlag="flag1">sentence.</alt>
       </sentence>
       <sentence>
         This is another 
-        <alt setFlag="flag1"> sentence.</alt>
+        <alt setFlag="flag1">sentence.</alt>
       </sentence>
     </story>
 
@@ -39,27 +51,19 @@ A flag is used to conditionally print a sentence:
     <story>
       <sentence>
         This is a 
-        <alt setFlag="flag1"> sentence.</alt>
-        <alt> joke.</alt>
+        <alt setFlag="flag1">sentence.</alt>
+        <alt>joke.</alt>
       </sentence>
       <sentence ifFlagIsSet="flag1">
-        This is another sentence.
-      </sentence>
-    </story>
-
-It's possible to have an empty sentence and just `<alt>`s, like this:
-
-    <story>
-      <sentence>
-        <alt>Some alternative.</alt>
-        <alt>Something else entirely.</alt>
+        This is only print if flag1 is set.
       </sentence>
     </story>
 
 
 Use `<br />` to insert a line break.
 
-== Macros ==
+Macros
+------
 
 Name must be unique. Define a macro with tag `<macro name="macroName">`. The macro can then be used on many places instead of alt:s. Use a macro with `<alt useMacro="macroName"></alt>`.
 
