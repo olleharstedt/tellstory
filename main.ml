@@ -27,7 +27,7 @@ type macro_alt = {
 
 type macro = {
   name : string;
-  macro_alts : macro_alt list
+  alts : macro_alt list
 }
 
 let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
@@ -158,7 +158,7 @@ let choose_alt sentence = match sentence with
 let get_flags alt =
   let flags = match alt with
     | Xml.Element (_, ["setFlag", str], _) ->  Some str
-    | Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)
+    (*| Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)*)
     | Xml.Element (_, x::xs, [Xml.PCData alt_content]) -> raise (Too_many_attributes ("alt: " ^ alt_content))
     | _ -> None
   in
@@ -202,8 +202,8 @@ let parse_macro_alts alts =
 (** Parse macro *)
 let parse_macro xml = match xml with
   | Xml.Element ("macro", [("name", name)], alts) ->
-      let macro_alts = parse_macro_alts alts in
-      {name; macro_alts}
+      let alts = parse_macro_alts alts in
+      {name; alts}
   | Xml.Element ("macro", [], _) ->
       raise (Macro_exception "Macro has no name attribute")
   | Xml.Element ("macro", _, []) ->
@@ -232,11 +232,20 @@ let print_sentence sentence =
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
     match alt with
       | None -> sen
-      | Some alt ->
-        let flags_list = get_flags alt in
-        store_flags flags_list;
-        let cont = fetch_content alt in
-        sen ^ cont
+      | Some alt -> match alt with
+        | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
+            if Hashtbl.mem macro_tbl macro_name then begin
+              let macro = Hashtbl.find macro_tbl macro_name in
+              let alts = macro.alts in
+              let alt = List.nth alts (dice (List.length alts) - 1) in
+              sen ^ " " ^ alt.content
+            end else
+              raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
+        | _ ->
+            let flags_list = get_flags alt in
+            store_flags flags_list;
+            let cont = fetch_content alt in
+            sen ^ " " ^ cont
   )
   with
     ex ->
@@ -254,19 +263,19 @@ let print_sentences story =
     let sen = String.trim (fetch_content s) in
     match s with
       | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) ->
-        (* All flags in list must be set to print sentence *)
-        let flag_list = Str.split (Str.regexp "[ \t]+") flags in
-        let all_flags_are_set = List.for_all (fun flag ->
-          Hashtbl.mem flags_tbl flag
-        ) flag_list in
-        if all_flags_are_set then
-          (print_sentence s) ^ " "
-        else
-          ""
+          (* All flags in list must be set to print sentence *)
+          let flag_list = Str.split (Str.regexp "[ \t]+") flags in
+          let all_flags_are_set = List.for_all (fun flag ->
+            Hashtbl.mem flags_tbl flag
+          ) flag_list in
+          if all_flags_are_set then
+            (print_sentence s) ^ " "
+          else
+            ""
       | Xml.Element ("sentence", [attr, flags], _) ->
-        raise (Sentence_problem (sen, Illegal_attribute_name attr))
+          raise (Sentence_problem (sen, Illegal_attribute_name attr))
       | Xml.Element ("sentence", x::xs, _) ->
-        raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
+          raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
       | Xml.Element ("br", _, _) -> "\n\n"
       | Xml.Element ("macro", _, _) ->
