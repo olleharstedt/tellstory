@@ -16,6 +16,7 @@ exception Too_many_attributes of string
 exception Flag_already_set of string
 exception Illegal_attribute_name of string
 exception Error_parsing_xml
+exception Unknown_tag of string
 exception Sentence_problem of string * exn
 
 (* Hash table to store flags, with flag name as key *)
@@ -221,6 +222,10 @@ let print_sentences story =
         raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
       | Xml.Element ("br", _, _) -> "\n\n"
+      | Xml.Element ("macro", _, _) ->
+          (* do stuff *)
+          ""
+      | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
   ) sentences in
   List.fold_left (^) "" string_sentences
