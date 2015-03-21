@@ -226,6 +226,24 @@ let store_macro macro =
     Hashtbl.add macro_tbl macro.name macro
 
 (**
+ * )
+ *)
+let eval_alt alt = match alt with
+  | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
+      if Hashtbl.mem macro_tbl macro_name then begin
+        let macro = Hashtbl.find macro_tbl macro_name in
+        let alts = macro.alts in
+        let alt = List.nth alts (dice (List.length alts) - 1) in
+        alt.content
+      end else
+        raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
+  | _ ->
+      let flags_list = get_flags alt in
+      store_flags flags_list;
+      let content = fetch_content alt in
+      content
+
+(**
  * Print a sentence with random alt.
  *
  * @param sentence Xml.xml
@@ -235,22 +253,12 @@ let print_sentence sentence =
   let sen = String.trim (fetch_content (sentence)) in
   try (
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
-    match alt with
-      | None -> sen
-      | Some alt -> match alt with
-        | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
-            if Hashtbl.mem macro_tbl macro_name then begin
-              let macro = Hashtbl.find macro_tbl macro_name in
-              let alts = macro.alts in
-              let alt = List.nth alts (dice (List.length alts) - 1) in
-              sen ^ " " ^ alt.content
-            end else
-              raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
-        | _ ->
-            let flags_list = get_flags alt in
-            store_flags flags_list;
-            let cont = fetch_content alt in
-            sen ^ " " ^ cont
+    match alt, sen with
+      | None, _ -> sen
+      | Some alt, "" ->
+          (eval_alt alt)
+      | Some alt, sen ->
+          sen ^ " " ^ (eval_alt alt)
   )
   with
     ex ->
@@ -278,7 +286,7 @@ let variable_name_free name =
   not (Hashtbl.mem vars_tbl name)
 
 (**
- * Check if all <alt>:s have a content
+ * Check if all <alt>:s have a content (except macro alts)
  *
  * @param alts Xml.Element list
  * @return bool
@@ -286,6 +294,8 @@ let variable_name_free name =
 let all_alts_have_content alts =
   List.for_all (fun a -> match a with
   | Xml.Element ("alt", _, [Xml.PCData content]) ->
+      true
+  | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
       true
   | Xml.Element ("alt", _, _) ->
       false
@@ -316,11 +326,8 @@ let variable_is_ok name alts =
  *)
 let eval_variable name alts =
   let alt = List.nth alts (dice (List.length alts) - 1) in
-  match alt with
-  | Xml.Element ("alt", _, [Xml.PCData content]) ->
-      Hashtbl.add vars_tbl name content
-  | _ ->
-      raise (Variable_exception ("Error chosing <alt> for variable with name " ^ name))
+  let content = eval_alt alt in
+  Hashtbl.add vars_tbl name content
 
 (**
  * Convert all sentences to strings
