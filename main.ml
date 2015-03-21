@@ -19,6 +19,7 @@ exception Error_parsing_xml
 exception Unknown_tag of string
 exception Sentence_problem of string * exn
 exception Macro_exception of string
+exception Variable_exception of string
 
 (** Data types for storing macros *)
 type macro_alt = {
@@ -30,10 +31,14 @@ type macro = {
   alts : macro_alt list
 }
 
+(** Hash table to store macros. Macros are randomized each use. *)
 let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
 
-(* Hash table to store flags, with flag name as key *)
+(* Hash table to store flags, with flag name as key. Flags are used for branching. *)
 let flags_tbl = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
+
+(* Hash table to store variables. Variables are only randomized once. *)
+let vars_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
 
 (* List of attributes allowed in <sentence> tag *)
 let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -252,7 +257,74 @@ let print_sentence sentence =
       raise (Sentence_problem (sen, ex))
 
 (**
+ * Check so that only Xml.Element "alt" are in the list
+ *
+ * @param alts Xml.Element list
+ * @return bool
+ *)
+let only_alts alts =
+  List.for_all (fun a -> match a with
+    | Xml.Element ("alt", _, _) -> true
+    | _ -> false
+  ) alts
+
+(**
+ * Return true if variable name is free (unused), otherwise false
+ *
+ * @param name string
+ * @return bool
+ *)
+let variable_name_free name =
+  not (Hashtbl.mem vars_tbl name)
+
+(**
+ * Check if all <alt>:s have a content
+ *
+ * @param alts Xml.Element list
+ * @return bool
+ *)
+let all_alts_have_content alts =
+  List.for_all (fun a -> match a with
+  | Xml.Element ("alt", _, [Xml.PCData content]) ->
+      true
+  | Xml.Element ("alt", _, _) ->
+      false
+  | _ ->
+      false
+  ) alts
+
+
+(**
+ * Check if we can add new variable with alts and name
+ *
+ * @param name string Name of new variable
+ * @param alts Xml.Element list
+ * @return bool
+ *)
+let variable_is_ok name alts =
+  if not (only_alts alts) then
+    raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
+  else if not (all_alts_have_content alts) then
+    raise (Variable_exception ("Some <alt> in variable with name '" ^ name ^ "' does not have any content"))
+  else if not (variable_name_free name) then
+    raise (Variable_exception ("<variable> with name '" ^ name ^ "' is already in use, can only be defined once."))
+  else
+    true
+
+(**
+ * Eval <variable>
+ *)
+let eval_variable name alts =
+  let alt = List.nth alts (dice (List.length alts) - 1) in
+  match alt with
+  | Xml.Element ("alt", _, [Xml.PCData content]) ->
+      Hashtbl.add vars_tbl name content
+  | _ ->
+      raise (Variable_exception ("Error chosing <alt> for variable with name " ^ name))
+
+(**
  * Convert all sentences to strings
+ * And macros, variables, records, includes...
  *
  * @param story XML
  * @return string
@@ -283,6 +355,13 @@ let print_sentences story =
           let macro = parse_macro s in
           store_macro macro;
           "" (* Return empty string *)
+
+      (* <variable> *)
+      | Xml.Element ("variable", [("name", name)], alts) when (variable_is_ok name alts)->
+          eval_variable name alts;
+          ""
+
+      (* Unknown tag or error *)
       | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
   ) sentences in
