@@ -20,6 +20,7 @@ exception Unknown_tag of string
 exception Sentence_problem of string * exn
 exception Macro_exception of string
 exception Variable_exception of string
+exception AltException of string
 
 (** Data types for storing macros *)
 type macro_alt = {
@@ -226,14 +227,27 @@ let store_macro macro =
     Hashtbl.add macro_tbl macro.name macro
 
 (**
- * )
+ * Eval <alt> to its content
+ *
+ * @param alt Xml.Element
+ * @return string
  *)
-let eval_alt alt = match alt with
+let eval_alt alt = 
+  (* Aux function to check for <alt></alt> *)
+  let check_for_empty_content c =
+    match c with 
+    | "" ->
+        raise (AltException "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
+    | _ ->
+        ()
+  in
+  match alt with
   | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
       if Hashtbl.mem macro_tbl macro_name then begin
         let macro = Hashtbl.find macro_tbl macro_name in
         let alts = macro.alts in
         let alt = List.nth alts (dice (List.length alts) - 1) in
+        check_for_empty_content alt.content;
         alt.content
       end else
         raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
@@ -241,6 +255,7 @@ let eval_alt alt = match alt with
       let flags_list = get_flags alt in
       store_flags flags_list;
       let content = fetch_content alt in
+      check_for_empty_content content;
       content
 
 (**
@@ -259,6 +274,7 @@ let print_sentence sentence =
           (eval_alt alt)
       | Some alt, sen ->
           sen ^ " " ^ (eval_alt alt)
+          (* TODO: If alt is ""? *)
   )
   with
     ex ->

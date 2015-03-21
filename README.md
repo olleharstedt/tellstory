@@ -107,4 +107,7 @@ Records are much like variables, just a tad more complex: You can save many diff
 
 Example:
 
+Advanced use-cases
+------------------
 
+* Using macros in variables
