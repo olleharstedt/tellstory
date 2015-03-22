@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <macro name="material">
+    <alt>sten</alt>
+    <alt>trä</alt>
+    <alt>brons</alt>
+    <alt>koppar</alt>
+  </macro>
+
+  <sentence>
+    1. Du hittar en låda av
+    <alt useMacro="material"></alt>
+  </sentence>
+</story>
