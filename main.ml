@@ -232,10 +232,10 @@ let store_macro macro =
  * @param alt Xml.Element
  * @return string
  *)
-let eval_alt alt = 
+let eval_alt alt =
   (* Aux function to check for <alt></alt> *)
   let check_for_empty_content c =
-    match c with 
+    match c with
     | "" ->
         raise (AltException "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
     | _ ->
@@ -259,6 +259,46 @@ let eval_alt alt =
       content
 
 (**
+ * Eval sentence, changin {bla} to variable content
+ *
+ * @param sen string
+ * @return string
+ *)
+let eval_sen sen =
+  try (
+    let matches = Pcre.exec_all ~pat:"{[a-zA-Z]+}" sen in
+    let matches = Array.to_list (
+      Array.map (fun m ->
+        let substrings = Pcre.get_substrings m in
+        let s = substrings.(0) in
+        let s = String.sub s 1 (String.length s - 2) in
+        s
+      ) matches;
+    ) in
+    let matches_uniq = List.sort_uniq (fun a b -> 1) matches in
+    (* Aux function to replace matches with found variables *)
+    let rec replace matches sen = match matches with
+      | [] -> sen
+      | x::xs -> 
+          let pattern = "{" ^ x ^ "}" in
+          let replacement = try 
+              Hashtbl.find vars_tbl x 
+            with 
+              Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'" x))
+          in
+          let sen = Pcre.replace ~pat:pattern ~templ:replacement sen in
+          replace xs sen
+    in
+    replace matches_uniq sen
+  )
+  with
+    Not_found -> sen
+  (* Get all {foo} in str *)
+  (* Loop through each, replace with variable content *)
+  (* Get all {foo.bar} in str *)
+  (* Loop and replace *)
+
+(**
  * Print a sentence with random alt.
  *
  * @param sentence Xml.xml
@@ -266,6 +306,7 @@ let eval_alt alt =
  *)
 let print_sentence sentence =
   let sen = String.trim (fetch_content (sentence)) in
+  let sen = eval_sen sen in
   try (
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
     match alt, sen with

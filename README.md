@@ -107,6 +107,11 @@ Records are much like variables, just a tad more complex: You can save many diff
 
 Example:
 
+Inline macros
+-------------
+
+Able to use macros direct in sentence like {#macro}?
+
 Advanced use-cases
 ------------------
 

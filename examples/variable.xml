@@ -23,7 +23,7 @@
   -->
 
   <sentence>
-    {test} öppnade dörren och sa:
+    {test} öppnade dörren {test} och sa:
     <alt>Jag älskar</alt>
     <alt>Jag hatar</alt>
   </sentence>
