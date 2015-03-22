@@ -20,6 +20,7 @@ exception Unknown_tag of string
 exception Sentence_problem of string * exn
 exception Macro_exception of string
 exception Variable_exception of string
+exception Record_exception of string
 exception AltException of string
 
 (** Data types for storing macros *)
@@ -32,6 +33,9 @@ type macro = {
   alts : macro_alt list
 }
 
+(** Types for storing records *)
+type record = (string, string) Hashtbl.t
+
 (** Hash table to store macros. Macros are randomized each use. *)
 let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
 
@@ -40,6 +44,8 @@ let flags_tbl = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
 
 (* Hash table to store variables. Variables are only randomized once. *)
 let vars_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
+
+let records_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
 
 (* List of attributes allowed in <sentence> tag *)
 let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -227,6 +233,66 @@ let store_macro macro =
     Hashtbl.add macro_tbl macro.name macro
 
 (**
+ * Eval content to replace variables and records
+ * Used in sentence and alt
+ *
+ * @param con string
+ * @return string
+ *)
+let eval_content con =
+  (* Replace variables *)
+  let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+  let matches = Array.to_list (
+    Array.map (fun m ->
+      let substrings = Pcre.get_substrings m in
+      let s = substrings.(0) in
+      let s = String.sub s 1 (String.length s - 2) in
+      s
+    ) matches
+  ) in
+  let matches_uniq = List.sort_uniq (fun a b -> 1) matches in
+
+  (* Aux function to replace matches with found variables *)
+  let rec replace matches con = match matches with
+    | [] -> con
+    | x::xs ->
+        let pattern = "{" ^ x ^ "}" in
+        let replacement = try
+            Hashtbl.find vars_tbl x
+          with
+            Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
+        in
+        let con = Pcre.replace ~pat:pattern ~templ:replacement con in
+        replace xs con
+  in
+  let con = replace matches_uniq con in
+
+  (* Replace records *)
+  let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+  Array.iter (fun m ->
+      let substrings = Pcre.get_substrings m in
+      let s = substrings.(0) in
+      let s = String.sub s 1 (String.length s - 2) in
+      let key_value = Pcre.split ~pat:"\\." s in
+      (* Split like {record_name.var_name} *)
+      let record_name = List.nth key_value 0 in
+      let var_name = List.nth key_value 1 in
+
+      (* Get correct record *)
+      let record = try Hashtbl.find records_tbl record_name with
+        Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
+      in
+      let var = try Hashtbl.find record var_name with
+        Not_found -> raise (Record_exception (sprintf "No such var '%s' in record '%s'" var_name record_name))
+      in
+
+      printf "var = %s\n" var;
+      List.iter (fun s -> printf "%s " s) key_value;
+      printf "%s\n" s;
+  ) matches;
+  con
+
+(**
  * Eval <alt> to its content
  *
  * @param alt Xml.Element
@@ -266,30 +332,7 @@ let eval_alt alt =
  *)
 let eval_sen sen =
   try (
-    let matches = Pcre.exec_all ~pat:"{[a-zA-Z]+}" sen in
-    let matches = Array.to_list (
-      Array.map (fun m ->
-        let substrings = Pcre.get_substrings m in
-        let s = substrings.(0) in
-        let s = String.sub s 1 (String.length s - 2) in
-        s
-      ) matches;
-    ) in
-    let matches_uniq = List.sort_uniq (fun a b -> 1) matches in
-    (* Aux function to replace matches with found variables *)
-    let rec replace matches sen = match matches with
-      | [] -> sen
-      | x::xs ->
-          let pattern = "{" ^ x ^ "}" in
-          let replacement = try
-              Hashtbl.find vars_tbl x
-            with
-              Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
-          in
-          let sen = Pcre.replace ~pat:pattern ~templ:replacement sen in
-          replace xs sen
-    in
-    replace matches_uniq sen
+    eval_content sen
   )
   with
     Not_found -> sen
@@ -379,12 +422,91 @@ let variable_is_ok name alts =
     true
 
 (**
+ * Check if record definition is valid
+ *
+ * @param name string
+ * @param alts Xml.Element list
+ * @return bool
+ *)
+let record_is_ok name alts =
+  (* Check so record name is free *)
+  if Hashtbl.mem records_tbl name then begin
+    raise (Record_exception (sprintf "Record name '%s' is already in use" name))
+  end;
+
+  (* Check so alts are not empty *)
+  if List.length alts = 0 then begin
+    raise (Record_exception (sprintf "Record '%s' has no <alt>" name))
+  end;
+
+  (* Each alt must have equal number of children with same structure *)
+  let compare alts = match alts with
+  | [] -> true
+  | x::xs -> List.for_all (fun alt -> match x, alt with
+      | Xml.Element ("alt", _, subtags), Xml.Element ("alt", _, subtags2) -> begin
+          try
+            (* Check so each var has same tag name *)
+            List.for_all2 (fun var1 var2 -> match var1, var2 with
+              | Xml.Element (name1, _, [Xml.PCData _]), Xml.Element (name2, _, [Xml.PCData _]) ->
+                  name1 = name2
+              | _ -> false
+            ) subtags subtags2
+          with
+            Invalid_argument _ ->
+              raise (Record_exception (sprintf "Not equal number of <alt> in <record> '%s'" name))
+          end
+      | _, _ -> false
+  ) xs
+  in
+
+  (* Raise exception if alts are not equal *)
+  if not (compare alts) then begin
+    raise (Record_exception (sprintf "Wrong structure in <record> '%s')" name))
+  end;
+
+  true
+
+(**
  * Eval <variable>
+ * Adds variable to variable hash table
+ *
+ * @param name string
+ * @param alts Xml.Element list
+ * @return void
  *)
 let eval_variable name alts =
   let alt = List.nth alts (dice (List.length alts) - 1) in
   let content = eval_alt alt in
   Hashtbl.add vars_tbl name content
+
+(**
+ * Adds record to record hash table
+ *
+ * @param name string
+ * @param alts Xml.Element list
+ * @return void
+ *)
+let eval_record name alts =
+
+  (* Choose alt *)
+  let alt = List.nth alts (dice (List.length alts) - 1) in
+
+  (* Store vars from alt in record hash table *)
+  let record = Hashtbl.create 20 in
+  List.iter (fun var ->
+    match var with
+    | Xml.Element (name, [], [Xml.PCData content]) ->
+        Hashtbl.add record name content
+    | Xml.Element (var_name, _, []) ->
+        raise (Record_exception (sprintf "No empty content allowed in '%s' for record '%s'" var_name name))
+    | Xml.Element (var_name, _, _) ->
+        raise (Record_exception (sprintf "No attributes allowed in '%s' for record '%s'" var_name name))
+    | _ ->
+        raise (Record_exception (sprintf "Unknown error in record '%s'" name))
+  ) (Xml.children alt);
+
+  (* Add record to records hash table *)
+  Hashtbl.add records_tbl name record
 
 (**
  * Convert all sentences to strings
@@ -425,6 +547,11 @@ let print_sentences story =
           eval_variable name alts;
           ""
 
+      (* <record> *)
+      | Xml.Element ("record", [("name", name)], alts) when (record_is_ok name alts) ->
+          eval_record name alts;
+          ""
+
       (* Unknown tag or error *)
       | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
@@ -452,6 +579,7 @@ let _ =
   with
     | Sentence_problem (sen, ex) ->
       print_endline ("Problem with sentence '" ^ sen ^ "'");
+      (* TODO: Pretty print exceptions *)
       raise ex
   in
   print_endline "";

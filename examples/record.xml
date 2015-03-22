@@ -12,4 +12,12 @@
     </alt>
   </record>
 
+  <record name="bla">
+    <alt></alt>
+  </record>
+
+  <sentence>
+    A sentence with {gender.han}
+  </sentence>
+
 </story>
