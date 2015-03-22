@@ -103,6 +103,8 @@ Variables
 
 Variables is a way to store `<alt>`s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{}`. One use-case for this is genders or names, which might be randomized once but used several times.
 
+Variables can use letter a-z, A-Z, 0-9 and '\_'.
+
 Example:
 
 Records
