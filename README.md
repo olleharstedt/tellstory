@@ -25,6 +25,11 @@ Linebreaks
 
 Use `<br />` to insert a line break.
 
+Comments
+--------
+
+Make comments in the like in any HTML or XMl document, with `<!-- bla bla -->`.
+
 Flags
 -----
 
