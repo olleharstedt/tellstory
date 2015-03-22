@@ -2,22 +2,35 @@
 <story>
 
   <record name="gender">
-    <alt>
+    <alt setFlag="man">
       <han>han</han>
       <hans>hans</hans>
     </alt>
-    <alt>
+    <alt setFlag="woman">
       <han>hon</han>
       <hans>hennes</hans>
     </alt>
   </record>
 
-  <record name="bla">
-    <alt></alt>
-  </record>
+  <macro name="man_name">
+    <alt>John</alt>
+    <alt>Jim</alt>
+  </macro>
+
+  <macro name="woman_name">
+    <alt>Jenny</alt>
+    <alt>Josefin</alt>
+  </macro>
+
+  <variable name="name">
+    <alt ifSet="man" >asd</alt>
+    <alt ifSet="woman">bf</alt>
+  </variable>
 
   <sentence>
-    A sentence with {gender.han} from {gender.hans} and {gender.han}
+    {name} A sentence with {gender.han} from {gender.hans} and {gender.han}
+    <alt ifSet="man">man</alt>
+    <alt ifSet="woman">woman</alt>
   </sentence>
 
 </story>

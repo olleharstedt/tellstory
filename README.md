@@ -20,6 +20,8 @@ It's possible to have an empty sentence and just `<alt>`s, like this:
       </sentence>
     </story>
 
+One alt is chosen randomly. All alts have the same probability.
+
 Linebreaks
 ----------
 
@@ -69,6 +71,8 @@ A flag is used to conditionally print a sentence:
         This is only print if flag1 is set.
       </sentence>
     </story>
+
+One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
 
 Macros
 ------

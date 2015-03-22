@@ -59,9 +59,9 @@ let _ =
   Hashtbl.add allowed_alt_attributes "setFlag" true
 
 
-(** Return number from 1 to n *)
+(** Return number from 0 to n - 1*)
 let dice n =
-  Random.int n + 1
+  Random.int n
 
 (**
  * Fetch node which tag name = tag_name
@@ -152,18 +152,65 @@ let fetch_node_content xml node =
  * @param sentence Xml.xml list, first element is actual sentence, rest is alt:s
  * @return xml option
  *)
-let choose_alt sentence = match sentence with
-  | Xml.PCData _ :: [] -> None
-  | Xml.PCData _ :: only_one :: []-> Some only_one
-  | Xml.PCData _ :: tail ->
-      let nr = (List.length tail) in
-      Some (List.nth tail (dice nr - 1))
-  | all_xmls ->
-      let nr = (List.length all_xmls) in
-      Some (List.nth all_xmls (dice nr - 1))
+let choose_alt_from_sentence sentence = match sentence with
+  | Xml.PCData _ :: [] ->
+      None
+  | Xml.PCData _ :: alt :: []->
+      None
+  | Xml.PCData _ :: alts
+  | alts ->
+      let nr = (List.length alts) in
+      Some (List.nth alts (dice nr))
 
 (**
- * Check if alt has a flag attribute and return it
+ * Chose an alt to use, depending on flags
+ *
+ * @param alts Xml.Element list
+ * @return Xml.Element option
+ *)
+let choose_alt alts = match alts with
+  | [] ->
+      None
+  | alts ->
+      None
+
+(**
+ * Get list of possible alts to consider, conserning flags
+ *
+ * @param alts Xml.Element list
+ * @return Xml.Element list
+ *)
+let get_possible_alts alts = match alts with
+  | [] ->
+      []
+  | alts ->
+      List.filter (fun alt ->
+        (* Have to check for flag condition to rule out some alts *)
+        let attrs = Xml.attribs alt in
+        let ifSet = List.filter (function
+          | ("ifFlagIsSet", _)
+          | ("ifSet", _) -> true
+          | _ -> false
+        ) attrs
+        in
+        (* Did we find ifSet? *)
+        begin match ifSet with
+          | [] ->
+              (* No flag condition? Ey ok. *)
+              true
+          | [("ifSet", flags)] ->
+              let flags = (Str.split (Str.regexp "[ \t]+") flags) in
+              List.iter (fun flag -> printf "flag = %s" flag) flags;
+              false
+          | l when List.length l > 1 ->
+              raise (AltException "Only one ifSet attribute allowed for one <alt>")
+          | _ ->
+              raise (Internal_error "choose_alt: Illegal struct of ifSet")
+        end
+      ) alts
+
+(**
+ * Check if alt has a setFlag attributes and return them as string list option
  *
  * @param alt XML
  * @return string list option
@@ -185,7 +232,7 @@ let get_flags alt =
 (**
  * Store flags in flags hash map
  *
- * @param flags_list string list
+ * @param flags_list string list option
  * @return unit
  *)
 let store_flags flags_list = match flags_list with
@@ -261,7 +308,7 @@ let eval_content con =
         let replacement = try
             Hashtbl.find vars_tbl x
           with
-            Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
+            Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
         in
         let con = Pcre.replace ~pat:pattern ~templ:replacement con in
         replace_variables xs con
@@ -287,7 +334,7 @@ let eval_content con =
           Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
         in
         let var = try Hashtbl.find record var_name with
-          Not_found -> raise (Record_exception (sprintf "No such var '%s' in record '%s'" var_name record_name))
+          Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
         in
         let pattern = sprintf "{%s.%s}" record_name var_name in
         let con = Pcre.replace ~pat:pattern ~templ:var con in
@@ -321,6 +368,15 @@ let eval_content con =
   *)
   con
 
+(* Aux function to find attribute *)
+let find_attribute attributes name =
+  try Some (List.find (function
+    | (attr_name, _) ->
+        name = attr_name
+  ) attributes)
+    with
+      Not_found ->
+        None
 (**
  * Eval <alt> to its content
  *
@@ -336,12 +392,45 @@ let eval_alt alt =
     | _ ->
         ()
   in
+  let attributes = Xml.attribs alt in
+
+  (* Find attribute setFlag *)
+  let setFlag = find_attribute attributes "setFlag" in
+  let flags_list = match setFlag with
+    | None ->
+        None
+    | Some (_, flags) ->
+       Some (Str.split (Str.regexp "[ \t]+") flags)
+  in
+  store_flags flags_list;
+
+  (* Get macro to use as (string * string) tuple *)
+  let useMacro = find_attribute attributes "useMacro" in
+
+  (* Get content either from macro or alt.content *)
+  let cont = match useMacro with
+  | None ->
+      fetch_content alt
+  | Some (_, macro_name) ->
+      if Hashtbl.mem macro_tbl macro_name then begin
+        let macro = Hashtbl.find macro_tbl macro_name in
+        let alts = macro.alts in
+        let alt = List.nth alts (dice (List.length alts)) in
+        check_for_empty_content alt.content;
+        alt.content
+      end else
+        raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
+  in
+
+  cont
+
+  (*
   match alt with
   | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
       if Hashtbl.mem macro_tbl macro_name then begin
         let macro = Hashtbl.find macro_tbl macro_name in
         let alts = macro.alts in
-        let alt = List.nth alts (dice (List.length alts) - 1) in
+        let alt = List.nth alts (dice (List.length alts)) in
         check_for_empty_content alt.content;
         alt.content
       end else
@@ -352,6 +441,7 @@ let eval_alt alt =
       let content = fetch_content alt in
       check_for_empty_content content;
       content
+  *)
 
 (**
  * Eval sentence, changin {bla} to variable content
@@ -376,7 +466,7 @@ let print_sentence sentence =
   let sen = String.trim (fetch_content (sentence)) in
   try (
     let sen = eval_sen sen in
-    let alt = choose_alt (fetch_nodes (sentence) "alt") in
+    let alt = choose_alt_from_sentence (fetch_nodes (sentence) "alt") in
     match alt, sen with
       | None, _ -> sen
       | Some alt, "" ->
@@ -420,7 +510,7 @@ let all_alts_have_content alts =
   List.for_all (fun a -> match a with
   | Xml.Element ("alt", _, [Xml.PCData content]) ->
       true
-  | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
+  | Xml.Element ("alt", attrs, _) when (find_attribute attrs "useMacro" != None) ->
       true
   | Xml.Element ("alt", _, _) ->
       false
@@ -440,7 +530,7 @@ let variable_is_ok name alts =
   if not (only_alts alts) then
     raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
   else if not (all_alts_have_content alts) then
-    raise (Variable_exception ("Some <alt> in variable with name '" ^ name ^ "' does not have any content"))
+    raise (Variable_exception ("Some <alt> in variable '" ^ name ^ "' does not have any content"))
   else if not (variable_name_free name) then
     raise (Variable_exception ("<variable> with name '" ^ name ^ "' is already in use, can only be defined once."))
   else
@@ -500,7 +590,7 @@ let record_is_ok name alts =
  * @return void
  *)
 let eval_variable name alts =
-  let alt = List.nth alts (dice (List.length alts) - 1) in
+  let alt = List.nth alts (dice (List.length alts)) in
   let content = eval_alt alt in
   Hashtbl.add vars_tbl name content
 
@@ -514,7 +604,11 @@ let eval_variable name alts =
 let eval_record name alts =
 
   (* Choose alt *)
-  let alt = List.nth alts (dice (List.length alts) - 1) in
+  let alt = List.nth alts (dice (List.length alts)) in
+
+  (* Store flags if present *)
+  let flags_list = get_flags alt in
+  store_flags flags_list;
 
   (* Store vars from alt in record hash table *)
   let record = Hashtbl.create 20 in
@@ -545,6 +639,7 @@ let print_sentences story =
   let string_sentences = List.map (fun s ->
     let sen = String.trim (fetch_content s) in
     match s with
+      | Xml.Element ("sentence", [("ifSet", flags)], _)
       | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) ->
           (* All flags in list must be set to print sentence *)
           let flag_list = Str.split (Str.regexp "[ \t]+") flags in
