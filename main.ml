@@ -284,7 +284,7 @@ let eval_sen sen =
           let replacement = try 
               Hashtbl.find vars_tbl x 
             with 
-              Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'" x))
+              Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
           in
           let sen = Pcre.replace ~pat:pattern ~templ:replacement sen in
           replace xs sen
@@ -306,8 +306,8 @@ let eval_sen sen =
  *)
 let print_sentence sentence =
   let sen = String.trim (fetch_content (sentence)) in
-  let sen = eval_sen sen in
   try (
+    let sen = eval_sen sen in
     let alt = choose_alt (fetch_nodes (sentence) "alt") in
     match alt, sen with
       | None, _ -> sen
