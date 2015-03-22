@@ -279,11 +279,11 @@ let eval_sen sen =
     (* Aux function to replace matches with found variables *)
     let rec replace matches sen = match matches with
       | [] -> sen
-      | x::xs -> 
+      | x::xs ->
           let pattern = "{" ^ x ^ "}" in
-          let replacement = try 
-              Hashtbl.find vars_tbl x 
-            with 
+          let replacement = try
+              Hashtbl.find vars_tbl x
+            with
               Not_found -> raise (Variable_exception (sprintf "Could not find variable with name '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
           in
           let sen = Pcre.replace ~pat:pattern ~templ:replacement sen in
