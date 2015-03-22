@@ -2,38 +2,14 @@
 <story>
 
   <!-- Simple variable -->
-  <variable name="test">
-    <alt>test1</alt>
-    <alt>test2</alt>
-    <alt>test3</alt>
+  <variable name="name">
+    <alt>John</alt>
+    <alt>Joe</alt>
+    <alt>Jenny</alt>
   </variable>
 
-  <!-- Variable with key-value pairs -->
-  <!--
-  <record name="gender">
-    <alt>
-      <han>han</han>
-      <hans>hans</hans>
-    </alt>
-    <alt>
-      <han>hon</han>
-      <hans>hennes</hans>
-    </alt>
-  </record>
-  -->
-
   <sentence>
-    {test} öppnade {fo} dörren {test} och sa:
-    <alt>Jag älskar</alt>
-    <alt>Jag hatar</alt>
+    {name} opened the door, looked in a mirror and saw {name}.
   </sentence>
 
-  <sentence>
-    <alt>män</alt>
-    <alt>kvinnor</alt>
-  </sentence>
-
-  <sentence>
-    Det var allt {gender.hans} ord sa.
-  </sentence>
 </story>
