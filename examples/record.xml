@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <record name="gender">
+    <alt>
+      <han>han</han>
+      <hans>hans</hans>
+    </alt>
+    <alt>
+      <han>hon</han>
+      <hans>hennes</hans>
+    </alt>
+  </record>
+
+</story>
