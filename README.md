@@ -3,11 +3,11 @@ Small program to render random texts from XML-file. See main.xml for example usa
 Tags
 ----
 
-### Story
+#### Story
 
 todo
 
-### Sentence and alt
+#### Sentence and alt
 
 A sentence will choose from the different alternatives:
 
@@ -28,15 +28,15 @@ It's possible to have an empty sentence and just `<alt>`s, like this:
 
 One alt is chosen randomly. All alts have the same probability.
 
-### Linebreaks
+#### Linebreaks
 
 Use `<br />` to insert a line break.
 
-### Comments
+#### Comments
 
 Make comments in the like in any HTML or XMl document, with `<!-- bla bla -->`.
 
-### Flags
+#### Flags
 
 When an alternative is chosen, you can set a flag to be used later:
 
@@ -77,7 +77,7 @@ A flag is used to conditionally print a sentence:
 
 One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
 
-### Macros
+#### Macros
 
 Name must be unique. Define a macro with tag `<macro name="macroName">`. The macro can then be used on many places instead of alt:s. Use a macro with `<alt useMacro="macroName"></alt>`. The macro is randomized anew each time it's used.
 
@@ -104,7 +104,7 @@ Example:
 
     </story>
 
-### Variables
+#### Variables
 
 Variables is a way to store `<alt>`s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{}`. One use-case for this is genders or names, which might be randomized once but used several times.
 
@@ -112,21 +112,21 @@ Variables can use letter a-z, A-Z, 0-9 and '\_'.
 
 Example:
 
-### Records
+#### Records
 
 Records are much like variables, just a tad more complex: You can save many different data fields in one "go", or randomization. This is good for gender pronouns like "he, him, his" vs "she, her, hers". In this way, you get all pronouns kept at one and same place.
 
 Example:
 
-### Inline macros
+#### Inline macros
 
 Able to use macros direct in sentence like {#macro}?
 
-### Include
+#### Include
 
 `<include>` tag to include other files in your story.
 
-### Advanced use-cases
+#### Advanced use-cases
 
 * Using macros in variables
 
