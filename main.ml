@@ -6,6 +6,7 @@
  *)
 
 open Printf
+open ListLabels
 
 exception No_node_content of string
 exception Not_implemented
@@ -147,34 +148,6 @@ let fetch_node_content xml node =
   fetch_content node
 
 (**
- * Choose one of the alt:s in a sentence.
- *
- * @param sentence Xml.xml list, first element is actual sentence, rest is alt:s
- * @return xml option
- *)
-let choose_alt_from_sentence sentence = match sentence with
-  | Xml.PCData _ :: [] ->
-      None
-  | Xml.PCData _ :: alt :: []->
-      None
-  | Xml.PCData _ :: alts
-  | alts ->
-      let nr = (List.length alts) in
-      Some (List.nth alts (dice nr))
-
-(**
- * Chose an alt to use, depending on flags
- *
- * @param alts Xml.Element list
- * @return Xml.Element option
- *)
-let choose_alt alts = match alts with
-  | [] ->
-      None
-  | alts ->
-      None
-
-(**
  * Get list of possible alts to consider, conserning flags
  *
  * @param alts Xml.Element list
@@ -184,6 +157,7 @@ let get_possible_alts alts = match alts with
   | [] ->
       []
   | alts ->
+      (* Filter alts that don't belong *)
       List.filter (fun alt ->
         (* Have to check for flag condition to rule out some alts *)
         let attrs = Xml.attribs alt in
@@ -199,15 +173,65 @@ let get_possible_alts alts = match alts with
               (* No flag condition? Ey ok. *)
               true
           | [("ifSet", flags)] ->
+
               let flags = (Str.split (Str.regexp "[ \t]+") flags) in
-              List.iter (fun flag -> printf "flag = %s" flag) flags;
-              false
+
+              List.iter (fun flag -> printf "flag = %s\n" flag) flags;
+
+              (* Filter flags and only keep alt if all flags are set *)
+              List.for_all (fun flag ->
+                let is_mem = Hashtbl.mem flags_tbl flag in
+                if is_mem then printf "flag '%s' is set\n" flag else ();
+                is_mem
+              ) flags
+
           | l when List.length l > 1 ->
               raise (AltException "Only one ifSet attribute allowed for one <alt>")
           | _ ->
-              raise (Internal_error "choose_alt: Illegal struct of ifSet")
+              raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
         end
       ) alts
+
+(**
+ * Chose an alt to use, depending on flags
+ *
+ * @param alts Xml.Element list
+ * @return Xml.Element option
+ *)
+let choose_alt alts =
+  let possible_alts = get_possible_alts alts in
+  printf "alts length = %d\n" (length possible_alts);
+  iter possible_alts ~f:(fun alt -> 
+    match Xml.children alt with
+    | [Xml.PCData cont] -> printf "alt content = %s\n" cont
+    | [] -> printf "alt content empty\n"
+    | _ -> assert false
+  );
+  let nr = (List.length possible_alts) in
+  if nr = 0 then
+    (* TODO: Log debug info here? *)
+    None
+  else
+    Some (List.nth possible_alts (dice nr))
+
+(**
+ * Choose one of the alt:s in a sentence.
+ *
+ * @param sentence Xml.xml list, first element is actual sentence, rest is alt:s
+ * @return xml option
+ *)
+let choose_alt_from_sentence sentence = match sentence with
+  | Xml.PCData _ :: [] ->
+      None
+  | Xml.PCData _ :: alt :: []->
+      Some alt
+  | Xml.PCData _ :: alts
+  | alts ->
+      choose_alt alts
+      (*
+      let nr = (List.length alts) in
+      Some (List.nth alts (dice nr))
+      *)
 
 (**
  * Check if alt has a setFlag attributes and return them as string list option
@@ -246,7 +270,8 @@ let store_flags flags_list = match flags_list with
         Hashtbl.add flags_tbl s true
     ) fl
 
-(** Parse macro alts
+(** 
+ * Parse macro alts
  *
  * @param alts Xml.Element list
  * @return alt list
@@ -269,7 +294,7 @@ let parse_macro xml = match xml with
   | Xml.Element ("macro", _, []) ->
       raise (Macro_exception "Macro has no alts")
   | _ ->
-      raise (Macro_exception "Macro definition is fucked, yo")
+      raise (Internal_error "Macro definition is weird")
 
 (** Store macro in macro hash table. Raise exception if macro with this name
  * already exists.
@@ -414,6 +439,7 @@ let eval_alt alt =
   | Some (_, macro_name) ->
       if Hashtbl.mem macro_tbl macro_name then begin
         let macro = Hashtbl.find macro_tbl macro_name in
+        (*let alt = choose_alt macro.alts in*)
         let alts = macro.alts in
         let alt = List.nth alts (dice (List.length alts)) in
         check_for_empty_content alt.content;
@@ -590,9 +616,12 @@ let record_is_ok name alts =
  * @return void
  *)
 let eval_variable name alts =
-  let alt = List.nth alts (dice (List.length alts)) in
-  let content = eval_alt alt in
-  Hashtbl.add vars_tbl name content
+  match choose_alt alts with
+  | None ->
+      raise (Variable_exception (sprintf "No alt could be chosen for variable '%s'" name))
+  | Some alt ->
+    let content = eval_alt alt in
+    Hashtbl.add vars_tbl name content
 
 (**
  * Adds record to record hash table
@@ -697,6 +726,9 @@ let _ =
     print_sentences story
   )
   with
+    | Sentence_problem (sen, Invalid_argument fn) ->
+      print_endline (sprintf "Internal error at sentence '%s': Invalid argument: '%s'" sen fn);
+      raise (Invalid_argument fn)
     | Sentence_problem (sen, ex) ->
       print_endline ("Problem with sentence '" ^ sen ^ "'");
       (* TODO: Pretty print exceptions *)

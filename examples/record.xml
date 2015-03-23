@@ -2,13 +2,13 @@
 <story>
 
   <record name="gender">
-    <alt setFlag="man">
-      <han>han</han>
-      <hans>hans</hans>
-    </alt>
     <alt setFlag="woman">
       <han>hon</han>
       <hans>hennes</hans>
+    </alt>
+    <alt setFlag="man">
+      <han>han</han>
+      <hans>hans</hans>
     </alt>
   </record>
 
@@ -23,12 +23,12 @@
   </macro>
 
   <variable name="name">
-    <alt ifSet="man" >asd</alt>
-    <alt ifSet="woman">bf</alt>
+    <alt ifSet="man" useMacro="man_name"></alt>
+    <alt ifSet="woman" useMacro="woman_name"></alt>
   </variable>
 
   <sentence>
-    {name} A sentence with {gender.han} from {gender.hans} and {gender.han}
+    {name} was a
     <alt ifSet="man">man</alt>
     <alt ifSet="woman">woman</alt>
   </sentence>
