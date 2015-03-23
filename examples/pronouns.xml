@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- How to use records, macros and variables to handle gender pronouns. -->
+<story>
+
+  <!-- Store pronouns in record. Choose either man or woman. -->
+  <record name="gender">
+    <alt setFlag="woman">
+      <gender>woman</gender>
+      <himself>her self</himself>
+    </alt>
+    <alt setFlag="man">
+      <gender>man</gender>
+      <himself>him self</himself>
+    </alt>
+  </record>
+
+  <!-- List of possible male names. -->
+  <macro name="man_name">
+    <alt>John</alt>
+    <alt>Jim</alt>
+  </macro>
+
+  <!-- List of possible female names. -->
+  <macro name="woman_name">
+    <alt>Jenny</alt>
+    <alt>Josefin</alt>
+  </macro>
+
+  <variable name="hero">
+    <alt ifSet="man" useMacro="man_name"></alt>
+    <alt ifSet="woman" useMacro="woman_name"></alt>
+  </variable>
+
+  <sentence>{hero} told {gender.himself}: "I am a {gender.gender}". </sentence>
+
+</story>
