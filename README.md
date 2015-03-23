@@ -1,4 +1,9 @@
-Small program to render random texts from XML-file. See main.xml for example usage. More features planned.
+Small program to render random texts from XML-file. See `examples/` for example usage.
+
+Installation
+------------
+
+Compile on your own. Made in OCaml. See Makefile or message and I will extend this section.
 
 Tags
 ----
@@ -76,6 +81,10 @@ A flag is used to conditionally print a sentence:
     </story>
 
 One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
+
+You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in the sentence.
+
+Example: todo
 
 #### Macros
 

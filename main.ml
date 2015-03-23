@@ -176,13 +176,9 @@ let get_possible_alts alts = match alts with
 
               let flags = (Str.split (Str.regexp "[ \t]+") flags) in
 
-              List.iter (fun flag -> printf "flag = %s\n" flag) flags;
-
               (* Filter flags and only keep alt if all flags are set *)
               List.for_all (fun flag ->
-                let is_mem = Hashtbl.mem flags_tbl flag in
-                if is_mem then printf "flag '%s' is set\n" flag else ();
-                is_mem
+                Hashtbl.mem flags_tbl flag
               ) flags
 
           | l when List.length l > 1 ->
@@ -200,13 +196,14 @@ let get_possible_alts alts = match alts with
  *)
 let choose_alt alts =
   let possible_alts = get_possible_alts alts in
-  printf "alts length = %d\n" (length possible_alts);
+  (* Debug info
   iter possible_alts ~f:(fun alt -> 
     match Xml.children alt with
     | [Xml.PCData cont] -> printf "alt content = %s\n" cont
     | [] -> printf "alt content empty\n"
     | _ -> assert false
   );
+  *)
   let nr = (List.length possible_alts) in
   if nr = 0 then
     (* TODO: Log debug info here? *)
