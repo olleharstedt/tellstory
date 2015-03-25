@@ -3,14 +3,25 @@ Small program to render random texts from XML-file. See `examples/` for example 
 Installation
 ------------
 
-Compile on your own. Made in OCaml. See Makefile or message and I will extend this section.
+Compile on your own. Made in OCaml. See Makefile or message me and I will extend this section.
+
+On Ubuntu:
+
+* Clone repository
+* Install OCaml like `sudo apt-get install ocaml ocaml-findlib opam`
+* Opam needs some configuration, look it up
+* Use opam to install xml-light and pcre
+* Print `make` in dir
+* Use `./tellstory filename.xml` to render story.
 
 Tags
 ----
 
+Tags with special meaning.
+
 #### Story
 
-todo
+Outermost tag. Mandatory.
 
 #### Sentence and alt
 
@@ -143,8 +154,10 @@ Possible future features
 ------------------------
 
 * Deck, where each alt is chosen atleast once during execution
+* Inline decks, like {$deck1}?
 * Many stories in one file, choose one randomly.
 * Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR flag3"`.
 * Debug information saved in text file
 * Export to PDF or markdown.
 * Web interface
+* Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.

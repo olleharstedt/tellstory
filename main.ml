@@ -197,7 +197,7 @@ let get_possible_alts alts = match alts with
 let choose_alt alts =
   let possible_alts = get_possible_alts alts in
   (* Debug info
-  iter possible_alts ~f:(fun alt -> 
+  iter possible_alts ~f:(fun alt ->
     match Xml.children alt with
     | [Xml.PCData cont] -> printf "alt content = %s\n" cont
     | [] -> printf "alt content empty\n"
@@ -267,7 +267,7 @@ let store_flags flags_list = match flags_list with
         Hashtbl.add flags_tbl s true
     ) fl
 
-(** 
+(**
  * Parse macro alts
  *
  * @param alts Xml.Element list
@@ -302,6 +302,33 @@ let store_macro macro =
   else
     Hashtbl.add macro_tbl macro.name macro
 
+
+(**
+ * Eval macro used in alt or inline, like <alt useMacro="name"> or {#name}
+ *
+ * @param name string
+ * @return string
+ * @raise Macro_exception if name is not a macro
+ *)
+let eval_macro name =
+  (* Aux function to check for <alt></alt> *)
+  let check_for_empty_content c =
+    match c with
+    | "" ->
+        raise (AltException "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
+    | _ ->
+        ()
+  in
+
+  if Hashtbl.mem macro_tbl name then begin
+    let macro = Hashtbl.find macro_tbl name in
+    (*let alt = choose_alt macro.alts in*)
+    let alts = macro.alts in
+    let alt = List.nth alts (dice (List.length alts)) in
+    check_for_empty_content alt.content;
+    alt.content
+  end else
+    raise (Macro_exception (sprintf "useMacro: Found no macro '%s'" name))
 (**
  * Eval content to replace variables and records
  * Used in sentence and alt
@@ -322,7 +349,7 @@ let eval_content con =
   ) in
   let matches_uniq = List.sort_uniq (fun a b -> 1) matches in
 
-  (* Aux function to replace matches with found variables *)
+  (* Replace inline variables, like {this} *)
   let rec replace_variables matches con = match matches with
     | [] -> con
     | x::xs ->
@@ -337,7 +364,7 @@ let eval_content con =
   in
   let con = replace_variables matches_uniq con in
 
-  (* Replace records *)
+  (* Replace records like {this.here} *)
   let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
   (* Matches as [[key, val], [key, val], ...] *)
   let matches = Array.to_list (
@@ -365,29 +392,26 @@ let eval_content con =
         raise (Internal_error "eval_content: replace_records: Wrong structure in list")
   in
   let con = replace_records matches con in
-  (*
-  Array.iter (fun m ->
+
+  (* Replace inline macros, like {#this} *)
+  let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+  let matches = Array.to_list (
+    ArrayLabels.map matches ~f:(fun m ->
       let substrings = Pcre.get_substrings m in
       let s = substrings.(0) in
-      let s = String.sub s 1 (String.length s - 2) in
-      let key_value = Pcre.split ~pat:"\\." s in
-      (* Split like {record_name.var_name} *)
-      let record_name = List.nth key_value 0 in
-      let var_name = List.nth key_value 1 in
-
-      (* Get correct record *)
-      let record = try Hashtbl.find records_tbl record_name with
-        Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
-      in
-      let var = try Hashtbl.find record var_name with
-        Not_found -> raise (Record_exception (sprintf "No such var '%s' in record '%s'" var_name record_name))
-      in
-
-      printf "var = %s\n" var;
-      List.iter (fun s -> printf "%s " s) key_value;
-      printf "%s\n" s;
-  ) matches;
-  *)
+      let s = String.sub s 2 (String.length s - 3) in
+      s
+    )
+  ) in
+  let rec replace_macros matches con = match matches with
+  | [] -> con
+  | mat::tail ->
+      let macro_content = eval_macro mat in
+      let pattern = sprintf "{#%s}" mat in
+      let con = Pcre.replace ~pat:pattern ~templ:macro_content con in
+      replace_macros tail con
+  in
+  let con = replace_macros matches con in
   con
 
 (* Aux function to find attribute *)
@@ -399,6 +423,7 @@ let find_attribute attributes name =
     with
       Not_found ->
         None
+
 (**
  * Eval <alt> to its content
  *
@@ -406,14 +431,6 @@ let find_attribute attributes name =
  * @return string
  *)
 let eval_alt alt =
-  (* Aux function to check for <alt></alt> *)
-  let check_for_empty_content c =
-    match c with
-    | "" ->
-        raise (AltException "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
-    | _ ->
-        ()
-  in
   let attributes = Xml.attribs alt in
 
   (* Find attribute setFlag *)
@@ -434,37 +451,10 @@ let eval_alt alt =
   | None ->
       fetch_content alt
   | Some (_, macro_name) ->
-      if Hashtbl.mem macro_tbl macro_name then begin
-        let macro = Hashtbl.find macro_tbl macro_name in
-        (*let alt = choose_alt macro.alts in*)
-        let alts = macro.alts in
-        let alt = List.nth alts (dice (List.length alts)) in
-        check_for_empty_content alt.content;
-        alt.content
-      end else
-        raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
+      eval_macro macro_name
   in
 
   cont
-
-  (*
-  match alt with
-  | Xml.Element ("alt", [("useMacro", macro_name)], _) ->
-      if Hashtbl.mem macro_tbl macro_name then begin
-        let macro = Hashtbl.find macro_tbl macro_name in
-        let alts = macro.alts in
-        let alt = List.nth alts (dice (List.length alts)) in
-        check_for_empty_content alt.content;
-        alt.content
-      end else
-        raise (Macro_exception ("useMacro: Found no macro with name " ^ macro_name))
-  | _ ->
-      let flags_list = get_flags alt in
-      store_flags flags_list;
-      let content = fetch_content alt in
-      check_for_empty_content content;
-      content
-  *)
 
 (**
  * Eval sentence, changin {bla} to variable content

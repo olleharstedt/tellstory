@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <macro name="material">
+    <alt>stone</alt>
+    <alt>tree</alt>
+    <alt>bronze</alt>
+    <alt>iron</alt>
+    <alt>steel</alt>
+  </macro>
+
+  <macro name="weapon">
+    <alt>a sword</alt>
+    <alt>a dagger</alt>
+    <alt>an axe</alt>
+  </macro>
+
+  <sentence>You find {#weapon} made of {#material}</sentence>
+
+</story>
