@@ -140,7 +140,16 @@ Example:
 
 #### Inline macros
 
-Able to use macros direct in sentence like {#macro}?
+Able to use macros direct in sentence like {#macro}. So instead of
+
+    <sentence>
+      A sentence with just one macro...
+      <alt useMacro="my_macro"></alt>
+    </sentence>
+
+you can write
+
+    <sentence>A sentence with just one macro... {#my_macro}</sentence>
 
 #### Include
 
