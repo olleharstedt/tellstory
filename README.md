@@ -121,7 +121,7 @@ Example:
 
 #### Variables
 
-Variables is a way to store `<alt>`:s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{}`. One use-case for this is genders or names, which might be randomized once but used several times.
+Variables is a way to store `<alt>`:s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{variable_name}`. One use-case for this is genders or names, which might be randomized once but used several times.
 
 Variable names can use letter a-z, A-Z, 0-9 and '\_'.
 
@@ -136,8 +136,6 @@ Example:
     <sentence>
       This person here is called {name}.
     </sentence>
-
-As you can see in the example, variables are always used inline with syntax `{variable_name}`.
 
 #### Records
 
@@ -172,16 +170,9 @@ The `<alt>`:s in the record must have exactly the same inner structure, in this 
 
 #### Inline macros
 
-Able to use macros direct in sentence like {#macro}. So instead of
+Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
 
-    <sentence>
-      A sentence with just one macro...
-      <alt useMacro="my_macro"></alt>
-    </sentence>
-
-you can write
-
-    <sentence>A sentence with just one macro... {#my_macro}</sentence>
+    <sentence>A sentence with just one macro: {#my_macro}</sentence>
 
 #### Include
 
@@ -194,7 +185,7 @@ you can write
 Possible future features
 ------------------------
 
-* Deck, where each alt is chosen atleast once during execution
+* Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
 * Inline decks, like {$deck1}?
 * Many stories in one file, choose one randomly.
 * Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR flag3"`.
@@ -202,3 +193,4 @@ Possible future features
 * Export to PDF or markdown.
 * Web interface
 * Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
+* Inline randomization: `{this_variable|or_this|#or_this_macro}`.
