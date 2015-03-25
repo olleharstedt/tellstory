@@ -65,9 +65,9 @@ Make comments in the like in any HTML or XMl document, with `<!-- Bla bla -->`.
 When an alternative is chosen, you can set a flag to be used later:
 
     <sentence>
-      This is a
-      <alt setFlag="flag1">sentence.</alt>
-      <alt>joke.</alt>
+      This person here is a
+      <alt setFlag="man">real man.</alt>
+      <alt setFlag="woman">real woman.</alt>
     </sentence>
 
 A flag can _only_ be set once!
@@ -75,12 +75,13 @@ A flag can _only_ be set once!
 A flag is used to conditionally print a sentence:
 
     <sentence>
-      This is a 
-      <alt setFlag="flag1">sentence.</alt>
-      <alt>joke.</alt>
+      This person here is a
+      <alt setFlag="man">real man.</alt>
+      <alt setFlag="woman">real woman.</alt>
     </sentence>
-    <sentence ifFlagIsSet="flag1">
-      This is only print if flag1 is set.
+
+    <sentence ifFlagIsSet="man">
+      Yes, he is indeed a man.
     </sentence>
 
 One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
@@ -93,7 +94,7 @@ You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in t
         <alt ifSet="man">man!</alt>
     </sentence>
 
-If not alt is possible to choose, an error will be printed.
+If no alt is possible to choose, an error will be printed.
 
 #### Macros
 
