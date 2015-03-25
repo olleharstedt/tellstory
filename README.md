@@ -23,9 +23,19 @@ Tags with special meaning.
 
 Outermost tag. Mandatory.
 
-#### Sentence and alt
+    <story>
+      <!-- Content here -->
+    </story>
 
-A sentence will choose from the different alternatives:
+#### Sentence
+
+The sentence is the fundamental building block. A simple sentence will be printed as is.
+
+    <sentence>A simple sentence.</sentence>
+
+#### Alt
+
+Within a sentence you can have `<alt>` tags (short for _alternative_). One alt tag will be chosen randomly:
 
     <sentence>
       This is a
@@ -35,14 +45,12 @@ A sentence will choose from the different alternatives:
 
 It's possible to have an empty sentence and just `<alt>`s, like this:
 
-    <story>
-      <sentence>
-        <alt>Some alternative.</alt>
-        <alt>Something else entirely.</alt>
-      </sentence>
-    </story>
+    <sentence>
+      <alt>Some alternative.</alt>
+      <alt>Something else entirely.</alt>
+    </sentence>
 
-One alt is chosen randomly. All alts have the same probability.
+All alts have the same probability.
 
 #### Linebreaks
 
@@ -50,7 +58,7 @@ Use `<br />` to insert a line break.
 
 #### Comments
 
-Make comments in the like in any HTML or XMl document, with `<!-- bla bla -->`.
+Make comments in the like in any HTML or XMl document, with `<!-- Bla bla -->`.
 
 #### Flags
 
@@ -62,40 +70,30 @@ When an alternative is chosen, you can set a flag to be used later:
       <alt>joke.</alt>
     </sentence>
 
-A flag can _only_ be set once! The following story will throw an exception:
-
-    <story>
-      <sentence>
-        This is a 
-        <alt setFlag="flag1">sentence.</alt>
-      </sentence>
-      <sentence>
-        This is another 
-        <alt setFlag="flag1">sentence.</alt>
-      </sentence>
-    </story>
-
-    Problem with sentence 'This is another'
-    Fatal error: exception Main.Flag_already_set("flag1")
+A flag can _only_ be set once!
 
 A flag is used to conditionally print a sentence:
 
-    <story>
-      <sentence>
-        This is a 
-        <alt setFlag="flag1">sentence.</alt>
-        <alt>joke.</alt>
-      </sentence>
-      <sentence ifFlagIsSet="flag1">
-        This is only print if flag1 is set.
-      </sentence>
-    </story>
+    <sentence>
+      This is a 
+      <alt setFlag="flag1">sentence.</alt>
+      <alt>joke.</alt>
+    </sentence>
+    <sentence ifFlagIsSet="flag1">
+      This is only print if flag1 is set.
+    </sentence>
 
 One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
 
 You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in the sentence.
 
-Example: todo
+    <sentence>
+      Hello, my old
+        <alt ifSet="woman">lady!</alt>
+        <alt ifSet="man">man!</alt>
+    </sentence>
+
+If not alt is possible to choose, an error will be printed.
 
 #### Macros
 

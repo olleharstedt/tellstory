@@ -23,7 +23,7 @@ exception Sentence_problem of string * exn
 exception Macro_exception of string
 exception Variable_exception of string
 exception Record_exception of string
-exception AltException of string
+exception Alt_exception of string
 
 (** Data types for storing macros *)
 type macro_alt = {
@@ -182,7 +182,7 @@ let get_possible_alts alts = match alts with
               ) flags
 
           | l when List.length l > 1 ->
-              raise (AltException "Only one ifSet attribute allowed for one <alt>")
+              raise (Alt_exception "Only one ifSet attribute allowed for one <alt>")
           | _ ->
               raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
         end
@@ -207,7 +207,7 @@ let choose_alt alts =
   let nr = (List.length possible_alts) in
   if nr = 0 then
     (* TODO: Log debug info here? *)
-    None
+    raise (Alt_exception "No possible alts to choose.")
   else
     Some (List.nth possible_alts (dice nr))
 
@@ -315,7 +315,7 @@ let eval_macro name =
   let check_for_empty_content c =
     match c with
     | "" ->
-        raise (AltException "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
+        raise (Alt_exception "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
     | _ ->
         ()
   in
