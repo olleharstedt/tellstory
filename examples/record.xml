@@ -1,36 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
 
-  <record name="gender">
-    <alt setFlag="woman">
-      <han>hon</han>
-      <hans>hennes</hans>
-    </alt>
-    <alt setFlag="man">
-      <han>han</han>
-      <hans>hans</hans>
-    </alt>
-  </record>
+    <record name="gender">
+      <alt>
+        <he>he</he>
+        <his>his</his>
+      </alt>
+      <alt>
+        <he>she</he>
+        <his>her</his>
+      </alt>
+    </record>
 
-  <macro name="man_name">
-    <alt>John</alt>
-    <alt>Jim</alt>
-  </macro>
-
-  <macro name="woman_name">
-    <alt>Jenny</alt>
-    <alt>Josefin</alt>
-  </macro>
-
-  <variable name="name">
-    <alt ifSet="man" useMacro="man_name"></alt>
-    <alt ifSet="woman" useMacro="woman_name"></alt>
-  </variable>
-
-  <sentence>
-    {name} was a
-    <alt ifSet="man">man</alt>
-    <alt ifSet="woman">woman</alt>
-  </sentence>
+    <sentence>
+      {gender.he} took {gender.his} things and left.
+    </sentence>
 
 </story>

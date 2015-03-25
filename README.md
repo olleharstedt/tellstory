@@ -39,8 +39,8 @@ Within a sentence you can have `<alt>` tags (short for _alternative_). One alt t
 
     <sentence>
       This is a
-      <alt>sentence.</alt>
-      <alt>joke.</alt>
+        <alt>sentence.</alt>
+        <alt>joke.</alt>
     </sentence>
 
 It's possible to have an empty sentence and just `<alt>`s, like this:
@@ -66,8 +66,8 @@ When an alternative is chosen, you can set a flag to be used later:
 
     <sentence>
       This person here is a
-      <alt setFlag="man">real man.</alt>
-      <alt setFlag="woman">real woman.</alt>
+        <alt setFlag="man">real man.</alt>
+        <alt setFlag="woman">real woman.</alt>
     </sentence>
 
 A flag can _only_ be set once!
@@ -76,8 +76,8 @@ A flag is used to conditionally print a sentence:
 
     <sentence>
       This person here is a
-      <alt setFlag="man">real man.</alt>
-      <alt setFlag="woman">real woman.</alt>
+        <alt setFlag="man">real man.</alt>
+        <alt setFlag="woman">real woman.</alt>
     </sentence>
 
     <sentence ifFlagIsSet="man">
@@ -98,44 +98,77 @@ If no alt is possible to choose, an error will be printed.
 
 #### Macros
 
-Name must be unique. Define a macro with tag `<macro name="macroName">`. The macro can then be used on many places instead of alt:s. Use a macro with `<alt useMacro="macroName"></alt>`. The macro is randomized anew each time it's used.
+A macro is a bunch of `<alt>`:s that can be re-used on many different places, each time with a new randomization. The macro name must be unique. Define a macro with tag `<macro name="macroName">`.  Use a macro with `<alt useMacro="macroName"></alt>`.
 
 Example:
 
-    <story>
+    <macro name="material">
+      <alt>stone</alt>
+      <alt>wood</alt>
+      <alt>bronce</alt>
+      <alt>copper</alt>
+    </macro>
 
-      <macro name="material">
-        <alt>stone</alt>
-        <alt>wood</alt>
-        <alt>bronce</alt>
-        <alt>copper</alt>
-      </macro>
-
-      <sentence>
-        This thing is made out of
+    <sentence>
+      This thing is made out of
         <alt useMacro="material"></alt>   <!-- Random alt -->
-      </sentence>
+    </sentence>
 
-      <sentence>
-        This other thing is made of
+    <sentence>
+      This other thing is made of
         <alt useMacro="material"></alt>   <!-- New randomization here -->
-      </sentence>
-
-    </story>
+    </sentence>
 
 #### Variables
 
-Variables is a way to store `<alt>`s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{}`. One use-case for this is genders or names, which might be randomized once but used several times.
+Variables is a way to store `<alt>`:s to be used again, without randomization. Variables can be parsed in sentences and alts with these curly braces: `{}`. One use-case for this is genders or names, which might be randomized once but used several times.
 
-Variables can use letter a-z, A-Z, 0-9 and '\_'.
+Variable names can use letter a-z, A-Z, 0-9 and '\_'.
 
 Example:
+
+    <variable name="name">
+      <alt>John</alt>
+      <alt>Joe</alt>
+      <alt>Jim</alt>
+    </variable>
+
+    <sentence>
+      This person here is called {name}.
+    </sentence>
+
+As you can see in the example, variables are always used inline with syntax `{variable_name}`.
 
 #### Records
 
 Records are much like variables, just a tad more complex: You can save many different data fields in one "go", or randomization. This is good for gender pronouns like "he, him, his" vs "she, her, hers". In this way, you get all pronouns kept at one and same place.
 
 Example:
+
+    <record name="gender">
+      <alt>
+        <he>he</he>
+        <his>his</his>
+      </alt>
+      <alt>
+        <he>she</he>
+        <his>her</his>
+      </alt>
+    </record>
+
+    <sentence>
+      {gender.he} took {gender.his} things and left.
+    </sentence>
+
+This will print either
+
+    he took his things and left.
+
+or
+
+    she took her things and left.
+
+The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
 #### Inline macros
 
