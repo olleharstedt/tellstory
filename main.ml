@@ -694,6 +694,15 @@ let print_sentences story =
   ) sentences in
   List.fold_left (^) "" string_sentences
 
+(**
+ * Eval <story> tag and all its children (macros, records, etc), returns the string
+ * 
+ * @param story Xml.Element
+ * @return string
+ *)
+let eval_story story =
+  ()
+
 (* Main *)
 let _ =
 

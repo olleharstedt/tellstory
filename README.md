@@ -189,6 +189,7 @@ Possible future features
 * Inline decks, like {$deck1}?
 * Many stories in one file, choose one randomly.
 * Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR flag3"`.
+* `ifNotSet`
 * Debug information saved in text file
 * Export to PDF or markdown.
 * Web interface
