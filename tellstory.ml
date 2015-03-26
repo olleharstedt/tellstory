@@ -24,6 +24,7 @@ exception Macro_exception of string
 exception Variable_exception of string
 exception Record_exception of string
 exception Alt_exception of string
+exception Parser_error of string
 
 (** Data types for storing macros *)
 type macro_alt = {
@@ -40,9 +41,6 @@ type record = (string, string) Hashtbl.t
 
 (** Hash table to store macros. Macros are randomized each use. *)
 let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
-
-(* Hash table to store flags, with flag name as key. Flags are used for branching. *)
-let flags_tbl = ((Hashtbl.create 20) : ((string, bool) Hashtbl.t))
 
 (* Hash table to store variables. Variables are only randomized once. *)
 let vars_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
@@ -63,6 +61,17 @@ let _ =
 (** Return number from 0 to n - 1*)
 let dice n =
   Random.int n
+
+(**
+ * Get option value
+ *
+ * @param var 'a option
+ * @param alt 'a
+ * @return alt if var is None, otherwise 'a
+ *)
+let get_opt var alt = match var with
+  | None -> alt
+  | Some a -> a
 
 (**
  * Fetch node which tag name = tag_name
@@ -148,6 +157,23 @@ let fetch_node_content xml node =
   fetch_content node
 
 (**
+ * Aux function to find attribute
+ * Find first attribute with name
+ *
+ * @param attributes ? Xml.Element list
+ * @param name string
+ * @return Xml.Element option
+ *)
+let find_attribute attributes name =
+  try Some (find attributes ~f:(function
+    | (attr_name, _) ->
+        name = attr_name
+  ))
+    with
+      Not_found ->
+        None
+
+(**
  * Get list of possible alts to consider, conserning flags
  *
  * @param alts Xml.Element list
@@ -161,27 +187,26 @@ let get_possible_alts alts = match alts with
       List.filter (fun alt ->
         (* Have to check for flag condition to rule out some alts *)
         let attrs = Xml.attribs alt in
-        let ifSet = List.filter (function
-          | ("ifSet", _) -> true
-          | _ -> false
-        ) attrs
-        in
+        let ifSet = find_attribute attrs "ifSet" in
         (* Did we find ifSet? *)
         begin match ifSet with
-          | [] ->
+          | None ->
               (* No flag condition? Ey ok. *)
               true
-          | [("ifSet", flags)] ->
+          | Some ("ifSet", flags) ->
 
-              let flags = (Str.split (Str.regexp "[ \t]+") flags) in
+              let split_flags = (Str.split (Str.regexp "[ \t]+") flags) in
+              printf "flags = %s\n" flags;
+              (*
+              let something = Lexing.from_string flags in
+              let flags_ok = Parser.main Lexer.token something in
+*)
+
 
               (* Filter flags and only keep alt if all flags are set *)
-              List.for_all (fun flag ->
-                Hashtbl.mem flags_tbl flag
-              ) flags
-
-          | l when List.length l > 1 ->
-              raise (Alt_exception "Only one ifSet attribute allowed for one <alt>")
+              for_all split_flags ~f:(fun flag ->
+                Hashtbl.mem Globals.flags_tbl flag
+              )
           | _ ->
               raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
         end
@@ -260,10 +285,10 @@ let store_flags flags_list = match flags_list with
   | Some fl ->
     List.iter (fun s ->
       (* Check if flag is already set. If so, abort *)
-      if Hashtbl.mem flags_tbl s then
+      if Hashtbl.mem Globals.flags_tbl s then
         raise (Flag_already_set s)
       else
-        Hashtbl.add flags_tbl s true
+        Hashtbl.add Globals.flags_tbl s true
     ) fl
 
 (**
@@ -413,16 +438,6 @@ let eval_content con =
   let con = replace_macros matches con in
   con
 
-(* Aux function to find attribute *)
-let find_attribute attributes name =
-  try Some (List.find (function
-    | (attr_name, _) ->
-        name = attr_name
-  ) attributes)
-    with
-      Not_found ->
-        None
-
 (**
  * Eval <alt> to its content
  *
@@ -519,15 +534,15 @@ let variable_name_free name =
  * @return bool
  *)
 let all_alts_have_content alts =
-  List.for_all (fun a -> match a with
-  | Xml.Element ("alt", _, [Xml.PCData content]) ->
-      true
-  | Xml.Element ("alt", attrs, _) when (find_attribute attrs "useMacro" != None) ->
-      true
-  | Xml.Element ("alt", _, _) ->
-      false
-  | _ ->
-      false
+  List.for_all (function
+    | Xml.Element ("alt", _, [Xml.PCData content]) ->
+        true
+    | Xml.Element ("alt", attrs, _) when (find_attribute attrs "useMacro" != None) ->
+        true
+    | Xml.Element ("alt", _, _) ->
+        false
+    | _ ->
+        false
   ) alts
 
 
@@ -643,6 +658,35 @@ let eval_record name alts =
   Hashtbl.add records_tbl name record
 
 (**
+ * Parses ifSet="" and return the result
+ *
+ * @param attrs Xml.Element list
+ * @return bool
+ * @raise Errors if parse failes
+ *)
+let flags_is_ok attrs =
+  let ifSet = find_attribute attrs "ifSet" in
+  match ifSet with
+  | None -> 
+      true
+  | Some ("ifSet", flags) ->
+      let lexing = Lexing.from_string flags in
+      let flags_ok = try Parser.main Lexer.token lexing with 
+        | Lexer.Error msg ->
+            (*Printf.fprintf stderr "Lexer.error = %s%!" msg; false*)
+            raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
+        | Parser.Error ->
+            (*Printf.fprintf stderr "At offset %d: syntax error.\n%!" (Lexing.lexeme_start lexing); false*)
+            raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
+        | Failure msg -> 
+            let open Lexing in
+            raise (Internal_error (sprintf "line = %d; col = %d" lexing.lex_curr_p.pos_lnum lexing.lex_curr_p.pos_cnum))
+      in
+      flags_ok
+  | _ -> 
+      raise (Internal_error "flags_is_ok: Weird result from find_attribute")
+
+(**
  * Convert all sentences to strings
  * And macros, variables, records, includes...
  *
@@ -651,24 +695,25 @@ let eval_record name alts =
  *)
 let print_sentences story =
   let sentences = fetch_children story in
-  let string_sentences = List.map (fun s ->
+  let string_sentences = map sentences ~f:(fun s ->
     let sen = String.trim (fetch_content s) in
-    match s with
-      | Xml.Element ("sentence", [("ifSet", flags)], _) ->
+    try begin match s with
+      | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
+          (*
+          let flags = find_attribute attrs "isSet" in
           (* All flags in list must be set to print sentence *)
           let flag_list = Str.split (Str.regexp "[ \t]+") flags in
           let all_flags_are_set = for_all flag_list ~f:(fun flag ->
-            Hashtbl.mem flags_tbl flag
+            Hashtbl.mem Globals.flags_tbl flag
           ) in
           if all_flags_are_set then
             (print_sentence s) ^ " "
           else
             ""
-      | Xml.Element ("sentence", [attr, flags], _) ->
-          raise (Sentence_problem (sen, Illegal_attribute_name attr))
-      | Xml.Element ("sentence", x::xs, _) ->
-          raise (Sentence_problem (sen, (Too_many_attributes ("sentence"))))
+          *)
+          print_sentence s ^ " "
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
+      | Xml.Element ("sentence", _, _) -> ""
       | Xml.Element ("br", _, _) -> "\n\n"
       | Xml.Element ("macro", _, _) ->
           (* store macro *)
@@ -689,7 +734,10 @@ let print_sentences story =
       (* Unknown tag or error *)
       | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
       | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
-  ) sentences in
+    end with
+      | ex ->
+        raise (Sentence_problem (sen, ex))
+  ) in
   List.fold_left (^) "" string_sentences
 
 (**
@@ -730,4 +778,5 @@ let _ =
   in
   print_endline "";
   print_endline string_story;
-  print_endline ""
+  print_endline "";
+  exit 0  (* TODO: Need to exit to not enter interpreter mode of menhir. *)

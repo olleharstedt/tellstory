@@ -4,4 +4,7 @@
 tellstory: tellstory.ml
 	ocamlfind ocamlopt -g -package xml-light,str,pcre -linkpkg tellstory.ml -o tellstory
 
+globals: globals.ml
+	ocamlopt -g -c globals.ml
+
 all: a.out
