@@ -52,7 +52,7 @@ let records_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
 (* List of attributes allowed in <sentence> tag *)
 let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
 let _ =
-  Hashtbl.add allowed_sentence_attributes "ifFlagIsSet" true
+  Hashtbl.add allowed_sentence_attributes "ifSet" true
 
 (* List of attributes allowed in <alt> tag *)
 let allowed_alt_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -162,7 +162,6 @@ let get_possible_alts alts = match alts with
         (* Have to check for flag condition to rule out some alts *)
         let attrs = Xml.attribs alt in
         let ifSet = List.filter (function
-          | ("ifFlagIsSet", _)
           | ("ifSet", _) -> true
           | _ -> false
         ) attrs
@@ -655,8 +654,7 @@ let print_sentences story =
   let string_sentences = List.map (fun s ->
     let sen = String.trim (fetch_content s) in
     match s with
-      | Xml.Element ("sentence", [("ifSet", flags)], _)
-      | Xml.Element ("sentence", [("ifFlagIsSet", flags)], _) ->
+      | Xml.Element ("sentence", [("ifSet", flags)], _) ->
           (* All flags in list must be set to print sentence *)
           let flag_list = Str.split (Str.regexp "[ \t]+") flags in
           let all_flags_are_set = List.for_all (fun flag ->

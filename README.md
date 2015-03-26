@@ -80,11 +80,9 @@ A flag is used to conditionally print a sentence:
         <alt setFlag="woman">real woman.</alt>
     </sentence>
 
-    <sentence ifFlagIsSet="man">
+    <sentence ifSet="man">
       Yes, he is indeed a man.
     </sentence>
-
-One can also use `ifSet` as a short-hand alternative to `ifFlagIsSet`.
 
 You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in the sentence.
 
@@ -188,7 +186,7 @@ Possible future features
 * Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
 * Inline decks, like {$deck1}?
 * Many stories in one file, choose one randomly.
-* Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR flag3"`.
+* Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR NOT flag3"`.
 * `ifNotSet`
 * Debug information saved in text file
 * Export to PDF or markdown.
