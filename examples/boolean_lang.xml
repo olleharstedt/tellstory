@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <sentence>
+    <alt setFlag="flag1"></alt>
+  </sentence>
+  <sentence>
+    <alt setFlag="flag2"></alt>
+  </sentence>
+
+  <sentence ifSet="flag1 AND flag2">Both flags are set</sentence>
+
+</story>
