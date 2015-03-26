@@ -657,9 +657,9 @@ let print_sentences story =
       | Xml.Element ("sentence", [("ifSet", flags)], _) ->
           (* All flags in list must be set to print sentence *)
           let flag_list = Str.split (Str.regexp "[ \t]+") flags in
-          let all_flags_are_set = List.for_all (fun flag ->
+          let all_flags_are_set = for_all flag_list ~f:(fun flag ->
             Hashtbl.mem flags_tbl flag
-          ) flag_list in
+          ) in
           if all_flags_are_set then
             (print_sentence s) ^ " "
           else
@@ -694,7 +694,7 @@ let print_sentences story =
 
 (**
  * Eval <story> tag and all its children (macros, records, etc), returns the string
- * 
+ *
  * @param story Xml.Element
  * @return string
  *)
