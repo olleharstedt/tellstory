@@ -196,14 +196,8 @@ let get_possible_alts alts = match alts with
           | Some ("ifSet", flags) ->
 
               let split_flags = (Str.split (Str.regexp "[ \t]+") flags) in
-              printf "flags = %s\n" flags;
-              (*
-              let something = Lexing.from_string flags in
-              let flags_ok = Parser.main Lexer.token something in
-*)
 
-
-              (* Filter flags and only keep alt if all flags are set *)
+              (* Check so all flags are set in hash table. *)
               for_all split_flags ~f:(fun flag ->
                 Hashtbl.mem Globals.flags_tbl flag
               )
@@ -673,10 +667,8 @@ let flags_is_ok attrs =
       let lexing = Lexing.from_string flags in
       let flags_ok = try Parser.main Lexer.token lexing with 
         | Lexer.Error msg ->
-            (*Printf.fprintf stderr "Lexer.error = %s%!" msg; false*)
             raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
         | Parser.Error ->
-            (*Printf.fprintf stderr "At offset %d: syntax error.\n%!" (Lexing.lexeme_start lexing); false*)
             raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
         | Failure msg -> 
             let open Lexing in
@@ -699,18 +691,6 @@ let print_sentences story =
     let sen = String.trim (fetch_content s) in
     try begin match s with
       | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
-          (*
-          let flags = find_attribute attrs "isSet" in
-          (* All flags in list must be set to print sentence *)
-          let flag_list = Str.split (Str.regexp "[ \t]+") flags in
-          let all_flags_are_set = for_all flag_list ~f:(fun flag ->
-            Hashtbl.mem Globals.flags_tbl flag
-          ) in
-          if all_flags_are_set then
-            (print_sentence s) ^ " "
-          else
-            ""
-          *)
           print_sentence s ^ " "
       | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
       | Xml.Element ("sentence", _, _) -> ""

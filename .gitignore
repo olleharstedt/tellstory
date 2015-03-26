@@ -7,5 +7,10 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.d
+lexer.ml
+parser.ml
+parser.mli
+tags
 tellstory
 ses
