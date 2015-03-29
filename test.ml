@@ -63,12 +63,149 @@ let test_alt test_ctxt =
   let story = T.print_sentences xml in
   assert_equal "Two alt two" story
 
+(**
+ * <story>
+ *   <alt>one</alt>
+ *   <alt>two</alt>
+ * </story>
+ *)
+let test_alt_with_empty_sentence test_ctxt =
+  let module T = Tellstory.Make(struct
+    let dice n = 0
+  end) in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [], [Xml.PCData "one"]);
+        Xml.Element ("alt", [], [Xml.PCData "two"]);
+      ])
+    ]
+  ) in
+  let story = T.print_sentences xml in
+  assert_equal "one" story;
+
+  let module T = Tellstory.Make(struct
+    let dice n = 1
+  end) in
+
+  let story = T.print_sentences xml in
+  assert_equal "two" story
+
+(**
+ * <story>
+ *   <sentence>
+ *     <alt setFlag="one">one</alt>
+ *   </sentence>
+ * </story>
+ *)
+let test_set_flag test_ctxt =
+  let module T = Tellstory.Make(struct
+    let dice n = 0
+  end) in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [("setFlag", "one")], [Xml.PCData "one"]);
+      ])
+    ]
+  ) in
+  let story = T.print_sentences xml in
+  assert_equal true (Hashtbl.mem Globals.flags_tbl "one");
+  assert_equal false (Hashtbl.mem Globals.flags_tbl "nothing");
+  assert_equal "one" story
+
+(**
+ * <story>
+ *   <sentence>
+ *     <alt setFlag="one"></alt>
+ *   </sentence>
+ *   <sentence ifSet="one">
+ *     One is set
+ *   </sentence>
+ * </story>
+ *)
+let test_if_set test_ctxt =
+
+  let module T = Tellstory.Make(struct
+    let dice n = 0
+  end) in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [("setFlag", "one")], []);
+      ]);
+      Xml.Element ("sentence", [("ifSet", "one")], [Xml.PCData "One is set"]);
+    ]
+  ) in
+  let story = try T.print_sentences xml with
+  | T.Sentence_problem (str, ex) -> printf "error: %s" (T.string_of_exn ex); raise ex
+  in
+
+  ()
+  (*
+  printf "'%s'" story;
+  assert_equal story story;
+  assert_equal true (Hashtbl.mem Globals.flags_tbl "one")
+  *)
+  (*
+  *)
+
+(**
+ * <story>
+ *   <sentence>
+ *     <alt setFlag="one"></alt>
+ *   </sentence>
+ *   <sentence>
+ *     <alt ifSet="one">one 1</alt>
+ *     <alt ifSet="one">one 2</alt>
+ *     <alt>something else</alt>
+ *   </sentence>
+ * </story>
+ *)
+let test_if_set_alt test_ctxt =
+
+  let module T = Tellstory.Make(struct
+    let dice n = 0
+  end) in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [("setFlag", "one")], []);
+      ]);
+      Xml.Element ("sentence", [("ifSet", "one")], [
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 1"]);
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 2"]);
+        Xml.Element ("alt", [], [Xml.PCData "something else"]);
+      ]);
+    ]
+  ) in
+  let story = T.print_sentences xml in
+  assert_equal "one 1" story;
+
+  let module T = Tellstory.Make(struct
+    let dice n = 1
+  end) in
+  let story = T.print_sentences xml in
+  assert_equal "one 2" story;
+
+  let module T = Tellstory.Make(struct
+    let dice n = 1
+  end) in
+  let story = T.print_sentences xml in
+  assert_equal "one 2" story
 
 (** Test suite for all tags *)
 let tag_test_suite =
   "tags" >::: [
     "sentence"  >:: test_sentence;
-    "alt"       >:: test_alt
+    "alt"       >:: test_alt;
+    "alt_empty_sentence"       >:: test_alt_with_empty_sentence;
+    "set_flag"  >:: test_set_flag;
+    "if_set"    >:: test_if_set;
   ]
 
 let _ =

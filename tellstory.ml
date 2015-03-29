@@ -36,6 +36,25 @@ module Make(Dice : D) = struct
   exception Alt_exception of string
   exception Parser_error of string
 
+  let rec string_of_exn ex = match ex with
+  | No_node_content str -> sprintf "No node content for node %s" str
+  | Not_implemented -> "Not implemented"
+  | Internal_error str -> sprintf "Internal error: %s" str
+  | No_such_lang str -> sprintf "No such language '%s'" str
+  | No_such_direct_node str -> sprintf "No such direct node '%s'" str
+  | Too_many_attributes str -> sprintf "Too many attributes: %s" str
+  | Flag_already_set str -> sprintf "Flag '%s' already set" str
+  | Illegal_attribute_name str -> sprintf "Illegal attribute name '%s'" str
+  | Error_parsing_xml -> "Error parsing xml"
+  | Unknown_tag str -> sprintf "Unknown tag '%s'" str
+  | Sentence_problem (str, ex) -> sprintf "Sentence problem: %s" (string_of_exn ex)
+  | Macro_exception str -> sprintf "Macro exception for '%s'" str
+  | Variable_exception str -> sprintf "Variable exception for '%s'" str
+  | Record_exception str -> sprintf "Record exception for '%s'" str
+  | Alt_exception str -> sprintf "Alt exception '%s'" str
+  | Parser_error str -> sprintf "Parser error: '%s'" str
+  | ex -> "[Not a Tellstory exception]"
+
   (** Data types for storing macros *)
   type macro_alt = {
     content : string
@@ -140,15 +159,6 @@ module Make(Dice : D) = struct
     | Xml.Element (_, _, Xml.PCData text :: _) -> text
     | Xml.Element (tag, _, _) -> "" (* TODO: Abort here or not? *)
     (*| Xml.Element (tag, _, _) -> raise (No_node_content tag)*)
-
-  (**
-   * Get ifFlagIsSet condition for sentence
-   *
-   * @param xml sent          Sentence
-   * @return string option    flag name
-   *)
-  let getFlagCondition sent =
-    ()
 
   (**
    * Fetch the content of an Xml node
