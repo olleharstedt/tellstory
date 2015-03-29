@@ -10,7 +10,7 @@ On Ubuntu:
 * Clone repository
 * Install OCaml like `sudo apt-get install ocaml ocaml-findlib opam`
 * Opam needs some configuration, look it up
-* Use opam to install xml-light and pcre
+* Use opam to install xml-light, pcre, menhir
 * Print `make` in dir
 * Use `./tellstory filename.xml` to render story.
 
@@ -87,8 +87,9 @@ A flag is used to conditionally print a sentence:
 You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in the sentence.
 
     <sentence>
-      Hello, my old
-        <alt ifSet="woman">lady!</alt>
+      Hello, my
+        <alt ifSet="woman">old lady!</alt>
+        <alt ifSet="woman">young lady!</alt>
         <alt ifSet="man">man!</alt>
     </sentence>
 
@@ -96,7 +97,7 @@ If no alt is possible to choose, an error will be printed.
 
 #### Macros
 
-A macro is a bunch of `<alt>`:s that can be re-used on many different places, each time with a new randomization. The macro name must be unique. Define a macro with tag `<macro name="macroName">`.  Use a macro with `<alt useMacro="macroName"></alt>`.
+A macro is a bunch of `<alt>`:s that can be re-used in many different places, each time with a new randomization. The macro name must be unique. Define a macro with tag `<macro name="macroName">`.  Use a macro with `<alt useMacro="macroName"></alt>`.
 
 Example:
 

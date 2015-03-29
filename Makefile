@@ -2,7 +2,7 @@
 INCLUDE					:= -package xml-light,str,pcre -linkpkg
 PGFLAGS         := --infer
 GENERATED       := parser.ml parser.mli lexer.ml
-MODULES         := globals parser lexer tellstory
+MODULES         := globals parser lexer tellstory main
 EXECUTABLE      := tellstory
 OCAMLDEPWRAPPER := ocamldep.wrapper
 include Makefile.shared

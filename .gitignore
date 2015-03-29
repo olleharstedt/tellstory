@@ -13,4 +13,5 @@ parser.ml
 parser.mli
 tags
 tellstory
+test
 ses

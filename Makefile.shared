@@ -273,6 +273,9 @@ endef
 
 # ----------------------------------------------------------------
 
+test: tellstory.cmx test.ml
+	ocamlfind ocamlopt -o test -package xml-light,str,pcre,oUnit -linkpkg globals.cmx lexer.cmx parser.cmx tellstory.cmx test.ml
+
 .PHONY: clean
 
 clean::
