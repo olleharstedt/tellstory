@@ -719,7 +719,8 @@ module Make(Dice : D) = struct
         | ex ->
           raise (Sentence_problem (sen, ex))
     ) in
-    List.fold_left (^) "" string_sentences
+    let result = List.fold_left (^) "" string_sentences in
+    String.trim result
 
   (**
    * Eval <story> tag and all its children (macros, records, etc), returns the string
