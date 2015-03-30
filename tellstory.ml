@@ -47,7 +47,7 @@ module Make(Dice : D) = struct
   | Illegal_attribute_name str -> sprintf "Illegal attribute name '%s'" str
   | Error_parsing_xml -> "Error parsing xml"
   | Unknown_tag str -> sprintf "Unknown tag '%s'" str
-  | Sentence_problem (str, ex) -> sprintf "Sentence problem: %s" (string_of_exn ex)
+  | Sentence_problem (str, ex) -> sprintf "Sentence problem for '%s': %s" str (string_of_exn ex)
   | Macro_exception str -> sprintf "Macro exception for '%s'" str
   | Variable_exception str -> sprintf "Variable exception for '%s'" str
   | Record_exception str -> sprintf "Record exception for '%s'" str
