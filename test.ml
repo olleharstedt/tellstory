@@ -1,13 +1,23 @@
 (**
  * Unit test cases
  *
+ * Patching ounit? opam help source, opam help pin
+ *
  * @since 2014-03-29
  * @author Olle Härstedt
  *)
 
 open OUnit2
+open OUnitTest
 open Printf
 open ListLabels
+
+exception Test_exception
+
+(** This module is only used for exception handling *)
+module T2 = Tellstory.Make(struct
+  let dice n = (-1)
+end)
 
 (** Identiy function for strings *)
 let id x = sprintf "'%s'" x
@@ -144,18 +154,10 @@ let test_if_set test_ctxt =
       Xml.Element ("sentence", [("ifSet", "one")], [Xml.PCData "One is set"]);
     ]
   ) in
-  let story = try T.print_sentences xml with
-    | T.Sentence_problem (str, ex) -> printf "%s" (T.string_of_exn ex); raise ex
-  in
+  let story = T.print_sentences xml in
 
-  ()
-  (*
-  printf "'%s'" story;
-  assert_equal story story;
-  assert_equal true (Hashtbl.mem Globals.flags_tbl "one")
-  *)
-  (*
-  *)
+  assert_equal ~msg:"story = One is set" ~printer:id story "One is set";
+  assert_equal ~msg:"flag 'one' is set" true ~printer:string_of_bool (Hashtbl.mem Globals.flags_tbl "one")
 
 (**
  * <story>
@@ -178,29 +180,70 @@ let test_if_set_alt test_ctxt =
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
-        Xml.Element ("alt", [("setFlag", "one")], []);
+        Xml.Element ("alt", [("setFlag", "one")], []);  (* dice choose 0 here *)
       ]);
       Xml.Element ("sentence", [("ifSet", "one")], [
-        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 1"]);
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 1"]);  (* 0 here too *)
         Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 2"]);
         Xml.Element ("alt", [], [Xml.PCData "something else"]);
       ]);
     ]
   ) in
   let story = T.print_sentences xml in
-  assert_equal "one 1" story;
+  assert_equal ~msg:"" ~printer:id "one 1" story
+
+(** As above *)
+let test_if_set_alt2 test_ctxt =
+  let dice_results = [0; 1] in  (* first and second dice result *)
+  let dice_calls = ref 0 in (* nr of times dice has been called *)
+  let module T = Tellstory.Make(struct
+    let dice n =
+      let result = List.nth dice_results (!dice_calls) in
+      dice_calls := !dice_calls + 1;
+      result
+  end) in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [("setFlag", "one")], []);  (* dice choose 0 here *)
+      ]);
+      Xml.Element ("sentence", [("ifSet", "one")], [
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 1"]);
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 2"]);  (* dice = 1 *)
+        Xml.Element ("alt", [], [Xml.PCData "something else"]);
+      ]);
+    ]
+  ) in
+  let story = T.print_sentences xml in
+  assert_equal ~msg:"" ~printer:id "one 2" story
+
+(**
+ * <story>
+ *   <sentence>
+ *     <alt ifSet="one">one 1</alt>
+ *   </sentence>
+ * </story>
+ *)
+let test_no_possible_alt test_ctxt =
 
   let module T = Tellstory.Make(struct
-    let dice n = 1
+    let dice n = 0
   end) in
-  let story = T.print_sentences xml in
-  assert_equal "one 2" story;
 
-  let module T = Tellstory.Make(struct
-    let dice n = 1
-  end) in
-  let story = T.print_sentences xml in
-  assert_equal "one 2" story
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("sentence", [], [
+        Xml.Element ("alt", [("ifSet", "one")], [Xml.PCData "one 1"]);
+      ]);
+    ]
+  ) in
+  assert_raises (T.Sentence_problem ("", "Sentence problem for '': Alt exception 'No possible alts to choose.'")) 
+  (fun _ -> 
+    (*raise (T.Sentence_problem ("asd", "asd", (T.Alt_exception "asd")))*)
+    T.print_sentences xml
+  );
+  ()
 
 (**
  * Tear-down
@@ -222,6 +265,9 @@ let test_list = [
   "alt_empty_sentence", test_alt_with_empty_sentence;
   "set_flag", test_set_flag;
   "if_set", test_if_set;
+  "if_set_alt", test_if_set_alt;
+  "if_set_alt2", test_if_set_alt2;
+  "no_possible_alts", test_no_possible_alt;
 ]
 
 (** Test suite for all tags *)
@@ -235,3 +281,7 @@ let tag_test_suite =
 
 let _ =
   run_test_tt_main tag_test_suite
+  (*
+  | T2.Sentence_problem (str, msg, ex) ->
+      printf "Sentence problem for '%s': %s" str (T2.string_of_exn ex)
+  *)

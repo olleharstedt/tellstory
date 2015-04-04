@@ -38,13 +38,13 @@ let _ =
     Tellstory.print_sentences story
   )
   with
-    | Tellstory.Sentence_problem (sen, Invalid_argument fn) ->
-      print_endline (sprintf "Internal error at sentence '%s': Invalid argument: '%s'" sen fn);
-      raise (Invalid_argument fn)
-    | Tellstory.Sentence_problem (sen, ex) ->
-      print_endline ("Problem with sentence '" ^ sen ^ "'");
-      (* TODO: Pretty print exceptions *)
-      raise ex
+    | Tellstory.Sentence_problem (sen, msg, Invalid_argument fn) ->
+        print_endline (sprintf "Internal error at sentence '%s': Invalid argument: '%s'" sen fn);
+        raise (Invalid_argument fn)
+    | Tellstory.Sentence_problem (sen, msg, ex) ->
+        printf "Problem with sentence '%s': '%s'\n" sen msg;
+        (* TODO: Pretty print exceptions *)
+        raise ex
   in
   print_endline "";
   print_endline string_story;
