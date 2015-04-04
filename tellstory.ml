@@ -29,12 +29,13 @@ module Make(Dice : D) = struct
   exception Illegal_attribute_name of string
   exception Error_parsing_xml
   exception Unknown_tag of string
-  exception Sentence_problem of string * exn
+  exception Sentence_problem of string * string (* Message, string of exn *)
   exception Macro_exception of string
   exception Variable_exception of string
   exception Record_exception of string
   exception Alt_exception of string
   exception Parser_error of string
+  exception Test_exception
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -47,13 +48,13 @@ module Make(Dice : D) = struct
   | Illegal_attribute_name str -> sprintf "Illegal attribute name '%s'" str
   | Error_parsing_xml -> "Error parsing xml"
   | Unknown_tag str -> sprintf "Unknown tag '%s'" str
-  | Sentence_problem (str, ex) -> sprintf "Sentence problem for '%s': %s" str (string_of_exn ex)
+  | Sentence_problem (sen, str) -> sprintf "Sentence problem for '%s': %s" sen str
   | Macro_exception str -> sprintf "Macro exception for '%s'" str
   | Variable_exception str -> sprintf "Variable exception for '%s'" str
   | Record_exception str -> sprintf "Record exception for '%s'" str
   | Alt_exception str -> sprintf "Alt exception '%s'" str
   | Parser_error str -> sprintf "Parser error: '%s'" str
-  | ex -> "[Not a Tellstory exception]"
+  | ex -> raise ex
 
   (** Data types for storing macros *)
   type macro_alt = {
@@ -199,7 +200,7 @@ module Make(Dice : D) = struct
         []
     | alts ->
         (* Filter alts that don't belong *)
-        List.filter (fun alt ->
+        let alts2 = filter alts ~f:(fun alt ->
           (* Have to check for flag condition to rule out some alts *)
           let attrs = Xml.attribs alt in
           let ifSet = find_attribute attrs "ifSet" in
@@ -219,7 +220,9 @@ module Make(Dice : D) = struct
             | _ ->
                 raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
           end
-        ) alts
+        ) in
+        (*(iter alts2 ~f:(fun xml -> printf "alt = %s\n" (Xml.to_string xml)));*)
+        alts2
 
   (**
    * Chose an alt to use, depending on flags
@@ -242,7 +245,11 @@ module Make(Dice : D) = struct
       (* TODO: Log debug info here? *)
       raise (Alt_exception "No possible alts to choose.")
     else
-      Some (List.nth possible_alts (Dice.dice nr))
+      try 
+        Some (List.nth possible_alts (Dice.dice nr)) 
+      with 
+        _ -> (* nth *)
+          raise (Internal_error (sprintf "No such alt to choose: %d, alt length = %d" 1 1))
 
   (**
    * Choose one of the alt:s in a sentence.
@@ -509,7 +516,7 @@ module Make(Dice : D) = struct
     )
     with
       ex ->
-        raise (Sentence_problem (sen, ex))
+        raise (Sentence_problem (sen, string_of_exn ex))
 
   (**
    * Check so that only Xml.Element "alt" are in the list
@@ -723,11 +730,11 @@ module Make(Dice : D) = struct
             ""
 
         (* Unknown tag or error *)
-        | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, Unknown_tag what))
-        | _ -> raise (Sentence_problem (sen, Error_parsing_xml))
+        | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, string_of_exn (Unknown_tag what)))
+        | _ -> raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
-          raise (Sentence_problem (sen, ex))
+          raise (Sentence_problem (sen, string_of_exn ex))
     ) in
     let result = List.fold_left (^) "" string_sentences in
     String.trim result
