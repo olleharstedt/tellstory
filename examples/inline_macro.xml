@@ -3,7 +3,7 @@
 
   <macro name="material">
     <alt>stone</alt>
-    <alt>tree</alt>
+    <alt>wood</alt>
     <alt>bronze</alt>
     <alt>iron</alt>
     <alt>steel</alt>
