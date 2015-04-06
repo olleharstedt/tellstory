@@ -6,7 +6,8 @@
  *)
 
 open Printf
-open ListLabels
+open Core
+open Core_list
 
 (**
  * Need to factor out dice function because in tests we want to control
@@ -181,13 +182,10 @@ module Make(Dice : D) = struct
    * @return Xml.Element option
    *)
   let find_attribute attributes name =
-    try Some (find attributes ~f:(function
+    find attributes ~f:(function
       | (attr_name, _) ->
           name = attr_name
-    ))
-      with
-        Not_found ->
-          None
+    )
 
   (**
    * Get list of possible alts to consider, conserning flags
@@ -245,11 +243,7 @@ module Make(Dice : D) = struct
       (* TODO: Log debug info here? *)
       raise (Alt_exception "No possible alts to choose.")
     else
-      try 
-        Some (List.nth possible_alts (Dice.dice nr)) 
-      with 
-        _ -> (* nth *)
-          raise (Internal_error (sprintf "No such alt to choose: %d, alt length = %d" 1 1))
+      nth possible_alts (Dice.dice nr)
 
   (**
    * Choose one of the alt:s in a sentence.
@@ -360,13 +354,16 @@ module Make(Dice : D) = struct
       let macro = Hashtbl.find macro_tbl name in
       (*let alt = choose_alt macro.alts in*)
       let alts = macro.alts in
-      let alt = List.nth alts (Dice.dice (List.length alts)) in
+      let alt = match nth alts (Dice.dice (List.length alts)) with
+        | Some alt -> alt
+        | None -> raise (Macro_exception "No alt?")
+      in
       check_for_empty_content alt.content;
       alt.content
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s'" name))
   (**
-   * Eval content to replace variables and records
+   * Eval content to replace inline variables, records and macros
    * Used in sentence and alt
    *
    * @param con string
@@ -448,6 +445,10 @@ module Make(Dice : D) = struct
         replace_macros tail con
     in
     let con = replace_macros matches con in
+
+    (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z90-9_.#]|}" con with Not_found -> [||] in
+
     con
 
   (**
@@ -646,7 +647,10 @@ module Make(Dice : D) = struct
   let eval_record name alts =
 
     (* Choose alt *)
-    let alt = List.nth alts (Dice.dice (List.length alts)) in
+    let alt = match nth alts (Dice.dice (List.length alts)) with
+      | Some alt -> alt
+      | None -> raise (Record_exception "No alt?")
+    in
 
     (* Store flags if present *)
     let flags_list = get_flags alt in

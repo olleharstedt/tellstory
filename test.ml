@@ -240,10 +240,8 @@ let test_no_possible_alt test_ctxt =
   ) in
   assert_raises (T.Sentence_problem ("", "Sentence problem for '': Alt exception 'No possible alts to choose.'")) 
   (fun _ -> 
-    (*raise (T.Sentence_problem ("asd", "asd", (T.Alt_exception "asd")))*)
     T.print_sentences xml
-  );
-  ()
+  )
 
 (**
  * Tear-down

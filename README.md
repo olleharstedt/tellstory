@@ -194,6 +194,7 @@ Possible future features
 * Web interface
 * Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Inline randomization: `{this_variable|or_this|#or_this_macro}`.
+* Possibility to use JSON format instead of XML.
 
 TODO
 ----
