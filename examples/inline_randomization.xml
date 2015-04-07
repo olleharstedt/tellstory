@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <macro name="love">
+    <alt>Big love</alt>
+    <alt>Small love</alt>
+  </macro>
+
+  <variable name="name">
+    <alt>Olle</alt>
+    <alt>Birte</alt>
+  </variable>
+
+  <sentence>This or {#material|name|0232}</sentence>
+
+</story>
