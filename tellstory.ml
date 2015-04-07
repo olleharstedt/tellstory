@@ -362,14 +362,15 @@ module Make(Dice : D) = struct
       alt.content
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s'" name))
+
+
   (**
-   * Eval content to replace inline variables, records and macros
-   * Used in sentence and alt
+   * Replace inline variable
    *
-   * @param con string
+   * @param name string Content from <sentence>
    * @return string
    *)
-  let eval_content con =
+  let replace_inline_variable con =
     (* Replace variables *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
@@ -395,7 +396,17 @@ module Make(Dice : D) = struct
           let con = Pcre.replace ~pat:pattern ~templ:replacement con in
           replace_variables xs con
     in
-    let con = replace_variables matches_uniq con in
+    replace_variables matches_uniq con
+
+  (**
+   * Eval content to replace inline variables, records and macros
+   * Used in sentence and alt
+   *
+   * @param con string
+   * @return string
+   *)
+  let eval_content con =
+    let con = replace_inline_variable con in
 
     (* Replace records like {this.here} *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
@@ -447,7 +458,22 @@ module Make(Dice : D) = struct
     let con = replace_macros matches con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z90-9_.#]|}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9\\|#\\.]+}" con with Not_found -> [||] in
+    ArrayLabels.iter matches ~f:(fun m -> 
+      let substrings = Pcre.get_substrings m in
+      ArrayLabels.iter substrings ~f:(fun substring ->
+        (* Strip {} *)
+        let no_ = String.sub substring 1 (String.length substring - 2) in
+        let split_by_bar = Pcre.split ~pat:"\\|" no_ in
+        let alt = match nth split_by_bar (Dice.dice (List.length split_by_bar)) with
+          | Some alt -> alt
+          | None -> raise (Internal_error (sprintf "eval_content: found no alternative when splitting '%s'" substring))
+        in
+        iter split_by_bar ~f:(fun s ->
+          print_endline s
+        );
+      );
+    );
 
     con
 
