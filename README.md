@@ -97,7 +97,19 @@ If no alt is possible to choose, an error will be printed.
 
 ##### More flag checking with AND, OR and NOT
 
-todo
+You can use keywords `AND`, `OR`, and `NOT` when checking which flags are set.
+
+Examples:
+
+* To check that two flags are set, use `ifSet="flag1 AND flag2"`
+* To check that either one of two flags are set, use `ifSet="flag2 OR flag2"`
+* To check that one flag is _not_ set, use `ifSet="NOT flag2"
+
+These can be combined with paranthesis:
+
+* To check that two flags are _not_ set, use `ifSet="NOT (flag1 AND flag2)"`
+
+And so on.
 
 #### Macros
 
