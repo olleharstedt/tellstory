@@ -266,6 +266,10 @@ let test_list = [
   "if_set_alt", test_if_set_alt;
   "if_set_alt2", test_if_set_alt2;
   "no_possible_alts", test_no_possible_alt;
+  (* macro test *)
+  (* inline macro test *)
+  (* variable test *)
+  (* record test *)
 ]
 
 (** Test suite for all tags *)

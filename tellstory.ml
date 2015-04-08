@@ -367,7 +367,7 @@ module Make(Dice : D) = struct
   (**
    * Replace inline variable
    *
-   * @param name string Content from <sentence>
+   * @param con string Content from <sentence>
    * @return string
    *)
   let replace_inline_variable con =
@@ -399,15 +399,12 @@ module Make(Dice : D) = struct
     replace_variables matches_uniq con
 
   (**
-   * Eval content to replace inline variables, records and macros
-   * Used in sentence and alt
+   * Replace inline records like {this.that}
    *
-   * @param con string
+   * @param con string Content
    * @return string
    *)
-  let eval_content con =
-    let con = replace_inline_variable con in
-
+  let replace_inline_records con =
     (* Replace records like {this.here} *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     (* Matches as [[key, val], [key, val], ...] *)
@@ -435,8 +432,15 @@ module Make(Dice : D) = struct
       | _ ->
           raise (Internal_error "eval_content: replace_records: Wrong structure in list")
     in
-    let con = replace_records matches con in
+    replace_records matches con
 
+  (**
+   * Replace inline macros like {#this}
+   *
+   * @param con string Content
+   * @return string
+   *)
+  let replace_inline_macros con =
     (* Replace inline macros, like {#this} *)
     let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
@@ -455,24 +459,60 @@ module Make(Dice : D) = struct
         let con = Pcre.replace ~pat:pattern ~templ:macro_content con in
         replace_macros tail con
     in
-    let con = replace_macros matches con in
+    replace_macros matches con
+
+  (**
+   * Eval content to replace inline variables, records and macros
+   * Used in sentence and alt
+   *
+   * @param con string
+   * @return string
+   *)
+  let rec eval_content con =
+    let con = replace_inline_variable con in
+    let con = replace_inline_records con in
+    let con = replace_inline_macros con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9\\|#\\.]+}" con with Not_found -> [||] in
-    ArrayLabels.iter matches ~f:(fun m -> 
+    let matches = Array.to_list matches in
+    (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
+    let matches_and_replaces = map matches ~f:(fun m -> 
       let substrings = Pcre.get_substrings m in
-      ArrayLabels.iter substrings ~f:(fun substring ->
+      let substrings_tuples = ArrayLabels.map substrings ~f:(fun substring ->
         (* Strip {} *)
+        print_endline substring;
         let no_ = String.sub substring 1 (String.length substring - 2) in
         let split_by_bar = Pcre.split ~pat:"\\|" no_ in
         let alt = match nth split_by_bar (Dice.dice (List.length split_by_bar)) with
           | Some alt -> alt
           | None -> raise (Internal_error (sprintf "eval_content: found no alternative when splitting '%s'" substring))
         in
+        (*
         iter split_by_bar ~f:(fun s ->
-          print_endline s
+          print_endline s;
+          print_endline (eval_content (sprintf "{%s}" s))
         );
-      );
+        *)
+        (substring, eval_content (sprintf "{%s}" alt))
+      ) in
+      printf "s2 length = %d\n" (Array.length substrings_tuples);
+      substrings_tuples.(0)
+    ) in
+    let rec replace_randomization matches con = match matches with
+    | [] -> con
+    | (mat, repl)::tail ->
+        print_endline mat;
+        print_endline repl;
+        let con = Pcre.replace_first ~pat:mat ~templ:repl con in
+        print_endline con;
+        replace_randomization tail con
+    in
+    let con = replace_randomization matches_and_replaces con in
+
+    iter matches_and_replaces ~f:(fun (x, y) ->
+      print_endline x;
+      print_endline y
     );
 
     con
