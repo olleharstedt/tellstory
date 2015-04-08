@@ -95,6 +95,10 @@ You can use `ifSet` in the `<alt>` tag to limit possible alts to be choosen in t
 
 If no alt is possible to choose, an error will be printed.
 
+##### More flag checking with AND, OR and NOT
+
+todo
+
 #### Macros
 
 A macro is a bunch of `<alt>`:s that can be re-used in many different places, each time with a new randomization. The macro name must be unique. Define a macro with tag `<macro name="macroName">`.  Use a macro with `<alt useMacro="macroName"></alt>`.
@@ -172,6 +176,14 @@ The `<alt>`:s in the record must have exactly the same inner structure, in this 
 Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
 
     <sentence>A sentence with just one macro: {#my_macro}</sentence>
+
+#### Inline randomization
+
+Choose between variable, record or macro directly in sentence content without writing `<alt>`:s, using barline `|`.
+
+Example:
+
+    <sentence>Could be any of this: {#macro1|record.something|variable}.</sentence>
 
 #### Include
 
