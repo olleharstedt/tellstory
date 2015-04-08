@@ -103,7 +103,7 @@ Examples:
 
 * To check that two flags are set, use `ifSet="flag1 AND flag2"`
 * To check that either one of two flags are set, use `ifSet="flag2 OR flag2"`
-* To check that one flag is _not_ set, use `ifSet="NOT flag2"
+* To check that one flag is _not_ set, use `ifSet="NOT flag2"`
 
 These can be combined with paranthesis:
 
