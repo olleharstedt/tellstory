@@ -19,6 +19,27 @@ module T2 = Tellstory.Make(struct
   let dice n = (-1)
 end)
 
+(**
+ * Create a Tellstory module were dice will return results from dice_results
+ * 
+ * Example:
+ *   make_module [1;2;5] will return a module where the dice call first time 
+ *   returns 1, second time 2, then 5.
+ *
+ * @param dice_results int list
+ * @return Tellstory module
+ *)
+let make_module dice_results : (module Tellstory.T) =
+  let dice_calls = ref 0 in (* nr of times dice has been called *)
+  let module T = Tellstory.Make(struct
+    let dice n =
+      let result = List.nth dice_results (!dice_calls) in
+      dice_calls := !dice_calls + 1;
+      result
+  end) in
+  (module T)
+
+
 (** Identiy function for strings *)
 let id x = sprintf "'%s'" x
 
@@ -194,6 +215,7 @@ let test_if_set_alt test_ctxt =
 
 (** As above *)
 let test_if_set_alt2 test_ctxt =
+
   let dice_results = [0; 1] in  (* first and second dice result *)
   let dice_calls = ref 0 in (* nr of times dice has been called *)
   let module T = Tellstory.Make(struct
@@ -244,6 +266,45 @@ let test_no_possible_alt test_ctxt =
   )
 
 (**
+    <macro name="material">
+      <alt>stone</alt>
+      <alt>wood</alt>
+    </macro>
+
+    <sentence>
+      This thing is made out of
+        <alt useMacro="material"></alt>
+    </sentence>
+
+    <sentence>
+      This other thing is made of
+        <alt useMacro="material"></alt>
+    </sentence>
+ *)
+let test_macro test_ctxt =
+
+  let (module T) = make_module [1;0] in
+
+  let xml = Xml.Element (
+    "story", [], [
+      Xml.Element ("macro", [("name", "material")], [
+        Xml.Element ("alt", [], [Xml.PCData "wood"]);
+        Xml.Element ("alt", [], [Xml.PCData "stone"]);
+      ]);
+      Xml.Element ("sentence", [], [
+        Xml.PCData "This thing is made out of";
+        Xml.Element ("alt", [("useMacro", "material")], []);
+      ]);
+      Xml.Element ("sentence", [], [
+        Xml.PCData "This other thing is made of";
+        Xml.Element ("alt", [("useMacro", "material")], []);
+      ]);
+    ]
+  ) in
+  let story = T.print_sentences xml in
+  assert_equal ~msg:"" ~printer:id "This thing is made out of stone This other thing is made of wood" story
+
+(**
  * Tear-down
  * Have to unset flags in flags_tbl hashtable after each test
  *
@@ -266,7 +327,7 @@ let test_list = [
   "if_set_alt", test_if_set_alt;
   "if_set_alt2", test_if_set_alt2;
   "no_possible_alts", test_no_possible_alt;
-  (* macro test *)
+  "macro", test_macro;
   (* inline macro test *)
   (* variable test *)
   (* record test *)
