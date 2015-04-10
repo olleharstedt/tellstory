@@ -183,13 +183,17 @@ or
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
-#### Inlining macros, variables and records
+#### Inlining alternatives, macros, variables and records
 
 Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
 
     <sentence>A sentence with just one macro: {#my_macro}</sentence>
 
-The same goes for records and variables:
+The same goes for content, records and variables. Inline alternatives is like inline `<alt>` tags, where the content is within quotes:
+
+    <sentence>A sentence with just two inline alternatives: {"this"|"that"}.</sentence>
+
+For variables and records:
 
     <sentence>A sentence with just one variable: {var}</sentence>
 
@@ -217,17 +221,10 @@ Possible future features
 * Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
 * Inline decks, like {$deck1}?
 * Many stories in one file, choose one randomly.
-* Logical operators in `ifSet`, like `ifSet="(flag1 AND flag2) OR NOT flag3"`.
-* `ifNotSet`
+* `ifNotSet`? Possible now with `NOT flag1`.
 * Debug information saved in text file
 * Export to PDF or markdown.
 * Web interface
 * Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
-* Inline randomization: `{this_variable|or_this|#or_this_macro}`.
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface.
-
-TODO
-----
-
-* Unit tests

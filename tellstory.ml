@@ -472,6 +472,38 @@ module Make(Dice : D) : T = struct
     replace_macros matches con
 
   (**
+   * Replaces inline content like {"this"}. Used for inline randomization, like
+   * in {#macro|"content"|variable}
+   *
+   * @param con string Content
+   * @return string
+   *)
+  let replace_inline_content con =
+    let matches = try Pcre.exec_all ~pat:"{\"[a-zA-Z0-9_]+\"}" con with Not_found -> [||] in
+    let matches = Array.to_list (
+      ArrayLabels.map matches ~f:(fun m ->
+        let substrings = Pcre.get_substrings m in
+        let s = substrings.(0) in
+        let s = String.sub s 1 (String.length s - 2) in
+        s
+      )
+    ) in
+    let rec replace_content matches con = match matches with
+      | [] -> con
+      | mat::tail ->
+          (*
+          printf "mat = %s\n" mat;
+          printf "con = %s\n" con;
+          *)
+          let replacement = String.sub mat 1 (String.length mat - 2) in
+          let mat = sprintf "{%s}" mat in
+          let mat = Pcre.quote mat in
+          let con = Pcre.replace ~pat:mat ~templ:replacement con in
+          replace_content tail con
+    in
+    replace_content matches con
+
+  (**
    * Eval content to replace inline variables, records and macros
    * Used in sentence and alt
    *
@@ -479,20 +511,21 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   let rec eval_content con =
+    let con = replace_inline_content con in
     let con = replace_inline_variable con in
     let con = replace_inline_records con in
     let con = replace_inline_macros con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"]+}" con with Not_found -> [||] in
     let matches = Array.to_list matches in
     (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
     let matches_and_replaces = map matches ~f:(fun m -> 
       let substrings = Pcre.get_substrings m in
       let substrings_tuples = ArrayLabels.map substrings ~f:(fun substring ->
         (* Strip {} *)
-        let no_ = String.sub substring 1 (String.length substring - 2) in
-        let split_by_bar = Pcre.split ~pat:"\\|" no_ in
+        let no_braces = String.sub substring 1 (String.length substring - 2) in
+        let split_by_bar = Pcre.split ~pat:"\\|" no_braces in
         let alt = match nth split_by_bar (Dice.dice (List.length split_by_bar)) with
           | Some alt -> alt
           | None -> raise (Internal_error (sprintf "eval_content: found no alternative when splitting '%s'" substring))

@@ -328,6 +328,7 @@ let test_list = [
   "if_set_alt2", test_if_set_alt2;
   "no_possible_alts", test_no_possible_alt;
   "macro", test_macro;
+  (* inline alt content test *)
   (* inline macro test *)
   (* variable test *)
   (* record test *)
