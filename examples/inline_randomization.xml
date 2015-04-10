@@ -13,6 +13,6 @@
     <alt>cigarettes</alt>
   </macro>
 
-  <sentence>His heart was made of {#good_material|bad_material}.</sentence>
+  <sentence>His heart was made of {#good_material|#bad_material}.</sentence>
 
 </story>

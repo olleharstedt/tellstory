@@ -19,7 +19,17 @@ module type D = sig
   val dice : int -> int
 end
 
-module Make(Dice : D) = struct
+(**
+ * Module type for Tellstory module produced by functor Make
+ *)
+module type T = sig
+  exception Sentence_problem of string * string
+
+  val fetch_node : Xml.xml -> string -> Xml.xml
+  val print_sentences : Xml.xml -> string
+end
+
+module Make(Dice : D) : T = struct
   exception No_node_content of string
   exception Not_implemented
   exception Internal_error of string
