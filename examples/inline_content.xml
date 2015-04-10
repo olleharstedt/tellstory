@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <macro name="drastic_line">
+    <alt>life</alt>
+    <alt>virginity</alt>
+  </macro>
+
+  <sentence>And I said to him: Take my {#drastic_line|"money"}.</sentence>
+
+</story>
