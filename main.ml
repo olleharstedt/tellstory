@@ -39,8 +39,8 @@ let _ =
   )
   with
     | Tellstory.Sentence_problem (sen, msg) ->
-        printf "Problem with sentence '%s': '%s'\n" sen msg;
-        ""
+        printf "%s\n" msg;
+        exit 0
   in
   print_endline "";
   print_endline string_story;

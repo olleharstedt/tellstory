@@ -474,14 +474,13 @@ module Make(Dice : D) = struct
     let con = replace_inline_macros con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9\\|#\\.]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.]+}" con with Not_found -> [||] in
     let matches = Array.to_list matches in
     (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
     let matches_and_replaces = map matches ~f:(fun m -> 
       let substrings = Pcre.get_substrings m in
       let substrings_tuples = ArrayLabels.map substrings ~f:(fun substring ->
         (* Strip {} *)
-        print_endline substring;
         let no_ = String.sub substring 1 (String.length substring - 2) in
         let split_by_bar = Pcre.split ~pat:"\\|" no_ in
         let alt = match nth split_by_bar (Dice.dice (List.length split_by_bar)) with
@@ -496,24 +495,23 @@ module Make(Dice : D) = struct
         *)
         (substring, eval_content (sprintf "{%s}" alt))
       ) in
-      printf "s2 length = %d\n" (Array.length substrings_tuples);
       substrings_tuples.(0)
     ) in
     let rec replace_randomization matches con = match matches with
     | [] -> con
     | (mat, repl)::tail ->
-        print_endline mat;
-        print_endline repl;
+        let mat = Pcre.quote mat in
         let con = Pcre.replace_first ~pat:mat ~templ:repl con in
-        print_endline con;
         replace_randomization tail con
     in
     let con = replace_randomization matches_and_replaces con in
 
+    (*
     iter matches_and_replaces ~f:(fun (x, y) ->
       print_endline x;
       print_endline y
     );
+    *)
 
     con
 

@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
 
-  <macro name="love">
-    <alt>Big love</alt>
-    <alt>Small love</alt>
+  <macro name="good_material">
+    <alt>gold</alt>
+    <alt>tissue</alt>
   </macro>
 
-  <variable name="name">
-    <alt>Olle</alt>
-    <alt>Birte</alt>
-  </variable>
+  <macro name="bad_material">
+    <alt>wood</alt>
+    <alt>coal</alt>
+    <alt>stone</alt>
+    <alt>cigarettes</alt>
+  </macro>
 
-  <sentence>This or {#love|name}</sentence>
+  <sentence>His heart was made of {#good_material|bad_material}.</sentence>
 
 </story>
