@@ -8,6 +8,16 @@
     <alt setFlag="flag2"></alt>
   </sentence>
 
+  <!-- This will be printed -->
   <sentence ifSet="flag1 AND flag2">Both flags are set</sentence>
+
+  <!-- This too -->
+  <sentence ifSet="flag1 OR flag2">flag1 or flag2 is set</sentence>
+
+  <!-- This will not be printed, since flag1 is indeed set -->
+  <sentence ifSet="NOT flag1">flag1 is not set</sentence>
+
+  <!-- Left as an exercise ;) -->
+  <sentence ifSet="NOT flag1 OR NOT (NOT flag2 OR flag1)">?</sentence>
 
 </story>
