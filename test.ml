@@ -31,13 +31,12 @@ end)
  *)
 let make_module dice_results : (module Tellstory.T) =
   let dice_calls = ref 0 in (* nr of times dice has been called *)
-  let module T = Tellstory.Make(struct
+  (module Tellstory.Make(struct
     let dice n =
       let result = List.nth dice_results (!dice_calls) in
       dice_calls := !dice_calls + 1;
       result
-  end) in
-  (module T)
+  end))
 
 
 (** Identiy function for strings *)
