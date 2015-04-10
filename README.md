@@ -183,11 +183,17 @@ or
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
-#### Inline macros
+#### Inlining macros, variables and records
 
 Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
 
     <sentence>A sentence with just one macro: {#my_macro}</sentence>
+
+The same goes for records and variables:
+
+    <sentence>A sentence with just one variable: {var}</sentence>
+
+    <sentence>A sentence with just one record: {das.ding}</sentence>
 
 #### Inline randomization
 
@@ -219,6 +225,7 @@ Possible future features
 * Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Inline randomization: `{this_variable|or_this|#or_this_macro}`.
 * Possibility to use JSON format instead of XML.
+* GUI to open XML-file and see it printed, intead of command-line interface.
 
 TODO
 ----
