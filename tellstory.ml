@@ -46,7 +46,7 @@ module Make(Dice : D) : T = struct
   exception Record_exception of string
   exception Alt_exception of string
   exception Parser_error of string
-  exception Test_exception
+  exception Deck_exception of string
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -64,17 +64,25 @@ module Make(Dice : D) : T = struct
   | Variable_exception str -> sprintf "Variable exception for '%s'" str
   | Record_exception str -> sprintf "Record exception for '%s'" str
   | Alt_exception str -> sprintf "Alt exception '%s'" str
+  | Deck_exception str -> sprintf "Deck exception '%s'" str
   | Parser_error str -> sprintf "Parser error: '%s'" str
   | ex -> raise ex
 
   (** Data types for storing macros *)
-  type macro_alt = {
+  type alt = {
     content : string
   }
 
   type macro = {
     name : string;
-    alts : macro_alt list
+    alts : alt list
+  }
+
+  (** Data types for storing decks *)
+
+  type deck = {
+    name : string;
+    mutable alts : alt list;  (* When an alt is chosen it's removed from list (card is picked) *)
   }
 
   (** Types for storing records *)
@@ -83,10 +91,13 @@ module Make(Dice : D) : T = struct
   (** Hash table to store macros. Macros are randomized each use. *)
   let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
 
-  (* Hash table to store variables. Variables are only randomized once. *)
-  let vars_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
+  (** Hash table to store variables. Variables are only randomized once. *)
+  let var_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
 
-  let records_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
+  (** Hash table to store records. Randomized once. *)
+  let record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
+
+  let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
 
   (* List of attributes allowed in <sentence> tag *)
   let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -308,23 +319,23 @@ module Make(Dice : D) : T = struct
       ) fl
 
   (**
-   * Parse macro alts
+   * Parse macro/deck xml alts as alt list
    *
    * @param alts Xml.Element list
    * @return alt list
    *)
-  let parse_macro_alts alts =
-    List.map (fun alt -> match alt with
+  let parse_alts alts =
+    map alts ~f:(fun alt -> match alt with
       | Xml.Element ("alt", [], [Xml.PCData content]) ->
           {content}
       | _ ->
-          raise (Macro_exception "Illegal alt in macro")
-    ) alts
+          raise (Alt_exception "Illegal alt in macro/deck")
+    )
 
   (** Parse macro *)
-  let parse_macro xml = match xml with
+  let parse_macro xml : macro = match xml with
     | Xml.Element ("macro", [("name", name)], alts) ->
-        let alts = parse_macro_alts alts in
+        let alts = parse_alts alts in
         {name; alts}
     | Xml.Element ("macro", [], _) ->
         raise (Macro_exception "Macro has no name attribute")
@@ -336,7 +347,7 @@ module Make(Dice : D) : T = struct
   (** Store macro in macro hash table. Raise exception if macro with this name
    * already exists.
    *)
-  let store_macro macro =
+  let store_macro (macro : macro) =
     if Hashtbl.mem macro_tbl macro.name then
       raise (Macro_exception ("Macro with name " ^ macro.name ^ " already exists"))
     else
@@ -399,7 +410,7 @@ module Make(Dice : D) : T = struct
       | x::xs ->
           let pattern = "{" ^ x ^ "}" in
           let replacement = try
-              Hashtbl.find vars_tbl x
+              Hashtbl.find var_tbl x
             with
               Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
           in
@@ -430,7 +441,7 @@ module Make(Dice : D) : T = struct
       | [] -> con
       | [record_name; var_name] :: xs ->
           (* Get record and var name *)
-          let record = try Hashtbl.find records_tbl record_name with
+          let record = try Hashtbl.find record_tbl record_name with
             Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
           in
           let var = try Hashtbl.find record var_name with
@@ -479,7 +490,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   let replace_inline_content con =
-    let matches = try Pcre.exec_all ~pat:"{\"[a-zA-Z0-9_]+\"}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{\"[a-zA-Z0-9_\\s]+\"}" con with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
         let substrings = Pcre.get_substrings m in
@@ -517,7 +528,7 @@ module Make(Dice : D) : T = struct
     let con = replace_inline_macros con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"\\s]+}" con with Not_found -> [||] in
     let matches = Array.to_list matches in
     (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
     let matches_and_replaces = map matches ~f:(fun m -> 
@@ -645,7 +656,7 @@ module Make(Dice : D) : T = struct
    * @return bool
    *)
   let variable_name_free name =
-    not (Hashtbl.mem vars_tbl name)
+    not (Hashtbl.mem var_tbl name)
 
   (**
    * Check if all <alt>:s have a content (except macro alts)
@@ -692,7 +703,7 @@ module Make(Dice : D) : T = struct
    *)
   let record_is_ok name alts =
     (* Check so record name is free *)
-    if Hashtbl.mem records_tbl name then begin
+    if Hashtbl.mem record_tbl name then begin
       raise (Record_exception (sprintf "Record name '%s' is already in use" name))
     end;
 
@@ -729,6 +740,20 @@ module Make(Dice : D) : T = struct
     true
 
   (**
+   * Check so deck declaration is OK. Name is not used.
+   *
+   * @param name string
+   * @param alts Xml.Element list
+   * @return bool
+   *)
+  let deck_is_ok name alts =
+    (* Check so deck name is free *)
+    if Hashtbl.mem deck_tbl name then begin
+      raise (Deck_exception (sprintf "Deck name '%s' is already in use" name))
+    end;
+    true
+
+  (**
    * Eval <variable>
    * Adds variable to variable hash table
    *
@@ -742,7 +767,7 @@ module Make(Dice : D) : T = struct
         raise (Variable_exception (sprintf "No alt could be chosen for variable '%s'" name))
     | Some alt ->
       let content = eval_alt alt in
-      Hashtbl.add vars_tbl name content
+      Hashtbl.add var_tbl name content
 
   (**
    * Adds record to record hash table
@@ -778,7 +803,40 @@ module Make(Dice : D) : T = struct
     ) (Xml.children alt);
 
     (* Add record to records hash table *)
-    Hashtbl.add records_tbl name record
+    Hashtbl.add record_tbl name record
+
+  (**
+   * Parse an xml structure as deck
+   *
+   * @param xml Xml.xml
+   * @return deck
+   *)
+  (*
+  let parse_deck xml : deck = match xml with
+    | _ -> ()
+  *)
+
+  (**
+   * Store deck in deck_tbl
+   *
+   * @param deck deck
+   * @return unit
+   *)
+  let store_deck (deck : deck) =
+    if Hashtbl.mem deck_tbl deck.name then
+      raise (Deck_exception (sprintf "Deck with name '%s' already exists" deck.name))
+    else
+      Hashtbl.add deck_tbl deck.name deck
+
+  (**
+   * Add deck to hashtable deck_tbl?
+   *
+   * @param name string
+   * @param alts Xml.Element list
+   * @return unit
+   *)
+  let eval_deck name alts =
+    ()
 
   (**
    * Parses ifSet="" and return the result
@@ -838,6 +896,13 @@ module Make(Dice : D) : T = struct
         (* <record> *)
         | Xml.Element ("record", [("name", name)], alts) when (record_is_ok name alts) ->
             eval_record name alts;
+            ""
+
+        (* <deck> *)
+        | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts) ->
+            let alts = parse_alts alts in
+            store_deck {name; alts};
+            eval_deck name alts;
             ""
 
         (* Unknown tag or error *)

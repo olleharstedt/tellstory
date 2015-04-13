@@ -220,6 +220,7 @@ Possible future features
 
 * Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
 * Inline decks, like {$deck1}?
+* Unset flag
 * Many stories in one file, choose one randomly.
 * `ifNotSet`? Possible now with `NOT flag1`.
 * Debug information saved in text file
@@ -228,3 +229,8 @@ Possible future features
 * Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface.
+
+TODO
+----
+
+* Proper regexp for inlining, e.g. this should not parse: {"content"|variable with spaces}
