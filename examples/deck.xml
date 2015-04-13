@@ -4,14 +4,17 @@
   <deck name="names">
     <alt>Olle</alt>
     <alt>Birte</alt>
+    <alt>Birte</alt>
   </deck>
 
   <sentence>
-    Using first card
+    Using first card:
       <alt useDeck="names"></alt>
   </sentence>
 
-  <sentence>Using second card inline {$names}</sentence>
+  <br />
+
+  <sentence>Using second card inline: {$names}</sentence>
 
   <!--
     <sentence>Using third time won't work! {$names}</sentence>

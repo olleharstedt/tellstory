@@ -82,7 +82,7 @@ module Make(Dice : D) : T = struct
 
   type deck = {
     name : string;
-    mutable alts : alt list;  (* When an alt is chosen it's removed from list (card is picked) *)
+    alts : alt list;  (* When an alt is chosen it's removed from list (card is picked). Remove and replace in deck hashtable? *)
   }
 
   (** Types for storing records *)
@@ -528,6 +528,7 @@ module Make(Dice : D) : T = struct
     let con = replace_inline_macros con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
+    (*let matches = try Pcre.exec_all ~pat:"{([a-zA-Z0-9_#\\.]+|\"[a-z]+\"|\\|)}" con with Not_found -> [||] in*)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"\\s]+}" con with Not_found -> [||] in
     let matches = Array.to_list matches in
     (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
@@ -570,6 +571,35 @@ module Make(Dice : D) : T = struct
     con
 
   (**
+   * Choose card from deck and remove it from the deck.
+   * Return card content.
+   *
+   * @param deck_name string
+   * @return string
+   *)
+  let eval_deck deck_name =
+      let deck = try Hashtbl.find deck_tbl deck_name with
+      | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
+      in
+      (* Abort if no cards are left in deck *)
+      if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+      let card = nth deck.alts (Dice.dice (length deck.alts)) in
+      match card with
+      | None -> raise (Deck_exception ("Found no card"))
+      | Some card -> 
+          (* Create a new deck without the card we picked *)
+          let new_alts = filter deck.alts ~f:(fun alt ->
+            alt.content != card.content
+          ) in
+          let new_deck = {
+            name = deck.name;
+            alts = new_alts;
+          } in
+          Hashtbl.remove deck_tbl deck.name;
+          Hashtbl.add deck_tbl new_deck.name new_deck;
+          card.content
+
+  (**
    * Eval <alt> to its content
    *
    * @param alt Xml.Element
@@ -590,13 +620,18 @@ module Make(Dice : D) : T = struct
 
     (* Get macro to use as (string * string) tuple *)
     let useMacro = find_attribute attributes "useMacro" in
+    let useDeck = find_attribute attributes "useDeck" in
 
-    (* Get content either from macro or alt.content *)
-    let cont = match useMacro with
-    | None ->
+    (* Get content either from macro, deck or alt.content *)
+    let cont = match useMacro, useDeck with
+    | None, None ->
         fetch_content alt
-    | Some (_, macro_name) ->
+    | Some (_, macro_name), None ->
         eval_macro macro_name
+    | None, Some (_, deck_name) ->
+        eval_deck deck_name
+    | _ ->
+        raise (Alt_exception "Both useMacro and useDeck attritubes?")
     in
 
     cont
@@ -829,16 +864,6 @@ module Make(Dice : D) : T = struct
       Hashtbl.add deck_tbl deck.name deck
 
   (**
-   * Add deck to hashtable deck_tbl?
-   *
-   * @param name string
-   * @param alts Xml.Element list
-   * @return unit
-   *)
-  let eval_deck name alts =
-    ()
-
-  (**
    * Parses ifSet="" and return the result
    *
    * @param attrs Xml.Element list
@@ -902,7 +927,6 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts) ->
             let alts = parse_alts alts in
             store_deck {name; alts};
-            eval_deck name alts;
             ""
 
         (* Unknown tag or error *)
