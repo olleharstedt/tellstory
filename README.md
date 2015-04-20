@@ -187,6 +187,8 @@ The `<alt>`:s in the record must have exactly the same inner structure, in this 
 
 Deck is a way to randomize alternatives without any single alternative being chosen twice, just like a deck of cards. Overly romantic example:
 
+> Olle loves Birte
+
     <deck name="names">
       <alt>Olle</alt>
       <alt>Birte</alt>
