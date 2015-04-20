@@ -4,7 +4,6 @@
   <deck name="names">
     <alt>Olle</alt>
     <alt>Birte</alt>
-    <alt>Birte</alt>
   </deck>
 
   <sentence>
@@ -14,7 +13,8 @@
 
   <br />
 
-  <sentence>Using second card inline: {$names}</sentence>
+  <!-- Inlining deck using '$' in beginning of deck name -->
+  <sentence>Using second card inline: {$names}.</sentence>
 
   <!--
     <sentence>Using third time won't work! {$names}</sentence>

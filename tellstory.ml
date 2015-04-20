@@ -384,6 +384,35 @@ module Make(Dice : D) : T = struct
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s'" name))
 
+  (**
+   * Choose card from deck and remove it from the deck.
+   * Return card content.
+   *
+   * @param deck_name string
+   * @return string
+   *)
+  let eval_deck deck_name =
+      let deck = try Hashtbl.find deck_tbl deck_name with
+      | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
+      in
+      (* Abort if no cards are left in deck *)
+      if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+      let card = nth deck.alts (Dice.dice (length deck.alts)) in
+      match card with
+      | None -> raise (Deck_exception ("Found no card"))
+      | Some card -> 
+          (* Create a new deck without the card we picked *)
+          let new_alts = filter deck.alts ~f:(fun alt ->
+            alt.content != card.content
+          ) in
+          let new_deck = {
+            name = deck.name;
+            alts = new_alts;
+          } in
+          Hashtbl.remove deck_tbl deck.name;
+          Hashtbl.add deck_tbl new_deck.name new_deck;
+          card.content
+
 
   (**
    * Replace inline variable
@@ -515,6 +544,32 @@ module Make(Dice : D) : T = struct
     replace_content matches con
 
   (**
+   * Replace inline deck like {$deck}
+   *
+   * @param con string Content
+   * @return string
+   *)
+  let replace_inline_deck con =
+    let matches = try Pcre.exec_all ~pat:"{\\$[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+    let matches = Array.to_list (
+      ArrayLabels.map matches ~f:(fun m ->
+        let substrings = Pcre.get_substrings m in
+        let s = substrings.(0) in
+        let s = String.sub s 2 (String.length s - 3) in
+        s
+      )
+    ) in
+    let rec replace_content matches con = match matches with
+    | [] -> con
+    | mat::tail ->
+        let card_content = eval_deck mat in
+        let pattern = sprintf "{\\$%s}" mat in
+        let con = Pcre.replace_first ~pat:pattern ~templ:card_content con in
+        replace_content tail con
+    in
+    replace_content matches con
+
+  (**
    * Eval content to replace inline variables, records and macros
    * Used in sentence and alt
    *
@@ -526,6 +581,7 @@ module Make(Dice : D) : T = struct
     let con = replace_inline_variable con in
     let con = replace_inline_records con in
     let con = replace_inline_macros con in
+    let con = replace_inline_deck con in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
     (*let matches = try Pcre.exec_all ~pat:"{([a-zA-Z0-9_#\\.]+|\"[a-z]+\"|\\|)}" con with Not_found -> [||] in*)
@@ -571,35 +627,6 @@ module Make(Dice : D) : T = struct
     con
 
   (**
-   * Choose card from deck and remove it from the deck.
-   * Return card content.
-   *
-   * @param deck_name string
-   * @return string
-   *)
-  let eval_deck deck_name =
-      let deck = try Hashtbl.find deck_tbl deck_name with
-      | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
-      in
-      (* Abort if no cards are left in deck *)
-      if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
-      let card = nth deck.alts (Dice.dice (length deck.alts)) in
-      match card with
-      | None -> raise (Deck_exception ("Found no card"))
-      | Some card -> 
-          (* Create a new deck without the card we picked *)
-          let new_alts = filter deck.alts ~f:(fun alt ->
-            alt.content != card.content
-          ) in
-          let new_deck = {
-            name = deck.name;
-            alts = new_alts;
-          } in
-          Hashtbl.remove deck_tbl deck.name;
-          Hashtbl.add deck_tbl new_deck.name new_deck;
-          card.content
-
-  (**
    * Eval <alt> to its content
    *
    * @param alt Xml.Element
@@ -634,7 +661,7 @@ module Make(Dice : D) : T = struct
         raise (Alt_exception "Both useMacro and useDeck attritubes?")
     in
 
-    cont
+    eval_content cont
 
   (**
    * Eval sentence, changin {bla} to variable content
@@ -694,7 +721,7 @@ module Make(Dice : D) : T = struct
     not (Hashtbl.mem var_tbl name)
 
   (**
-   * Check if all <alt>:s have a content (except macro alts)
+   * Check if all <alt>:s have a content (except macro and deck alts)
    *
    * @param alts Xml.Element list
    * @return bool
@@ -704,6 +731,8 @@ module Make(Dice : D) : T = struct
       | Xml.Element ("alt", _, [Xml.PCData content]) ->
           true
       | Xml.Element ("alt", attrs, _) when (find_attribute attrs "useMacro" != None) ->
+          true
+      | Xml.Element ("alt", attrs, _) when (find_attribute attrs "useDeck" != None) ->
           true
       | Xml.Element ("alt", _, _) ->
           false

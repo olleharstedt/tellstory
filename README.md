@@ -220,7 +220,8 @@ Possible future features
 
 * Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
 * Inline decks, like {$deck1}?
-* Unset flag
+* Shuffle deck when cards are empty? `<deck name="deck1" shuffle="true">`.
+* Unset flag?
 * Many stories in one file, choose one randomly.
 * `ifNotSet`? Possible now with `NOT flag1`.
 * Debug information saved in text file
