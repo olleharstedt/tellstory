@@ -236,7 +236,9 @@ Example where one of three alternatives will be chosen:
 
 #### Include
 
-`<include>` tag to include other files in your story.
+Include another file in you script.
+
+    <include file="example/myexample.xml" />
 
 Possible future features
 ------------------------

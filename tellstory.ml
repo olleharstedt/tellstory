@@ -926,7 +926,7 @@ module Make(Dice : D) : T = struct
    * @param story XML
    * @return string
    *)
-  let print_sentences story =
+  let rec print_sentences story =
     let sentences = fetch_children story in
     let string_sentences = map sentences ~f:(fun s ->
       let sen = String.trim (fetch_content s) in
@@ -957,6 +957,26 @@ module Make(Dice : D) : T = struct
             let alts = parse_alts alts in
             store_deck {name; alts};
             ""
+
+        (* <include file=""> *)
+        | Xml.Element ("include", [("file", filename)], []) ->
+            let xml = try Xml.parse_file filename with
+              | Xml.Error (msg, pos) ->
+                  print_endline ("Error while parsing XML file '" ^ filename ^ "'");
+                  print_int (Xml.line pos);
+                  print_endline (": " ^ Xml.error_msg msg);
+                  exit 0;
+            in
+            let story = fetch_node xml "story" in
+            let string_story = try (
+              print_sentences story
+            )
+            with
+              | Sentence_problem (sen, msg) ->
+                  printf "%s\n" msg;
+                  exit 0
+            in
+            string_story
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, string_of_exn (Unknown_tag what)))

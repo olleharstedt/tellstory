@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <include file="examples/deck.xml" />
+  <br />
+  <include file="examples/boolean_lang.xml" />
+</story>
