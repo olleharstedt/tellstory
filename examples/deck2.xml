@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <deck name="names">
+    <alt>Olle</alt>
+    <alt>Birte</alt>
+  </deck>
+
+  <!-- Use deck in variable -->
+  <variable name="you">
+    <alt useDeck="names"></alt>
+  </variable>
+
+  <!-- Same thing but inline -->
+  <variable name="me">
+    <alt>{$names}</alt>
+  </variable>
+
+  <macro name="reaction">
+    <alt>Horror!</alt>
+    <alt>Oh noes!</alt>
+    <alt>Yey!</alt>
+    <alt>Whatever...</alt>
+  </macro>
+
+  <sentence>{me} loves {you} more than {you} loves {me}. {#reaction}</sentence>
+
+</story>
