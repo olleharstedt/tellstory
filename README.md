@@ -183,7 +183,27 @@ or
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
-#### Inlining alternatives, macros, variables and records
+#### Decks
+
+Deck is a way to randomize alternatives without any single alternative being chosen twice, just like a deck of cards. Overly romantic example:
+
+    <deck name="names">
+      <alt>Olle</alt>
+      <alt>Birte</alt>
+    </deck>
+
+    <sentence>
+      <alt useDeck="names">
+    </sentence>
+
+    <sentence>
+      loves
+        <alt useDeck="names">
+    </sentence>
+
+When all cards have been "picked", the deck can't be used again. (Possible TODO: Add support to re-shuffle deck.)
+
+#### Inlining alternatives, macros, variables, records and deck
 
 Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
 
@@ -199,21 +219,22 @@ For variables and records:
 
     <sentence>A sentence with just one record: {das.ding}</sentence>
 
+For decks we use the character `$`, like this:
+
+    <sentence>Pick a card, any card: {$deck}.</sentence>
+
 #### Inline randomization
 
 Choose between variable, record or macro directly in sentence content without writing `<alt>`:s, using barline `|`.
 
-Example:
+Example where one of three alternatives will be chosen:
 
     <sentence>Could be any of this: {#macro1|record.something|variable}.</sentence>
+
 
 #### Include
 
 `<include>` tag to include other files in your story.
-
-#### Advanced use-cases
-
-* Using macros in variables
 
 Possible future features
 ------------------------
@@ -227,9 +248,10 @@ Possible future features
 * Debug information saved in text file
 * Export to PDF or markdown.
 * Web interface
-* Use case where we want to generate many characters, all with different names and genders, where no name is used more than once.
+* Use-case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Possibility to use JSON format instead of XML.
-* GUI to open XML-file and see it printed, intead of command-line interface.
+* GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
+* Markov chains...?
 
 TODO
 ----
