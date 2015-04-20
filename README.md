@@ -175,11 +175,11 @@ Example:
 
 This will print either
 
-    he took his things and left.
+> he took his things and left.
 
 or
 
-    she took her things and left.
+> she took her things and left.
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
