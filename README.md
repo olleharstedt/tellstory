@@ -242,6 +242,14 @@ Include another file in you script.
 
 All macros, records and so on will be present after the inclusion. So you can't include the same file twice which define the same variable/record/macro.
 
+It's also possible to include files using randomization:
+
+    <sentence>
+      What should we print today?
+        <alt include="file1" />
+        <alt include="file2" />
+    </sentence>
+
 Possible future features
 ------------------------
 
