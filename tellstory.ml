@@ -942,6 +942,21 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
         | Xml.Element ("sentence", _, _) -> ""
         | Xml.Element ("br", _, _) -> "\n\n"
+
+        (* <setFlag name="flagname" /> *)
+        | Xml.Element ("setFlag", [("name", flagnames)], _) ->
+            let flags_list = Some (Str.split (Str.regexp "[ \t]+") flagnames) in
+            store_flags flags_list;
+            ""
+
+        (* <ifSet name="flag AND flag2"> ... </ifSet> *)
+        | Xml.Element ("ifSet", [("name", flag_expression)], children) ->
+            if flags_is_ok [("ifSet", flag_expression)] then 
+              print_sentences (Xml.Element ("", [], children))
+            else
+              ""
+
+        (* <macro> *)
         | Xml.Element ("macro", _, _) ->
             (* store macro *)
             let macro = parse_macro s in
