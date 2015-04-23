@@ -26,18 +26,7 @@ let _ =
 
   Random.self_init ();
 
-  let xml = try Xml.parse_file filename with
-    | Xml.Error (msg, pos) ->
-        print_endline ("Error while parsing XML file '" ^ filename ^ "'");
-        print_int (Xml.line pos);
-        print_endline (": " ^ Xml.error_msg msg);
-        exit 0;
-  in
-  let story = Tellstory.fetch_node xml "story" in
-  let string_story = try (
-    Tellstory.print_sentences story
-  )
-  with
+  let string_story = try Tellstory.file_to_string filename with
     | Tellstory.Sentence_problem (sen, msg) ->
         printf "%s\n" msg;
         exit 0

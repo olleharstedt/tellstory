@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <sentence>
+    What should we print today?
+    <alt include="examples/deck.xml" />
+    <alt include="examples/boolean_lang.xml" />
+  </sentence>
+</story>

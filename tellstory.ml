@@ -27,6 +27,7 @@ module type T = sig
 
   val fetch_node : Xml.xml -> string -> Xml.xml
   val print_sentences : Xml.xml -> string
+  val file_to_string : string -> string
 end
 
 module Make(Dice : D) : T = struct
@@ -47,6 +48,7 @@ module Make(Dice : D) : T = struct
   exception Alt_exception of string
   exception Parser_error of string
   exception Deck_exception of string
+  exception Xml_exception of string
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -66,6 +68,7 @@ module Make(Dice : D) : T = struct
   | Alt_exception str -> sprintf "Alt exception '%s'" str
   | Deck_exception str -> sprintf "Deck exception '%s'" str
   | Parser_error str -> sprintf "Parser error: '%s'" str
+  | Xml_exception str -> sprintf "Xml exception: '%s'" str
   | ex -> raise ex
 
   (** Data types for storing macros *)
@@ -144,7 +147,7 @@ module Make(Dice : D) : T = struct
         | Xml.PCData _ -> search_xml_list xs tag_name
     in
     match xml with
-      Xml.Element (tag, attrs, []) -> assert false
+      Xml.Element (tag, attrs, []) -> raise (Xml_exception (sprintf "No node children for node with tag '%s'?" tag))
     | Xml.Element (tag, attrs, children) ->
         (* TODO: iter depth and bredth *)
         if tag = tag_name then xml else search_xml_list children tag_name
@@ -632,7 +635,7 @@ module Make(Dice : D) : T = struct
    * @param alt Xml.Element
    * @return string
    *)
-  let eval_alt alt =
+  let rec eval_alt alt =
     let attributes = Xml.attribs alt in
 
     (* Find attribute setFlag *)
@@ -648,17 +651,20 @@ module Make(Dice : D) : T = struct
     (* Get macro to use as (string * string) tuple *)
     let useMacro = find_attribute attributes "useMacro" in
     let useDeck = find_attribute attributes "useDeck" in
+    let _include = find_attribute attributes "include" in
 
     (* Get content either from macro, deck or alt.content *)
-    let cont = match useMacro, useDeck with
-    | None, None ->
+    let cont = match useMacro, useDeck, _include with
+    | None, None, None ->
         fetch_content alt
-    | Some (_, macro_name), None ->
+    | Some (_, macro_name), None, None ->
         eval_macro macro_name
-    | None, Some (_, deck_name) ->
+    | None, Some (_, deck_name), None ->
         eval_deck deck_name
+    | None, None, Some (_, filename) ->
+        file_to_string filename
     | _ ->
-        raise (Alt_exception "Both useMacro and useDeck attritubes?")
+        raise (Alt_exception "Both useMacro, useDeck and include attributes?")
     in
 
     eval_content cont
@@ -669,7 +675,7 @@ module Make(Dice : D) : T = struct
    * @param sen string
    * @return string
    *)
-  let eval_sen sen =
+  and eval_sen sen =
     try (
       eval_content sen
     )
@@ -682,7 +688,7 @@ module Make(Dice : D) : T = struct
    * @param sentence Xml.xml
    * @return string
    *)
-  let print_sentence sentence =
+  and print_sentence sentence =
     let sen = String.trim (fetch_content (sentence)) in
     try (
       let sen = eval_sen sen in
@@ -705,7 +711,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  let only_alts alts =
+  and only_alts alts =
     List.for_all (fun a -> match a with
       | Xml.Element ("alt", _, _) -> true
       | _ -> false
@@ -717,7 +723,7 @@ module Make(Dice : D) : T = struct
    * @param name string
    * @return bool
    *)
-  let variable_name_free name =
+  and variable_name_free name =
     not (Hashtbl.mem var_tbl name)
 
   (**
@@ -726,7 +732,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  let all_alts_have_content alts =
+  and all_alts_have_content alts =
     List.for_all (function
       | Xml.Element ("alt", _, [Xml.PCData content]) ->
           true
@@ -748,7 +754,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  let variable_is_ok name alts =
+  and variable_is_ok name alts =
     if not (only_alts alts) then
       raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
     else if not (all_alts_have_content alts) then
@@ -765,7 +771,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  let record_is_ok name alts =
+  and record_is_ok name alts =
     (* Check so record name is free *)
     if Hashtbl.mem record_tbl name then begin
       raise (Record_exception (sprintf "Record name '%s' is already in use" name))
@@ -810,7 +816,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  let deck_is_ok name alts =
+  and deck_is_ok name alts =
     (* Check so deck name is free *)
     if Hashtbl.mem deck_tbl name then begin
       raise (Deck_exception (sprintf "Deck name '%s' is already in use" name))
@@ -825,7 +831,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return void
    *)
-  let eval_variable name alts =
+  and eval_variable name alts =
     match choose_alt alts with
     | None ->
         raise (Variable_exception (sprintf "No alt could be chosen for variable '%s'" name))
@@ -840,7 +846,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return void
    *)
-  let eval_record name alts =
+  and eval_record name alts =
 
     (* Choose alt *)
     let alt = match nth alts (Dice.dice (List.length alts)) with
@@ -886,7 +892,7 @@ module Make(Dice : D) : T = struct
    * @param deck deck
    * @return unit
    *)
-  let store_deck (deck : deck) =
+  and store_deck (deck : deck) =
     if Hashtbl.mem deck_tbl deck.name then
       raise (Deck_exception (sprintf "Deck with name '%s' already exists" deck.name))
     else
@@ -899,7 +905,7 @@ module Make(Dice : D) : T = struct
    * @return bool
    * @raise Errors if parse failes
    *)
-  let flags_is_ok attrs =
+  and flags_is_ok attrs =
     let ifSet = find_attribute attrs "ifSet" in
     match ifSet with
     | None ->
@@ -926,7 +932,7 @@ module Make(Dice : D) : T = struct
    * @param story XML
    * @return string
    *)
-  let rec print_sentences story =
+  and print_sentences story =
     let sentences = fetch_children story in
     let string_sentences = map sentences ~f:(fun s ->
       let sen = String.trim (fetch_content s) in
@@ -960,23 +966,8 @@ module Make(Dice : D) : T = struct
 
         (* <include file=""> *)
         | Xml.Element ("include", [("file", filename)], []) ->
-            let xml = try Xml.parse_file filename with
-              | Xml.Error (msg, pos) ->
-                  print_endline ("Error while parsing XML file '" ^ filename ^ "'");
-                  print_int (Xml.line pos);
-                  print_endline (": " ^ Xml.error_msg msg);
-                  exit 0;
-            in
-            let story = fetch_node xml "story" in
-            let string_story = try (
-              print_sentences story
-            )
-            with
-              | Sentence_problem (sen, msg) ->
-                  printf "%s\n" msg;
-                  exit 0
-            in
-            string_story
+            (* TODO: Copied from main.ml, factorize? *)
+            file_to_string filename
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, string_of_exn (Unknown_tag what)))
@@ -987,6 +978,24 @@ module Make(Dice : D) : T = struct
     ) in
     let result = List.fold_left (^) "" string_sentences in
     String.trim result
+
+  (**
+   * Return string of XML-file with story etc.
+   * Exits if XMl can't be parsed.
+   *
+   * @param string filename
+   * @return string
+   *)
+  and file_to_string filename =
+    let xml = try Xml.parse_file filename with
+      | Xml.Error (msg, pos) ->
+          print_endline (sprintf "Error while parsing XML file '%s'" filename);
+          print_int (Xml.line pos);
+          print_endline (": " ^ Xml.error_msg msg);
+          exit 0;
+    in
+    let story = fetch_node xml "story" in
+    print_sentences story
 
   (**
    * Eval <story> tag and all its children (macros, records, etc), returns the string

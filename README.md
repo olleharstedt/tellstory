@@ -240,11 +240,11 @@ Include another file in you script.
 
     <include file="example/myexample.xml" />
 
+All macros, records and so on will be present after the inclusion. So you can't include the same file twice which define the same variable/record/macro.
+
 Possible future features
 ------------------------
 
-* Deck, where each alt is chosen atleast once during execution, but never twice or more. Use-case: Names.
-* Inline decks, like {$deck1}?
 * Shuffle deck when cards are empty? `<deck name="deck1" shuffle="true">`.
 * Unset flag?
 * Many stories in one file, choose one randomly.
@@ -256,6 +256,8 @@ Possible future features
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
+* Include in `<alt>` to randomly include a file
+* `<ifSet name="...">` to print sentences only if flag is set.
 
 TODO
 ----
