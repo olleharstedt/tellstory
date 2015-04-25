@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <deck name="events">
+    <alt include="examples/pronouns.xml" />
+    <alt include="examples/record.xml" />
+  </deck>
+
+  <sentence>Card 1: <alt useDeck="events" /></sentence>
+  <sentence>Card 2: <alt useDeck="events" /></sentence>
+
+</story>
