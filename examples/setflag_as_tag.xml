@@ -4,7 +4,9 @@
   <setFlag name="flag1" />
 
   <ifSet name="flag1">
+
     <sentence>Just some stuff I wanted to {"say"|"print"|"do"}.</sentence>
+
   </ifSet>
 
 </story>

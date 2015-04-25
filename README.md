@@ -74,12 +74,6 @@ A flag can _only_ be set once!
 
 A flag is used to conditionally print a sentence:
 
-    <sentence>
-      This person here is a
-        <alt setFlag="man">real man.</alt>
-        <alt setFlag="woman">real woman.</alt>
-    </sentence>
-
     <sentence ifSet="man">
       Yes, he is indeed a man.
     </sentence>
@@ -249,6 +243,29 @@ It's also possible to include files using randomization:
         <alt include="file1" />
         <alt include="file2" />
     </sentence>
+
+#### More about flags
+
+You can set a flag without using `<sentence>` or `<alt>` tags like this:
+
+    <setFlag name="flag1" />
+
+This is useful for when a file is included randomly. E.g., if the file `dragon.xml` is included, you might want to check in other files for this condition.
+
+In the same way you can use `ifSet` as its own tag:
+
+    <ifSet name="flag1">
+
+      <macro name="flag1_macro">  <!-- Macro only defined if flag1 is set!
+        <alt>Hi</alt>
+        <alt>Ho</alt>
+      </macro>
+
+      <!-- All other tags can be used too ... -->
+
+    </ifSet>
+
+The flag mini-language is available as expected, so you can print `(flag1 AND flag2) OR NOT flag3` etc in flag condition.
 
 Possible future features
 ------------------------

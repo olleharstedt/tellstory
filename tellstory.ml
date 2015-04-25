@@ -73,7 +73,8 @@ module Make(Dice : D) : T = struct
 
   (** Data types for storing macros *)
   type alt = {
-    content : string
+    content : string;
+    attributes : (string * string) list
   }
 
   type macro = {
@@ -122,6 +123,44 @@ module Make(Dice : D) : T = struct
   let get_opt var alt = match var with
     | None -> alt
     | Some a -> a
+
+  (**
+   * Compare if two list of attribues for alt record are equal
+   *
+   * @param attrs1 (string * string) list
+   * @param attrs2 (string * string) list
+   * @return bool
+   *)
+  let rec compare_alt_attributes attrs1 attrs2 = match attrs1, attrs2 with
+  | [], [] -> true
+  | x, [] -> false
+  | [], y -> false
+  | (name1, content1)::xs, (name2, content2)::ys ->
+      name1 = name2 && content1 = content2 && (compare_alt_attributes xs ys)
+
+  (**
+   * Compare two alt records, return true if they're equal
+   *
+   * @param a1 alt
+   * @param a2 alt
+   * @return bool true if the two alts are equal, otherwise false
+   *)
+  let compare_alt alt1 alt2 = match alt1, alt2 with
+  | {content = content1; attributes = attrs1}, {content = content2; attributes = attrs2} ->
+      content1 = content2 && (compare_alt_attributes attrs1 attrs2)
+
+  let print_deck deck =
+    printf "%s\n" deck.name;
+    printf "alts:\n";
+    iter deck.alts ~f:(fun alt ->
+      if length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
+      let attr = nth alt.attributes 0 in
+      match attr with
+      | None ->
+          printf "<alt>%s</alt>" alt.content
+      | Some attr ->
+          printf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content
+    )
 
   (**
    * Fetch node which tag name = tag_name
@@ -329,8 +368,10 @@ module Make(Dice : D) : T = struct
    *)
   let parse_alts alts =
     map alts ~f:(fun alt -> match alt with
-      | Xml.Element ("alt", [], [Xml.PCData content]) ->
-          {content}
+      | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
+          {content; attributes}
+      | Xml.Element ("alt", attributes, []) ->
+          {content = ""; attributes}
       | _ ->
           raise (Alt_exception "Illegal alt in macro/deck")
     )
@@ -394,7 +435,8 @@ module Make(Dice : D) : T = struct
    * @param deck_name string
    * @return string
    *)
-  let eval_deck deck_name =
+  let rec eval_deck deck_name =
+    printf "eval_deck\n";
       let deck = try Hashtbl.find deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
       in
@@ -405,16 +447,37 @@ module Make(Dice : D) : T = struct
       | None -> raise (Deck_exception ("Found no card"))
       | Some card -> 
           (* Create a new deck without the card we picked *)
+          (* Card = alt in this context *)
+          (* Filter logic:
+           * We want to filter the card we just picked.
+           * All cards that are not identical to this card should return false (not filter)
+           * The card is identical to the card we picked IF:
+           *   content = content AND attributes are equal (name && content of attribues are equal)
+           *)
           let new_alts = filter deck.alts ~f:(fun alt ->
-            alt.content != card.content
+            (compare_alt alt card)
+            (*
+            alt.content != card.content || not (List.for_all2 (fun alt_attr card_attr ->
+              printf "%s, %s\n" (fst alt_attr) (snd alt_attr);
+              match alt_attr, card_attr with
+              | (alt_attr_name, alt_attr_content), (card_attr_name, card_attr_content) -> 
+                  alt_attr_name != card_attr_name || alt_attr_content != card_attr_content
+            ) alt.attributes card.attributes)
+            *)
           ) in
           let new_deck = {
             name = deck.name;
             alts = new_alts;
           } in
+          printf "old_deck: ";
+          print_deck deck;
+          printf "new deck: ";
+          print_deck new_deck;
           Hashtbl.remove deck_tbl deck.name;
           Hashtbl.add deck_tbl new_deck.name new_deck;
-          card.content
+          (* Build Xml.xml <alt> out of record *)
+          let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
+          eval_alt alt
 
 
   (**
@@ -423,7 +486,7 @@ module Make(Dice : D) : T = struct
    * @param con string Content from <sentence>
    * @return string
    *)
-  let replace_inline_variable con =
+  and replace_inline_variable con =
     (* Replace variables *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
@@ -457,7 +520,7 @@ module Make(Dice : D) : T = struct
    * @param con string Content
    * @return string
    *)
-  let replace_inline_records con =
+  and replace_inline_records con =
     (* Replace records like {this.here} *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     (* Matches as [[key, val], [key, val], ...] *)
@@ -493,7 +556,7 @@ module Make(Dice : D) : T = struct
    * @param con string Content
    * @return string
    *)
-  let replace_inline_macros con =
+  and replace_inline_macros con =
     (* Replace inline macros, like {#this} *)
     let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
@@ -521,7 +584,7 @@ module Make(Dice : D) : T = struct
    * @param con string Content
    * @return string
    *)
-  let replace_inline_content con =
+  and replace_inline_content con =
     let matches = try Pcre.exec_all ~pat:"{\"[a-zA-Z0-9_\\s]+\"}" con with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
@@ -552,7 +615,7 @@ module Make(Dice : D) : T = struct
    * @param con string Content
    * @return string
    *)
-  let replace_inline_deck con =
+  and replace_inline_deck con =
     let matches = try Pcre.exec_all ~pat:"{\\$[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
@@ -579,7 +642,7 @@ module Make(Dice : D) : T = struct
    * @param con string
    * @return string
    *)
-  let rec eval_content con =
+  and eval_content con =
     let con = replace_inline_content con in
     let con = replace_inline_variable con in
     let con = replace_inline_records con in
@@ -635,7 +698,7 @@ module Make(Dice : D) : T = struct
    * @param alt Xml.Element
    * @return string
    *)
-  let rec eval_alt alt =
+  and eval_alt alt =
     let attributes = Xml.attribs alt in
 
     (* Find attribute setFlag *)
@@ -933,6 +996,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and print_sentences story =
+    printf "print_sentence\n";
     let sentences = fetch_children story in
     let string_sentences = map sentences ~f:(fun s ->
       let sen = String.trim (fetch_content s) in
@@ -992,6 +1056,7 @@ module Make(Dice : D) : T = struct
           raise (Sentence_problem (sen, string_of_exn ex))
     ) in
     let result = List.fold_left (^) "" string_sentences in
+    printf "result = %s\n" result;
     String.trim result
 
   (**

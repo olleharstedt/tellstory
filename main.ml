@@ -26,10 +26,7 @@ let _ =
 
   Random.self_init ();
 
-  let string_story = try Tellstory.file_to_string filename with
-    | Tellstory.Sentence_problem (sen, msg) ->
-        printf "%s\n" msg;
-        exit 0
+  let string_story = Tellstory.file_to_string filename
   in
   print_endline "";
   print_endline string_story;
