@@ -246,7 +246,16 @@ It's also possible to include files using randomization:
       What should we print today?
         <alt include="file1" />
         <alt include="file2" />
-    </sentence>
+    </sentence>o
+
+or in a deck or macro:
+
+    <deck name="mydeck">
+      <alt include="file1.xml" />
+      <alt include="file2.xml" />
+    </deck>
+
+Be careful of how you name things in different files, since you can get name collisions if two files define the same deck or macro name.
 
 #### More about flags
 
