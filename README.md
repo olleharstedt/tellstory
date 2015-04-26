@@ -33,6 +33,10 @@ The sentence is the fundamental building block. A simple sentence will be printe
 
     <sentence>A simple sentence.</sentence>
 
+Then run, from the shell, `$./tellstory filename.xml`, and the program will print
+
+> A simple sentence.
+
 #### Alt
 
 Within a sentence you can have `<alt>` tags (short for _alternative_). One alt tag will be chosen randomly:
