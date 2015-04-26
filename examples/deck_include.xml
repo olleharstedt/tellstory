@@ -3,10 +3,12 @@
 
   <deck name="events">
     <alt include="examples/pronouns.xml" />
-    <alt include="examples/record.xml" />
+    <alt include="examples/boolean_lang.xml" />
   </deck>
 
   <sentence>Card 1: <alt useDeck="events" /></sentence>
+  <br />
+  <sentence>Card 2: <alt useDeck="events" /></sentence>
   <sentence>Card 2: <alt useDeck="events" /></sentence>
 
 </story>
