@@ -11,8 +11,10 @@ open Tellstory
 
 exception No_filename
 
+
 (* Main *)
 let _ =
+  Printexc.record_backtrace true;
 
   (** Create module with dice function module *)
   let module Tellstory = Tellstory.Make(
@@ -26,7 +28,9 @@ let _ =
 
   Random.self_init ();
 
-  let string_story = Tellstory.file_to_string filename
+  let string_story = try Tellstory.file_to_string filename with
+  | ex ->
+      Printexc.to_string ex
   in
   print_endline "";
   print_endline string_story;

@@ -288,3 +288,4 @@ TODO
 ----
 
 * Proper regexp for inlining, e.g. this should not parse: {"content"|variable with spaces}
+* Better error messages at namespace conflicts when including different files

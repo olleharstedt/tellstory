@@ -1,4 +1,4 @@
-INCLUDE					:= -package xml-light,str,pcre,core -linkpkg -thread
+INCLUDE					:= -package xml-light,str,pcre,core,bolt -linkpkg -thread -g
 PGFLAGS         := --infer
 GENERATED       := parser.ml parser.mli lexer.ml
 MODULES         := globals parser lexer tellstory main

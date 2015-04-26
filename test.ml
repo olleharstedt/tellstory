@@ -331,6 +331,8 @@ let test_list = [
   (* inline macro test *)
   (* variable test *)
   (* record test *)
+  (* deck test *)
+  (* include test *)
 ]
 
 (** Test suite for all tags *)

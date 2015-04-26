@@ -10,6 +10,15 @@ open Core
 open Core_list
 
 (**
+ * Debug with Bolt
+ *
+ * Run with BOLT_FILE=bolt.config ./tellstory ...
+ *
+ *)
+let log_trace msg =
+  Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg
+
+(**
  * Need to factor out dice function because in tests we want to control
  * return values.
  *
@@ -149,17 +158,18 @@ module Make(Dice : D) : T = struct
   | {content = content1; attributes = attrs1}, {content = content2; attributes = attrs2} ->
       content1 = content2 && (compare_alt_attributes attrs1 attrs2)
 
+
   let print_deck deck =
-    printf "%s\n" deck.name;
-    printf "alts:\n";
+    log_trace (sprintf "%s\n" deck.name);
+    log_trace "alts:\n";
     iter deck.alts ~f:(fun alt ->
       if length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
       let attr = nth alt.attributes 0 in
       match attr with
       | None ->
-          printf "<alt>%s</alt>" alt.content
+          log_trace (sprintf "<alt>%s</alt>" alt.content)
       | Some attr ->
-          printf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content
+          log_trace (sprintf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content)
     )
 
   (**
@@ -282,7 +292,7 @@ module Make(Dice : D) : T = struct
                 raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
           end
         ) in
-        (*(iter alts2 ~f:(fun xml -> printf "alt = %s\n" (Xml.to_string xml)));*)
+        (*(iter alts2 ~f:(fun xml -> log_trace "alt = %s\n" (Xml.to_string xml)));*)
         alts2
 
   (**
@@ -296,8 +306,8 @@ module Make(Dice : D) : T = struct
     (* Debug info
     iter possible_alts ~f:(fun alt ->
       match Xml.children alt with
-      | [Xml.PCData cont] -> printf "alt content = %s\n" cont
-      | [] -> printf "alt content empty\n"
+      | [Xml.PCData cont] -> log_trace "alt content = %s\n" cont
+      | [] -> log_trace "alt content empty\n"
       | _ -> assert false
     );
     *)
@@ -436,7 +446,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   let rec eval_deck deck_name =
-    printf "eval_deck\n";
+    log_trace "eval_deck\n";
       let deck = try Hashtbl.find deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
       in
@@ -455,29 +465,23 @@ module Make(Dice : D) : T = struct
            *   content = content AND attributes are equal (name && content of attribues are equal)
            *)
           let new_alts = filter deck.alts ~f:(fun alt ->
-            (compare_alt alt card)
-            (*
-            alt.content != card.content || not (List.for_all2 (fun alt_attr card_attr ->
-              printf "%s, %s\n" (fst alt_attr) (snd alt_attr);
-              match alt_attr, card_attr with
-              | (alt_attr_name, alt_attr_content), (card_attr_name, card_attr_content) -> 
-                  alt_attr_name != card_attr_name || alt_attr_content != card_attr_content
-            ) alt.attributes card.attributes)
-            *)
+            not (compare_alt alt card)
           ) in
           let new_deck = {
             name = deck.name;
             alts = new_alts;
           } in
-          printf "old_deck: ";
+          log_trace "old_deck: ";
           print_deck deck;
-          printf "new deck: ";
+          log_trace "new deck: ";
           print_deck new_deck;
           Hashtbl.remove deck_tbl deck.name;
           Hashtbl.add deck_tbl new_deck.name new_deck;
           (* Build Xml.xml <alt> out of record *)
           let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
-          eval_alt alt
+          let result = eval_alt alt in
+          log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
+          result
 
 
   (**
@@ -598,8 +602,8 @@ module Make(Dice : D) : T = struct
       | [] -> con
       | mat::tail ->
           (*
-          printf "mat = %s\n" mat;
-          printf "con = %s\n" con;
+          log_trace "mat = %s\n" mat;
+          log_trace "con = %s\n" con;
           *)
           let replacement = String.sub mat 1 (String.length mat - 2) in
           let mat = sprintf "{%s}" mat in
@@ -723,8 +727,10 @@ module Make(Dice : D) : T = struct
     | Some (_, macro_name), None, None ->
         eval_macro macro_name
     | None, Some (_, deck_name), None ->
+        log_trace "eval_alt: useDeck";
         eval_deck deck_name
     | None, None, Some (_, filename) ->
+        log_trace "eval_alt: file_to_string";
         file_to_string filename
     | _ ->
         raise (Alt_exception "Both useMacro, useDeck and include attributes?")
@@ -752,6 +758,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and print_sentence sentence =
+    log_trace "print_sentence";
     let sen = String.trim (fetch_content (sentence)) in
     try (
       let sen = eval_sen sen in
@@ -766,6 +773,7 @@ module Make(Dice : D) : T = struct
     )
     with
       ex ->
+        log_trace "exception in print_sentence";
         raise (Sentence_problem (sen, string_of_exn ex))
 
   (**
@@ -837,6 +845,8 @@ module Make(Dice : D) : T = struct
   and record_is_ok name alts =
     (* Check so record name is free *)
     if Hashtbl.mem record_tbl name then begin
+      log_trace "record_is_ok";
+      log_trace (Printexc.get_backtrace ());
       raise (Record_exception (sprintf "Record name '%s' is already in use" name))
     end;
 
@@ -996,16 +1006,25 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and print_sentences story =
-    printf "print_sentence\n";
+    log_trace "print_sentences";
+    let raw_backtrace = Printexc.get_callstack 20 in
+    let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
+    log_trace ("print_sentences raw_s = \n" ^ raw_s);
     let sentences = fetch_children story in
     let string_sentences = map sentences ~f:(fun s ->
+      log_trace "print_sentences: map";
       let sen = String.trim (fetch_content s) in
       try begin match s with
+
+        (* <sentence attr="...">...</sentence> *)
         | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
             print_sentence s ^ " "
-        | Xml.Element ("sentence", [], _) -> (print_sentence s) ^ " "
-        | Xml.Element ("sentence", _, _) -> ""
-        | Xml.Element ("br", _, _) -> "\n\n"
+        | Xml.Element ("sentence", [], _) ->
+            print_sentence s ^ " "
+        | Xml.Element ("sentence", _, _) ->
+            ""
+        | Xml.Element ("br", _, _) ->
+            "\n\n"
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
@@ -1013,7 +1032,7 @@ module Make(Dice : D) : T = struct
             store_flags flags_list;
             ""
 
-        (* <ifSet name="flag AND flag2"> ... </ifSet> *)
+        (* <ifSet name="flag AND flag2 ..."> ... </ifSet> *)
         | Xml.Element ("ifSet", [("name", flag_expression)], children) ->
             if flags_is_ok [("ifSet", flag_expression)] then 
               print_sentences (Xml.Element ("", [], children))
@@ -1039,6 +1058,7 @@ module Make(Dice : D) : T = struct
 
         (* <deck> *)
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts) ->
+            log_trace "print_sentences: store deck";
             let alts = parse_alts alts in
             store_deck {name; alts};
             ""
@@ -1053,10 +1073,13 @@ module Make(Dice : D) : T = struct
         | _ -> raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
-          raise (Sentence_problem (sen, string_of_exn ex))
+            log_trace "exception in print_sentences";
+            log_trace (Printexc.to_string ex);
+            log_trace (Printexc.get_backtrace ());
+            raise (Sentence_problem (sen, string_of_exn ex))
     ) in
     let result = List.fold_left (^) "" string_sentences in
-    printf "result = %s\n" result;
+    log_trace (sprintf "print_sentences result = %s\n" result);
     String.trim result
 
   (**
@@ -1067,6 +1090,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and file_to_string filename =
+
     let xml = try Xml.parse_file filename with
       | Xml.Error (msg, pos) ->
           print_endline (sprintf "Error while parsing XML file '%s'" filename);
