@@ -286,16 +286,13 @@ Possible future features
 * Shuffle deck when cards are empty? `<deck name="deck1" shuffle="true">`.
 * Unset flag?
 * Many stories in one file, choose one randomly.
-* `ifNotSet`? Possible now with `NOT flag1`.
-* Debug information saved in text file
 * Export to PDF or markdown.
 * Web interface
 * Use-case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
-* Include in `<alt>` to randomly include a file
-* `<ifSet name="...">` to print sentences only if flag is set.
+* Namespaces - how and where? Just use prefix? Make state explicit - record?
 
 TODO
 ----

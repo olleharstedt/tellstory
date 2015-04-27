@@ -58,6 +58,7 @@ module Make(Dice : D) : T = struct
   exception Parser_error of string
   exception Deck_exception of string
   exception Xml_exception of string
+  exception Include_exception of string * exn
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -78,6 +79,7 @@ module Make(Dice : D) : T = struct
   | Deck_exception str -> sprintf "Deck exception '%s'" str
   | Parser_error str -> sprintf "Parser error: '%s'" str
   | Xml_exception str -> sprintf "Xml exception: '%s'" str
+  | Include_exception (str, ex) -> sprintf "Include exception: %s: '%s'" str (string_of_exn ex)
   | ex -> raise ex
 
   (** Data types for storing macros *)
@@ -731,7 +733,9 @@ module Make(Dice : D) : T = struct
         eval_deck deck_name
     | None, None, Some (_, filename) ->
         log_trace "eval_alt: file_to_string";
-        file_to_string filename
+        (try file_to_string filename with
+        | ex ->
+            raise (Include_exception ("Can't evalutate <alt>", ex)))
     | _ ->
         raise (Alt_exception "Both useMacro, useDeck and include attributes?")
     in
@@ -1066,7 +1070,10 @@ module Make(Dice : D) : T = struct
         (* <include file=""> *)
         | Xml.Element ("include", [("file", filename)], []) ->
             (* TODO: Copied from main.ml, factorize? *)
-            file_to_string filename
+            (try file_to_string filename with
+            | ex ->
+                raise (Include_exception ("Can't include file", ex))
+            )
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, string_of_exn (Unknown_tag what)))
