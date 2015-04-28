@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <!-- Use-case for hyperdrive at rollspel.nu -->
+
+  <!-- Basic setting -->
+  <variable name="basic_setting">
+    <alt>castle</alt>
+    <alt>pub</alt>
+    <alt>village</alt>
+  </variable>
+
+  <!-- Tresure to steal -->
+  <variable name="tresure">
+    <alt>crown</alt>
+    <alt>sword</alt>
+    <alt>apple</alt>
+  </variable>
+
+  <!-- Deck with event "cards", where each card is a file -->
+  <deck name="events">
+    <alt include="examples/usecase_hyperdrive/dragon.xml" />
+    <alt include="examples/usecase_hyperdrive/thief.xml" />
+    <alt include="examples/usecase_hyperdrive/harvest.xml" />
+    <alt include="examples/usecase_hyperdrive/smith.xml" />
+  </deck>
+
+  <!-- Draw three cards from the deck -->
+  <sentence>Event 1: {$events}</sentence>
+  <br />
+  <sentence>Event 2: {$events}</sentence>
+  <br />
+  <sentence>Event 3: {$events}</sentence>
+  <br />
+
+</story>

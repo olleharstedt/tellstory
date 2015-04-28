@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <setFlag name="smith" />
+
+  <sentence>The best smith in the hole {basic_setting} is called {"John"|"Simon"|"Ariel"}.</sentence>
+
+  <sentence ifSet="dragon">Did the dragon want to talk to the smith? Did they have something in common, a history together of danger and adventure?</sentence>
+
+  <sentence ifSet="thief">
+    <alt>The thief steals material and gives to the smith.</alt>
+    <alt>The thief stole something from the smith.</alt>
+  </sentence>
+
+</story>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <setFlag name="thief" />
+
+  <sentence>A thief breaks in the {basic_setting} and steals something.</sentence>
+
+  <sentence ifSet="dragon">The dragon sees what the thief steals.</sentence>
+
+</story>

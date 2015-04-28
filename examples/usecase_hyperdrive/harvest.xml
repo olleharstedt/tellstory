@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <setFlag name="harvest" />
+
+  <variable name="harvest_result">
+    <alt setFlag="harvest_bad">bad</alt>
+    <alt setFlag="harvest_bad">horrible</alt>
+    <alt setFlag="harvest_good">abundant</alt>
+    <alt setFlag="harvest_good">good</alt>
+  </variable>
+
+  <sentence>The harvest this year was {harvest_result}.</sentence>
+
+  <sentence ifSet="dragon">But then the dragon came and {"ate it all"|"destroyed us"|"died and we ate it"}. </sentence>
+
+  <sentence ifSet="thief">And we will {"kill"|"throw in jail"} anyone who tries to steal it.</sentence>
+
+  <sentence ifSet="smith AND harvest_good">The smith can work twice as hard now when the harvest turned out good.</sentence>
+  <sentence ifSet="smith AND harvest_bad">Without good food, the smith will be in a bad mood and needs more payment.</sentence>
+
+</story>
