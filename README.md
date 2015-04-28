@@ -280,6 +280,37 @@ In the same way you can use `ifSet` as its own tag:
 
 The flag mini-language is available as expected, so you can print `(flag1 AND flag2) OR NOT flag3` etc in flag condition.
 
+#### Namespaces
+
+**Work in progress**
+
+When you include many different files from within another file, names of variables and macros might clash. To solve this, we use namespaces, a common concept from programming languages. Basically, each file has its own namespace, meaning you can't read variables, flags, macros and so on from other files. If you want to do that, you have to use the _global_ namespace explicitly, like this:
+
+    <ifSet name="flag1_from_another_file" namespace="global">...</ifSet>
+
+Same pattern is used for variables, macros, records, decks etc.
+
+    <include file="other_file.xml" />
+
+    <sentence>
+      Write variable from other file:
+        <alt 
+    </sentence>
+
+Each file creates its own namespace. Can also create new namespaces just by naming them, like `<variable name="asd" namespace="new_namespace">asd</variable>`.
+
+Optional use of namespaces? Too much changes in source, not possible? Just pass global namespace around instead. Option on command-line? `./tellstory --use-namespaces myfile.xml`. Compilcated, so good if not mandatory, or behaviour you can add.
+
+    <useNamespaces> ??
+
+Inline namespace?
+
+    {other_file\variable1}
+
+always optional. use-case?
+
+    <story default_namespace=""></story>
+
 Possible future features
 ------------------------
 
@@ -292,10 +323,12 @@ Possible future features
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
-* Namespaces - how and where? Just use prefix? Make state explicit - record?
+* Namespaces - how and where? Just use prefix? Make state explicit - record? `<namespace>...</namespace`. Or `<variable name="var1" namespace="global">asd</variable>`. Always local namespace by default? Except when declaring global namespace.
+* Loops? for 1 to 10 pick card/include/blaha
 
 TODO
 ----
 
 * Proper regexp for inlining, e.g. this should not parse: {"content"|variable with spaces}
-* Better error messages at namespace conflicts when including different files
+* Don't throw sentence exception everywhere... Confusing.
+
