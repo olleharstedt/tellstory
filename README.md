@@ -325,10 +325,10 @@ Possible future features
 * Markov chains...?
 * Namespaces - how and where? Just use prefix? Make state explicit - record? `<namespace>...</namespace`. Or `<variable name="var1" namespace="global">asd</variable>`. Always local namespace by default? Except when declaring global namespace.
 * Loops? for 1 to 10 pick card/include/blaha
+* Functions inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 
 TODO
 ----
 
 * Proper regexp for inlining, e.g. this should not parse: {"content"|variable with spaces}
-* Don't throw sentence exception everywhere... Confusing.
-
+* Don't throw sentence exception everywhere... Confusing. Only for `<sentence>` tag.
