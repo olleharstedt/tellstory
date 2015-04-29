@@ -11,7 +11,7 @@
   </variable>
 
   <!-- Tresure to steal -->
-  <variable name="tresure">
+  <variable name="treasure">
     <alt>crown</alt>
     <alt>sword</alt>
     <alt>apple</alt>
@@ -25,12 +25,12 @@
     <alt include="examples/usecase_hyperdrive/smith.xml" />
   </deck>
 
+  <sentence>Setting: {basic_setting}.</sentence>
+
   <!-- Draw three cards from the deck -->
-  <sentence>Event 1: {$events}</sentence>
-  <br />
-  <sentence>Event 2: {$events}</sentence>
-  <br />
-  <sentence>Event 3: {$events}</sentence>
+  <sentence>{$events}</sentence>
+  <sentence>{$events}</sentence>
+  <sentence>{$events}</sentence>
   <br />
 
 </story>
