@@ -104,6 +104,7 @@ module Make(Dice : D) : T = struct
   type record = (string, string) Hashtbl.t
 
   (** Hash table to store macros. Macros are randomized each use. *)
+  (*
   let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
 
   (** Hash table to store variables. Variables are only randomized once. *)
@@ -114,6 +115,7 @@ module Make(Dice : D) : T = struct
 
   (** Hash table for decks *)
   let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
+  *)
 
   (*
   type namespace_element =
@@ -123,11 +125,17 @@ module Make(Dice : D) : T = struct
   | Deck_tbl of (string, deck) Hashtbl.t
   *)
 
+  (** Namespace of macros, variables, ... *)
   type namespace = {
     macro_tbl : (string, macro) Hashtbl.t;
     var_tbl : (string, string) Hashtbl.t;
     record_tbl : (string, record) Hashtbl.t;
     deck_tbl : (string, deck) Hashtbl.t;
+  }
+
+  (** Explicit state, pass around every where... *)
+  type state = {
+    namespace : namespace
   }
 
   (** Namespace hash table *)
@@ -429,10 +437,15 @@ module Make(Dice : D) : T = struct
     | _ ->
         raise (Internal_error "Macro definition is weird")
 
-  (** Store macro in macro hash table. Raise exception if macro with this name
+  (** 
+   * Store macro in macro hash table. Raise exception if macro with this name
    * already exists.
+   *
+   * @param macro
+   * @param macro_tbl hash table
+   * @return unit
    *)
-  let store_macro (macro : macro) =
+  let store_macro (macro : macro) macro_tbl =
     if Hashtbl.mem macro_tbl macro.name then
       raise (Macro_exception ("Macro with name " ^ macro.name ^ " already exists"))
     else
@@ -443,10 +456,11 @@ module Make(Dice : D) : T = struct
    * Eval macro used in alt or inline, like <alt useMacro="name"> or {#name}
    *
    * @param name string
+   * @param macro_tbl hash table
    * @return string
    * @raise Macro_exception if name is not a macro
    *)
-  let eval_macro name =
+  let eval_macro name macro_tbl =
     (* Aux function to check for <alt></alt> *)
     let check_for_empty_content c =
       match c with
@@ -474,9 +488,10 @@ module Make(Dice : D) : T = struct
    * Return card content.
    *
    * @param deck_name string
+   * @param deck_tbl hash table
    * @return string
    *)
-  let rec eval_deck deck_name =
+  let rec eval_deck deck_name deck_tbl =
     log_trace "eval_deck\n";
       let deck = try Hashtbl.find deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
@@ -518,12 +533,13 @@ module Make(Dice : D) : T = struct
   (**
    * Replace inline variable
    *
-   * @param con string Content from <sentence>
+   * @param content string Content from <sentence>
+   * @param var_tbl hash table
    * @return string
    *)
-  and replace_inline_variable con =
+  and replace_inline_variable content var_tbl =
     (* Replace variables *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     let matches = Array.to_list (
       Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
@@ -535,8 +551,8 @@ module Make(Dice : D) : T = struct
     let matches_uniq = List.sort_uniq (fun a b -> 1) matches in
 
     (* Replace inline variables, like {this} *)
-    let rec replace_variables matches con = match matches with
-      | [] -> con
+    let rec replace_variables matches content = match matches with
+      | [] -> content
       | x::xs ->
           let pattern = "{" ^ x ^ "}" in
           let replacement = try
@@ -544,20 +560,21 @@ module Make(Dice : D) : T = struct
             with
               Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
           in
-          let con = Pcre.replace ~pat:pattern ~templ:replacement con in
-          replace_variables xs con
+          let content = Pcre.replace ~pat:pattern ~templ:replacement content in
+          replace_variables xs content
     in
-    replace_variables matches_uniq con
+    replace_variables matches_uniq content
 
   (**
    * Replace inline records like {this.that}
    *
-   * @param con string Content
+   * @param content string Content
+   * @param record_tbl hash table
    * @return string
    *)
-  and replace_inline_records con =
+  and replace_inline_records content record_tbl =
     (* Replace records like {this.here} *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     (* Matches as [[key, val], [key, val], ...] *)
     let matches = Array.to_list (
       Array.map(fun m ->
@@ -567,8 +584,8 @@ module Make(Dice : D) : T = struct
         Pcre.split ~pat:"\\." s
       ) matches
     ) in
-    let rec replace_records matches con = match matches with
-      | [] -> con
+    let rec replace_records matches content = match matches with
+      | [] -> content
       | [record_name; var_name] :: xs ->
           (* Get record and var name *)
           let record = try Hashtbl.find record_tbl record_name with
@@ -578,22 +595,23 @@ module Make(Dice : D) : T = struct
             Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
           in
           let pattern = sprintf "{%s.%s}" record_name var_name in
-          let con = Pcre.replace ~pat:pattern ~templ:var con in
-          replace_records xs con
+          let content = Pcre.replace ~pat:pattern ~templ:var content in
+          replace_records xs content
       | _ ->
           raise (Internal_error "eval_content: replace_records: Wrong structure in list")
     in
-    replace_records matches con
+    replace_records matches content
 
   (**
    * Replace inline macros like {#this}
    *
    * @param con string Content
+   * @param macro_tbl hash table
    * @return string
    *)
-  and replace_inline_macros con =
+  and replace_inline_macros content macro_tbl =
     (* Replace inline macros, like {#this} *)
-    let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
         let substrings = Pcre.get_substrings m in
@@ -602,15 +620,15 @@ module Make(Dice : D) : T = struct
         s
       )
     ) in
-    let rec replace_macros matches con = match matches with
-    | [] -> con
+    let rec replace_macros matches content = match matches with
+    | [] -> content
     | mat::tail ->
-        let macro_content = eval_macro mat in
+        let macro_content = eval_macro mat macro_tbl in
         let pattern = sprintf "{#%s}" mat in
-        let con = Pcre.replace ~pat:pattern ~templ:macro_content con in
-        replace_macros tail con
+        let content = Pcre.replace ~pat:pattern ~templ:macro_content content in
+        replace_macros tail content
     in
-    replace_macros matches con
+    replace_macros matches content
 
   (**
    * Replaces inline content like {"this"}. Used for inline randomization, like
@@ -648,9 +666,10 @@ module Make(Dice : D) : T = struct
    * Replace inline deck like {$deck}
    *
    * @param con string Content
+   * @param deck_tbl hash table
    * @return string
    *)
-  and replace_inline_deck con =
+  and replace_inline_deck con deck_tbl =
     let matches = try Pcre.exec_all ~pat:"{\\$[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
@@ -663,7 +682,7 @@ module Make(Dice : D) : T = struct
     let rec replace_content matches con = match matches with
     | [] -> con
     | mat::tail ->
-        let card_content = eval_deck mat in
+        let card_content = eval_deck mat deck_tbl in
         let pattern = sprintf "{\\$%s}" mat in
         let con = Pcre.replace_first ~pat:pattern ~templ:card_content con in
         replace_content tail con
@@ -677,12 +696,12 @@ module Make(Dice : D) : T = struct
    * @param con string
    * @return string
    *)
-  and eval_content con =
+  and eval_content con namespace =
     let con = replace_inline_content con in
-    let con = replace_inline_variable con in
-    let con = replace_inline_records con in
-    let con = replace_inline_macros con in
-    let con = replace_inline_deck con in
+    let con = replace_inline_variable con namespace.var_tbl in
+    let con = replace_inline_records con namespace.record_tbl in
+    let con = replace_inline_macros con namespace.macro_tbl in
+    let con = replace_inline_deck con namespace.deck_tbl in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
     (*let matches = try Pcre.exec_all ~pat:"{([a-zA-Z0-9_#\\.]+|\"[a-z]+\"|\\|)}" con with Not_found -> [||] in*)
@@ -1036,9 +1055,10 @@ module Make(Dice : D) : T = struct
    * And macros, variables, records, includes...
    *
    * @param story XML
+   * @param state
    * @return string
    *)
-  and print_sentences story =
+  and print_sentences story state =
     log_trace "print_sentences";
     let raw_backtrace = Printexc.get_callstack 20 in
     let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
