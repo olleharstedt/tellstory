@@ -112,7 +112,18 @@ module Make(Dice : D) : T = struct
   (** Hash table to store records. Randomized once. *)
   let record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
 
+  (** Hash table for decks *)
   let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
+
+  (** Polymorphic variant to handle namespace elements *)
+  type namespace_element =
+  | Macro_tbl of (string, macro) Hashtbl.t
+  | Var_tbl of (string, string) Hashtbl.t
+  | Record_tbl of (string, record) Hashtbl.t
+  | Deck_tbl of (string, deck) Hashtbl.t
+
+  (* Namespace hash table *)
+  let namespace_tbl = ((Hashtbl.create 10) : ((string, namespace_element) Hashtbl.t))
 
   (* List of attributes allowed in <sentence> tag *)
   let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
