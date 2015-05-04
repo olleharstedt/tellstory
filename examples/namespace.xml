@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <!-- Use namespaces to control naming conflicts between different files. -->
+
+  <Variable name="var" namespace="my_namespace">test</Variable>
+
+  <sentence namespace="my_namespace">Is this a variable, {var}?</sentence>
+
+  <sentence>Also use namespace inline: {my_namespace\var}.</sentence>
+
+  <!-- This won't work: No variable 'var' found in global namespace
+    <sentence>Nope: {var}.</sentence> -->
+
+  <!-- The global namespace is called 'global' -->
+  <macro name="cat" namespace="global">
+    <alt>Bill</alt>
+    <alt>Bull</alt>
+  </macro>
+
+  <!-- Global namespace implied -->
+  <sentence>Is that you, {#cat}?</sentence>
+
+</story>
