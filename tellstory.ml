@@ -115,22 +115,40 @@ module Make(Dice : D) : T = struct
   (** Hash table for decks *)
   let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
 
-  (** Polymorphic variant to handle namespace elements *)
+  (*
   type namespace_element =
   | Macro_tbl of (string, macro) Hashtbl.t
   | Var_tbl of (string, string) Hashtbl.t
   | Record_tbl of (string, record) Hashtbl.t
   | Deck_tbl of (string, deck) Hashtbl.t
+  *)
 
-  (* Namespace hash table *)
-  let namespace_tbl = ((Hashtbl.create 10) : ((string, namespace_element) Hashtbl.t))
+  type namespace = {
+    macro_tbl : (string, macro) Hashtbl.t;
+    var_tbl : (string, string) Hashtbl.t;
+    record_tbl : (string, record) Hashtbl.t;
+    deck_tbl : (string, deck) Hashtbl.t;
+  }
 
-  (* List of attributes allowed in <sentence> tag *)
+  (** Namespace hash table *)
+  let namespace_tbl = ((Hashtbl.create 10) : ((string, namespace) Hashtbl.t))
+
+  (** Add global namespace as init *)
+  (** TODO: Should use Map, not Hashtbl *)
+  let _ =
+    Hashtbl.add namespace_tbl "global" {
+      macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t));
+      var_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t));
+      record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t));
+      deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
+    }
+
+  (** List of attributes allowed in <sentence> tag *)
   let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
   let _ =
     Hashtbl.add allowed_sentence_attributes "ifSet" true
 
-  (* List of attributes allowed in <alt> tag *)
+  (** List of attributes allowed in <alt> tag *)
   let allowed_alt_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
   let _ =
     Hashtbl.add allowed_alt_attributes "setFlag" true
@@ -1130,4 +1148,5 @@ module Make(Dice : D) : T = struct
 
   let get_story =
     ()
+
 end
