@@ -34,9 +34,14 @@ end
 module type T = sig
   exception Sentence_problem of string * string
 
+  type state
+  type namespace
+
   val fetch_node : Xml.xml -> string -> Xml.xml
-  val print_sentences : Xml.xml -> string
-  val file_to_string : string -> string
+  val print_sentences : Xml.xml -> state -> namespace -> string
+  val file_to_string : string -> state -> string
+  val init_state : unit -> state
+  val get_global_namespace : state -> namespace
 end
 
 module Make(Dice : D) : T = struct
@@ -125,31 +130,25 @@ module Make(Dice : D) : T = struct
   | Deck_tbl of (string, deck) Hashtbl.t
   *)
 
+  type macro_tbl = (string, macro) Hashtbl.t
+  type var_tbl = (string, string) Hashtbl.t
+  type deck_tbl = (string, deck) Hashtbl.t
+  type record_tbl = (string, record) Hashtbl.t
+
   (** Namespace of macros, variables, ... *)
   type namespace = {
-    macro_tbl : (string, macro) Hashtbl.t;
-    var_tbl : (string, string) Hashtbl.t;
-    record_tbl : (string, record) Hashtbl.t;
-    deck_tbl : (string, deck) Hashtbl.t;
+    macro_tbl : macro_tbl;
+    var_tbl : var_tbl;
+    record_tbl : record_tbl;
+    deck_tbl : deck_tbl;
   }
+
+  type namespace_tbl = (string, namespace) Hashtbl.t
 
   (** Explicit state, pass around every where... *)
   type state = {
-    namespace : namespace
+    namespace_tbl : namespace_tbl;
   }
-
-  (** Namespace hash table *)
-  let namespace_tbl = ((Hashtbl.create 10) : ((string, namespace) Hashtbl.t))
-
-  (** Add global namespace as init *)
-  (** TODO: Should use Map, not Hashtbl *)
-  let _ =
-    Hashtbl.add namespace_tbl "global" {
-      macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t));
-      var_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t));
-      record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t));
-      deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
-    }
 
   (** List of attributes allowed in <sentence> tag *)
   let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -460,7 +459,7 @@ module Make(Dice : D) : T = struct
    * @return string
    * @raise Macro_exception if name is not a macro
    *)
-  let eval_macro name macro_tbl =
+  let eval_macro name (macro_tbl : macro_tbl) =
     (* Aux function to check for <alt></alt> *)
     let check_for_empty_content c =
       match c with
@@ -488,12 +487,13 @@ module Make(Dice : D) : T = struct
    * Return card content.
    *
    * @param deck_name string
-   * @param deck_tbl hash table
+   * @param state state
+   * @param namespace namespace
    * @return string
    *)
-  let rec eval_deck deck_name deck_tbl =
+  let rec eval_deck deck_name (state : state) (namespace : namespace) =
     log_trace "eval_deck\n";
-      let deck = try Hashtbl.find deck_tbl deck_name with
+      let deck = try Hashtbl.find namespace.deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
       in
       (* Abort if no cards are left in deck *)
@@ -521,11 +521,11 @@ module Make(Dice : D) : T = struct
           print_deck deck;
           log_trace "new deck: ";
           print_deck new_deck;
-          Hashtbl.remove deck_tbl deck.name;
-          Hashtbl.add deck_tbl new_deck.name new_deck;
+          Hashtbl.remove namespace.deck_tbl deck.name;
+          Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
           (* Build Xml.xml <alt> out of record *)
           let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
-          let result = eval_alt alt in
+          let result = eval_alt alt state namespace in
           log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
           result
 
@@ -669,7 +669,7 @@ module Make(Dice : D) : T = struct
    * @param deck_tbl hash table
    * @return string
    *)
-  and replace_inline_deck con deck_tbl =
+  and replace_inline_deck con state namespace =
     let matches = try Pcre.exec_all ~pat:"{\\$[a-zA-Z0-9_]+}" con with Not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
@@ -682,7 +682,7 @@ module Make(Dice : D) : T = struct
     let rec replace_content matches con = match matches with
     | [] -> con
     | mat::tail ->
-        let card_content = eval_deck mat deck_tbl in
+        let card_content = eval_deck mat state namespace in
         let pattern = sprintf "{\\$%s}" mat in
         let con = Pcre.replace_first ~pat:pattern ~templ:card_content con in
         replace_content tail con
@@ -696,12 +696,12 @@ module Make(Dice : D) : T = struct
    * @param con string
    * @return string
    *)
-  and eval_content con namespace =
+  and eval_content con state namespace =
     let con = replace_inline_content con in
     let con = replace_inline_variable con namespace.var_tbl in
     let con = replace_inline_records con namespace.record_tbl in
     let con = replace_inline_macros con namespace.macro_tbl in
-    let con = replace_inline_deck con namespace.deck_tbl in
+    let con = replace_inline_deck con state namespace in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
     (*let matches = try Pcre.exec_all ~pat:"{([a-zA-Z0-9_#\\.]+|\"[a-z]+\"|\\|)}" con with Not_found -> [||] in*)
@@ -724,7 +724,7 @@ module Make(Dice : D) : T = struct
           print_endline (eval_content (sprintf "{%s}" s))
         );
         *)
-        (substring, eval_content (sprintf "{%s}" alt))
+        (substring, eval_content (sprintf "{%s}" alt) state namespace)
       ) in
       substrings_tuples.(0)
     ) in
@@ -750,9 +750,10 @@ module Make(Dice : D) : T = struct
    * Eval <alt> to its content
    *
    * @param alt Xml.Element
+   * @param state state
    * @return string
    *)
-  and eval_alt alt =
+  and eval_alt alt (state : state) (namespace : namespace) =
     let attributes = Xml.attribs alt in
 
     (* Find attribute setFlag *)
@@ -775,30 +776,32 @@ module Make(Dice : D) : T = struct
     | None, None, None ->
         fetch_content alt
     | Some (_, macro_name), None, None ->
-        eval_macro macro_name
+        eval_macro macro_name namespace.macro_tbl
     | None, Some (_, deck_name), None ->
         log_trace "eval_alt: useDeck";
-        eval_deck deck_name
+        eval_deck deck_name state namespace
     | None, None, Some (_, filename) ->
         log_trace "eval_alt: file_to_string";
-        (try file_to_string filename with
+        (try file_to_string filename state with
         | ex ->
             raise (Include_exception ("Can't evalutate <alt>", ex)))
     | _ ->
         raise (Alt_exception "Both useMacro, useDeck and include attributes?")
     in
 
-    eval_content cont
+    eval_content cont state namespace
 
   (**
    * Eval sentence, changin {bla} to variable content
    *
    * @param sen string
+   * @param state
+   * @param namespace
    * @return string
    *)
-  and eval_sen sen =
+  and eval_sen sen state namespace =
     try (
-      eval_content sen
+      eval_content sen state namespace
     )
     with
       Not_found -> sen
@@ -809,18 +812,18 @@ module Make(Dice : D) : T = struct
    * @param sentence Xml.xml
    * @return string
    *)
-  and print_sentence sentence =
+  and print_sentence sentence (state : state) namespace =
     log_trace "print_sentence";
     let sen = String.trim (fetch_content (sentence)) in
     try (
-      let sen = eval_sen sen in
+      let sen = eval_sen sen state namespace in
       let alt = choose_alt_from_sentence (fetch_nodes (sentence) "alt") in
       match alt, sen with
         | None, _ -> sen
         | Some alt, "" ->
-            (eval_alt alt)
+            (eval_alt alt state namespace)
         | Some alt, sen ->
-            sen ^ " " ^ (eval_alt alt)
+            sen ^ " " ^ (eval_alt alt state namespace)
             (* TODO: If alt is ""? *)
     )
     with
@@ -846,7 +849,7 @@ module Make(Dice : D) : T = struct
    * @param name string
    * @return bool
    *)
-  and variable_name_free name =
+  and variable_name_free name var_tbl =
     not (Hashtbl.mem var_tbl name)
 
   (**
@@ -877,12 +880,12 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  and variable_is_ok name alts =
+  and variable_is_ok name alts var_tbl =
     if not (only_alts alts) then
       raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
     else if not (all_alts_have_content alts) then
       raise (Variable_exception ("Some <alt> in variable '" ^ name ^ "' does not have any content"))
-    else if not (variable_name_free name) then
+    else if not (variable_name_free name var_tbl) then
       raise (Variable_exception ("<variable> with name '" ^ name ^ "' is already in use, can only be defined once."))
     else
       true
@@ -894,7 +897,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  and record_is_ok name alts =
+  and record_is_ok name alts record_tbl =
     (* Check so record name is free *)
     if Hashtbl.mem record_tbl name then begin
       log_trace "record_is_ok";
@@ -941,7 +944,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return bool
    *)
-  and deck_is_ok name alts =
+  and deck_is_ok name alts deck_tbl =
     (* Check so deck name is free *)
     if Hashtbl.mem deck_tbl name then begin
       raise (Deck_exception (sprintf "Deck name '%s' is already in use" name))
@@ -954,24 +957,26 @@ module Make(Dice : D) : T = struct
    *
    * @param name string
    * @param alts Xml.Element list
+   * @param state state
    * @return void
    *)
-  and eval_variable name alts =
+  and eval_variable name alts (state : state) namespace =
     match choose_alt alts with
     | None ->
         raise (Variable_exception (sprintf "No alt could be chosen for variable '%s'" name))
     | Some alt ->
-      let content = eval_alt alt in
-      Hashtbl.add var_tbl name content
+      let content = eval_alt alt state namespace in
+      Hashtbl.add namespace.var_tbl name content
 
   (**
    * Adds record to record hash table
    *
    * @param name string
    * @param alts Xml.Element list
+   * @param record_tbl record_tbl
    * @return void
    *)
-  and eval_record name alts =
+  and eval_record name alts record_tbl =
 
     (* Choose alt *)
     let alt = match nth alts (Dice.dice (List.length alts)) with
@@ -1015,9 +1020,10 @@ module Make(Dice : D) : T = struct
    * Store deck in deck_tbl
    *
    * @param deck deck
+   * @param deck_tbl deck_tbl
    * @return unit
    *)
-  and store_deck (deck : deck) =
+  and store_deck (deck : deck) deck_tbl =
     if Hashtbl.mem deck_tbl deck.name then
       raise (Deck_exception (sprintf "Deck with name '%s' already exists" deck.name))
     else
@@ -1058,7 +1064,7 @@ module Make(Dice : D) : T = struct
    * @param state
    * @return string
    *)
-  and print_sentences story state =
+  and print_sentences story (state : state) namespace =
     log_trace "print_sentences";
     let raw_backtrace = Printexc.get_callstack 20 in
     let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
@@ -1071,9 +1077,9 @@ module Make(Dice : D) : T = struct
 
         (* <sentence attr="...">...</sentence> *)
         | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
-            print_sentence s ^ " "
+            print_sentence s state namespace ^ " "
         | Xml.Element ("sentence", [], _) ->
-            print_sentence s ^ " "
+            print_sentence s state namespace ^ " "
         | Xml.Element ("sentence", _, _) ->
             ""
         | Xml.Element ("br", _, _) ->
@@ -1088,7 +1094,7 @@ module Make(Dice : D) : T = struct
         (* <ifSet name="flag AND flag2 ..."> ... </ifSet> *)
         | Xml.Element ("ifSet", [("name", flag_expression)], children) ->
             if flags_is_ok [("ifSet", flag_expression)] then 
-              print_sentences (Xml.Element ("", [], children))
+              print_sentences (Xml.Element ("", [], children)) state namespace
             else
               ""
 
@@ -1096,30 +1102,30 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("macro", _, _) ->
             (* store macro *)
             let macro = parse_macro s in
-            store_macro macro;
+            store_macro macro namespace.macro_tbl;
             "" (* Return empty string *)
 
         (* <variable> *)
-        | Xml.Element ("variable", [("name", name)], alts) when (variable_is_ok name alts)->
-            eval_variable name alts;
+        | Xml.Element ("variable", [("name", name)], alts) when (variable_is_ok name alts namespace.var_tbl)->
+            eval_variable name alts state namespace;
             ""
 
         (* <record> *)
-        | Xml.Element ("record", [("name", name)], alts) when (record_is_ok name alts) ->
-            eval_record name alts;
+        | Xml.Element ("record", [("name", name)], alts) when (record_is_ok name alts namespace.record_tbl) ->
+            eval_record name alts namespace.record_tbl;
             ""
 
         (* <deck> *)
-        | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts) ->
+        | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
             let alts = parse_alts alts in
-            store_deck {name; alts};
+            store_deck {name; alts} namespace.deck_tbl;
             ""
 
         (* <include file=""> *)
         | Xml.Element ("include", [("file", filename)], []) ->
             (* TODO: Copied from main.ml, factorize? *)
-            (try file_to_string filename with
+            (try file_to_string filename state with
             | ex ->
                 raise (Include_exception ("Can't include file", ex))
             )
@@ -1139,13 +1145,40 @@ module Make(Dice : D) : T = struct
     String.trim result
 
   (**
+   * Init state with global namespace and hash tables
+   *
+   * @return state
+   *)
+  and init_state () =
+    let global_namespace = {
+      var_tbl = ((Hashtbl.create 20) : var_tbl);
+      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
+      record_tbl = ((Hashtbl.create 20) : record_tbl);
+      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
+    } in
+    let namespace_tbl = (Hashtbl.create 10 : namespace_tbl) in
+    Hashtbl.add namespace_tbl "global" global_namespace;
+    (* Return state *)
+    {namespace_tbl}
+
+  (**
+   * Return global namespace in state
+   *
+   * @param state
+   * @return namespace
+   *)
+  and get_global_namespace state =
+    Hashtbl.find state.namespace_tbl "global"
+
+  (**
    * Return string of XML-file with story etc.
    * Exits if XMl can't be parsed.
    *
    * @param string filename
+   * @param state state
    * @return string
    *)
-  and file_to_string filename =
+  and file_to_string filename (state : state) =
 
     let xml = try Xml.parse_file filename with
       | Xml.Error (msg, pos) ->
@@ -1155,7 +1188,8 @@ module Make(Dice : D) : T = struct
           exit 0;
     in
     let story = fetch_node xml "story" in
-    print_sentences story
+    let global_namespace = Hashtbl.find state.namespace_tbl "global" in
+    print_sentences story state global_namespace
 
   (**
    * Eval <story> tag and all its children (macros, records, etc), returns the string

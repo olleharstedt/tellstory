@@ -55,12 +55,15 @@ let test_sentence test_ctxt =
     let dice n = 1
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [Xml.PCData "Test sentence"])
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"sentence" ~printer:id "Test sentence" story
 
 (**
@@ -78,6 +81,9 @@ let test_alt test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -87,14 +93,17 @@ let test_alt test_ctxt =
       ])
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"alt 1" ~printer:id "Two alt one" story;
 
   let module T = Tellstory.Make(struct
     let dice n = 1
   end) in
 
-  let story = T.print_sentences xml in
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"alt 2" ~printer:id "Two alt two" story
 
 (**
@@ -108,6 +117,9 @@ let test_alt_with_empty_sentence test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -116,14 +128,17 @@ let test_alt_with_empty_sentence test_ctxt =
       ])
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"alt empty 1" ~printer:id "one" story;
 
   let module T = Tellstory.Make(struct
     let dice n = 1
   end) in
 
-  let story = T.print_sentences xml in
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"alt empty 2" ~printer:id "two" story
 
 (**
@@ -138,6 +153,9 @@ let test_set_flag test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -145,7 +163,7 @@ let test_set_flag test_ctxt =
       ])
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"'one' is member of hashtbl" ~printer:string_of_bool true (Hashtbl.mem Globals.flags_tbl "one");
   assert_equal ~msg:"'nothing' is not member of hashtbl" ~printer:string_of_bool false (Hashtbl.mem Globals.flags_tbl "nothing");
   assert_equal ~msg:"'one' is printed" ~printer:id "one" story
@@ -166,6 +184,9 @@ let test_if_set test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -174,7 +195,7 @@ let test_if_set test_ctxt =
       Xml.Element ("sentence", [("ifSet", "one")], [Xml.PCData "One is set"]);
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
 
   assert_equal ~msg:"story = One is set" ~printer:id story "One is set";
   assert_equal ~msg:"flag 'one' is set" true ~printer:string_of_bool (Hashtbl.mem Globals.flags_tbl "one")
@@ -197,6 +218,9 @@ let test_if_set_alt test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -209,7 +233,7 @@ let test_if_set_alt test_ctxt =
       ]);
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"" ~printer:id "one 1" story
 
 (** As above *)
@@ -224,6 +248,9 @@ let test_if_set_alt2 test_ctxt =
       result
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -236,7 +263,7 @@ let test_if_set_alt2 test_ctxt =
       ]);
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"" ~printer:id "one 2" story
 
 (**
@@ -252,6 +279,9 @@ let test_no_possible_alt test_ctxt =
     let dice n = 0
   end) in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("sentence", [], [
@@ -261,7 +291,7 @@ let test_no_possible_alt test_ctxt =
   ) in
   assert_raises (T.Sentence_problem ("", "Sentence problem for '': Alt exception 'No possible alts to choose.'")) 
   (fun _ -> 
-    T.print_sentences xml
+    T.print_sentences xml state namespace
   )
 
 (**
@@ -284,6 +314,9 @@ let test_macro test_ctxt =
 
   let (module T) = make_module [1;0] in
 
+  let state = T.init_state () in
+  let namespace = T.get_global_namespace state in
+
   let xml = Xml.Element (
     "story", [], [
       Xml.Element ("macro", [("name", "material")], [
@@ -300,7 +333,7 @@ let test_macro test_ctxt =
       ]);
     ]
   ) in
-  let story = T.print_sentences xml in
+  let story = T.print_sentences xml state namespace in
   assert_equal ~msg:"" ~printer:id "This thing is made out of stone This other thing is made of wood" story
 
 (**

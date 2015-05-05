@@ -28,7 +28,9 @@ let _ =
 
   Random.self_init ();
 
-  let string_story = try Tellstory.file_to_string filename with
+  let state = Tellstory.init_state () in
+
+  let string_story = try Tellstory.file_to_string filename state with
   | ex ->
       Printexc.to_string ex
   in
