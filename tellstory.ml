@@ -139,6 +139,7 @@ module Make(Dice : D) : T = struct
 
   (** Namespace of macros, variables, ... *)
   type namespace = {
+    name : string;
     macro_tbl : macro_tbl;
     var_tbl : var_tbl;
     record_tbl : record_tbl;
@@ -199,7 +200,7 @@ module Make(Dice : D) : T = struct
       content1 = content2 && (compare_alt_attributes attrs1 attrs2)
 
 
-  let print_deck deck =
+  let print_deck (deck : deck) =
     log_trace (sprintf "%s\n" deck.name);
     log_trace "alts:\n";
     iter deck.alts ~f:(fun alt ->
@@ -877,20 +878,21 @@ module Make(Dice : D) : T = struct
 
   (**
    * Check if we can add new variable with alts and name
+   * Raise exception if not
    *
    * @param name string Name of new variable
    * @param alts Xml.Element list
-   * @return bool
+   * @return unit
    *)
-  and variable_is_ok name alts var_tbl =
+  and variable_is_ok name alts namespace =
     if not (only_alts alts) then
       raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
     else if not (all_alts_have_content alts) then
-      raise (Variable_exception ("Some <alt> in variable '" ^ name ^ "' does not have any content"))
-    else if not (variable_name_free name var_tbl) then
-      raise (Variable_exception ("<variable> with name '" ^ name ^ "' is already in use, can only be defined once."))
+      raise (Variable_exception (sprintf "Some <alt> in variable '%s\\%s' does not have any content" namespace.name name))
+    else if not (variable_name_free name namespace.var_tbl) then
+      raise (Variable_exception (sprintf "<variable> with name '%s' is already in use, can only be defined once." name))
     else
-      true
+      ()
 
   (**
    * Check if record definition is valid
@@ -1113,12 +1115,15 @@ module Make(Dice : D) : T = struct
             let name = find_attribute attrs "name" in
             let namespace_name = find_attribute attrs "namespace" in
             begin
+              (* Check which attributes we have *)
               match name, namespace_name with
               | Some ("name", name), None ->
-                  eval_variable name alts state namespace;
+                  variable_is_ok name alts namespace;
+                  eval_variable name alts state namespace
               | Some ("name", name), Some ("namespace", namespace_name) ->
                   (* Don't use default namespace *)
                   let namespace = get_namespace state namespace_name in
+                  variable_is_ok name alts namespace;
                   eval_variable name alts state namespace
               | _, _ ->
                   raise (Variable_exception (sprintf "Attributes wrong for variable"))
@@ -1156,7 +1161,8 @@ module Make(Dice : D) : T = struct
             log_trace (Printexc.to_string ex);
             log_trace (Printexc.get_backtrace ());
             (*raise (Sentence_problem (sen, string_of_exn ex))*)
-            raise ex
+            print_endline (string_of_exn ex);
+            exit 0
     ) in
     let result = List.fold_left (^) "" string_sentences in
     log_trace (sprintf "print_sentences result = %s\n" result);
@@ -1164,9 +1170,12 @@ module Make(Dice : D) : T = struct
 
   (**
    * Creates a new empty namespace
+   *
+   * @return namespace
    *)
-  and new_namespace () =
+  and new_namespace name =
     {
+      name;
       var_tbl = ((Hashtbl.create 20) : var_tbl);
       macro_tbl = ((Hashtbl.create 20) : macro_tbl);
       record_tbl = ((Hashtbl.create 20) : record_tbl);
@@ -1176,10 +1185,11 @@ module Make(Dice : D) : T = struct
   (**
    * Init state with global namespace and hash tables
    *
+   * @param unit
    * @return state
    *)
   and init_state () =
-    let global_namespace = new_namespace () in
+    let global_namespace = new_namespace "global" in
     let namespace_tbl = (Hashtbl.create 10 : namespace_tbl) in
     Hashtbl.add namespace_tbl "global" global_namespace;
     (* Return state *)
@@ -1207,7 +1217,7 @@ module Make(Dice : D) : T = struct
       Hashtbl.find state.namespace_tbl name
     else begin
       log_trace (sprintf "new namespace created with name '%s'" name);
-      let new_namespace = new_namespace () in
+      let new_namespace = new_namespace name in
       Hashtbl.add state.namespace_tbl name new_namespace;
       new_namespace
     end
