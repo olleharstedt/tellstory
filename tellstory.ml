@@ -886,11 +886,11 @@ module Make(Dice : D) : T = struct
    *)
   and variable_is_ok name alts namespace =
     if not (only_alts alts) then
-      raise (Variable_exception ("Only <alt> allowed in variable tag for variable " ^ name))
+      raise (Variable_exception (sprintf "Only <alt> allowed in variable tag for variable '%s\\%s'" namespace.name name))
     else if not (all_alts_have_content alts) then
       raise (Variable_exception (sprintf "Some <alt> in variable '%s\\%s' does not have any content" namespace.name name))
     else if not (variable_name_free name namespace.var_tbl) then
-      raise (Variable_exception (sprintf "<variable> with name '%s' is already in use, can only be defined once." name))
+      raise (Variable_exception (sprintf "<variable> with name '%s\\%s' is already in use, can only be defined once." namespace.name name))
     else
       ()
 
