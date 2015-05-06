@@ -3,7 +3,9 @@
 
   <!-- Use namespaces to control naming conflicts between different files. -->
 
-  <Variable name="var" namespace="my_namespace">test</Variable>
+  <variable name="var" namespace="my_namespace">
+    <alt>test</alt>
+  </variable>
 
   <sentence namespace="my_namespace">Is this a variable, {var}?</sentence>
 

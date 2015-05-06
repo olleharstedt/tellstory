@@ -12,7 +12,7 @@ open Core_list
 (**
  * Debug with Bolt
  *
- * Run with BOLT_FILE=bolt.config ./tellstory ...
+ * Run with BOLT_FILE=bolt.config ./tellstory
  *
  *)
 let log_trace msg =
@@ -64,6 +64,7 @@ module Make(Dice : D) : T = struct
   exception Deck_exception of string
   exception Xml_exception of string
   exception Include_exception of string * exn
+  exception Namespace_exception of string
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -84,6 +85,7 @@ module Make(Dice : D) : T = struct
   | Deck_exception str -> sprintf "Deck exception '%s'" str
   | Parser_error str -> sprintf "Parser error: '%s'" str
   | Xml_exception str -> sprintf "Xml exception: '%s'" str
+  | Namespace_exception str -> sprintf "Namespace exception: '%s'" str
   | Include_exception (str, ex) -> sprintf "Include exception: %s: '%s'" str (string_of_exn ex)
   | ex -> raise ex
 
@@ -290,7 +292,7 @@ module Make(Dice : D) : T = struct
    *
    * @param attributes ? Xml.Element list
    * @param name string
-   * @return Xml.Element option
+   * @return Xml.Element option???
    *)
   let find_attribute attributes name =
     find attributes ~f:(function
@@ -1106,8 +1108,21 @@ module Make(Dice : D) : T = struct
             "" (* Return empty string *)
 
         (* <variable> *)
-        | Xml.Element ("variable", [("name", name)], alts) when (variable_is_ok name alts namespace.var_tbl)->
-            eval_variable name alts state namespace;
+        | Xml.Element ("variable", attrs, alts) ->
+            (*when (variable_is_ok name alts namespace.var_tbl)->*)
+            let name = find_attribute attrs "name" in
+            let namespace_name = find_attribute attrs "namespace" in
+            begin
+              match name, namespace_name with
+              | Some ("name", name), None ->
+                  eval_variable name alts state namespace;
+              | Some ("name", name), Some ("namespace", namespace_name) ->
+                  (* Don't use default namespace *)
+                  let namespace = get_namespace state namespace_name in
+                  eval_variable name alts state namespace
+              | _, _ ->
+                  raise (Variable_exception (sprintf "Attributes wrong for variable"))
+            end;
             ""
 
         (* <record> *)
@@ -1131,18 +1146,32 @@ module Make(Dice : D) : T = struct
             )
 
         (* Unknown tag or error *)
-        | Xml.Element (what, _, _) -> raise (Sentence_problem (sen, string_of_exn (Unknown_tag what)))
-        | _ -> raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
+        | Xml.Element (what, _, _) -> 
+            raise (Unknown_tag what)
+        | _ -> 
+            raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
             log_trace "exception in print_sentences";
             log_trace (Printexc.to_string ex);
             log_trace (Printexc.get_backtrace ());
-            raise (Sentence_problem (sen, string_of_exn ex))
+            (*raise (Sentence_problem (sen, string_of_exn ex))*)
+            raise ex
     ) in
     let result = List.fold_left (^) "" string_sentences in
     log_trace (sprintf "print_sentences result = %s\n" result);
     String.trim result
+
+  (**
+   * Creates a new empty namespace
+   *)
+  and new_namespace () =
+    {
+      var_tbl = ((Hashtbl.create 20) : var_tbl);
+      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
+      record_tbl = ((Hashtbl.create 20) : record_tbl);
+      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
+    }
 
   (**
    * Init state with global namespace and hash tables
@@ -1150,12 +1179,7 @@ module Make(Dice : D) : T = struct
    * @return state
    *)
   and init_state () =
-    let global_namespace = {
-      var_tbl = ((Hashtbl.create 20) : var_tbl);
-      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
-      record_tbl = ((Hashtbl.create 20) : record_tbl);
-      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
-    } in
+    let global_namespace = new_namespace () in
     let namespace_tbl = (Hashtbl.create 10 : namespace_tbl) in
     Hashtbl.add namespace_tbl "global" global_namespace;
     (* Return state *)
@@ -1169,6 +1193,24 @@ module Make(Dice : D) : T = struct
    *)
   and get_global_namespace state =
     Hashtbl.find state.namespace_tbl "global"
+
+  (**
+   * Get namespace with name from state
+   * If namespace does not exists, it will be created
+   *
+   * @param state
+   * @param name string
+   * @return namespace
+   *)
+  and get_namespace state name =
+    if Hashtbl.mem state.namespace_tbl name then
+      Hashtbl.find state.namespace_tbl name
+    else begin
+      log_trace (sprintf "new namespace created with name '%s'" name);
+      let new_namespace = new_namespace () in
+      Hashtbl.add state.namespace_tbl name new_namespace;
+      new_namespace
+    end
 
   (**
    * Return string of XML-file with story etc.
