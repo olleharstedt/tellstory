@@ -540,8 +540,9 @@ module Make(Dice : D) : T = struct
    * @param var_tbl hash table
    * @return string
    *)
-  and replace_inline_variable content var_tbl =
+  and replace_inline_variable content namespace =
     (* Replace variables *)
+    let var_tbl = namespace.var_tbl in
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     let matches = Array.to_list (
       Array.map (fun m ->
@@ -561,7 +562,7 @@ module Make(Dice : D) : T = struct
           let replacement = try
               Hashtbl.find var_tbl x
             with
-              Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s'. Check that you defined it with <variable name=\"%s\">..." x x))
+              Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s' in namespace '%s'. Check that you defined it with <variable name=\"%s\">..." x namespace.name x))
           in
           let content = Pcre.replace ~pat:pattern ~templ:replacement content in
           replace_variables xs content
@@ -701,7 +702,7 @@ module Make(Dice : D) : T = struct
    *)
   and eval_content con state namespace =
     let con = replace_inline_content con in
-    let con = replace_inline_variable con namespace.var_tbl in
+    let con = replace_inline_variable con namespace in
     let con = replace_inline_records con namespace.record_tbl in
     let con = replace_inline_macros con namespace.macro_tbl in
     let con = replace_inline_deck con state namespace in
@@ -1080,12 +1081,31 @@ module Make(Dice : D) : T = struct
       try begin match s with
 
         (* <sentence attr="...">...</sentence> *)
+        (* Never create namespace when using <sentence>, only get *)
         | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
-            print_sentence s state namespace ^ " "
+            let namespace_name = find_attribute attrs "namespace" in
+            begin match namespace_name with
+            | None ->
+              print_sentence s state namespace ^ " "
+            | Some ("namespace", namespace_name) ->
+                let local_namespace = get_namespace state namespace_name in
+                begin match local_namespace with
+                | None ->
+                    let local_namespace = create_namespace state namespace_name in
+                    print_sentence s state local_namespace ^ " "
+                | Some local_namespace ->
+                    print_sentence s state local_namespace ^ " "
+                end
+            | Some (attr, _) ->
+                raise (Sentence_problem (sen, sprintf "Unknown attritube: %s" attr))
+            end
         | Xml.Element ("sentence", [], _) ->
             print_sentence s state namespace ^ " "
+        (* Empty sentence *)
         | Xml.Element ("sentence", _, _) ->
             ""
+
+        (* <br /> *)
         | Xml.Element ("br", _, _) ->
             "\n\n"
 
@@ -1122,9 +1142,9 @@ module Make(Dice : D) : T = struct
                   eval_variable name alts state namespace
               | Some ("name", name), Some ("namespace", namespace_name) ->
                   (* Don't use default namespace *)
-                  let namespace = get_namespace state namespace_name in
-                  variable_is_ok name alts namespace;
-                  eval_variable name alts state namespace
+                  let local_namespace = get_namespace_or_create state namespace_name in
+                  variable_is_ok name alts local_namespace;
+                  eval_variable name alts state local_namespace
               | _, _ ->
                   raise (Variable_exception (sprintf "Attributes wrong for variable"))
             end;
@@ -1171,6 +1191,7 @@ module Make(Dice : D) : T = struct
   (**
    * Creates a new empty namespace
    *
+   * @param name string Name of namespace
    * @return namespace
    *)
   and new_namespace name =
@@ -1210,9 +1231,41 @@ module Make(Dice : D) : T = struct
    *
    * @param state
    * @param name string
-   * @return namespace
+   * @return namespace option
    *)
   and get_namespace state name =
+    if Hashtbl.mem state.namespace_tbl name then
+      Some (Hashtbl.find state.namespace_tbl name)
+    else 
+      None
+      
+  (**
+   * Creates a new namespace with name and adds it to the state
+   * Raises exception if namespace already exists
+   *
+   * @param state state
+   * @param name string
+   * @return namespace
+   *)
+  and create_namespace state name =
+    if Hashtbl.mem state.namespace_tbl name then
+      raise (Namespace_exception (sprintf "Namespace with name '%s' already exists in this state" name))
+    else begin
+      log_trace (sprintf "new namespace created with name '%s'" name);
+      let new_namespace = new_namespace name in
+      Hashtbl.add state.namespace_tbl name new_namespace;
+      new_namespace
+    end
+
+  (**
+   * Get namespace with name @name, or creates a new one
+   * with this name if no one is present
+   *
+   * @param state
+   * @param name string
+   * @return namespace
+   *)
+  and get_namespace_or_create state name =
     if Hashtbl.mem state.namespace_tbl name then
       Hashtbl.find state.namespace_tbl name
     else begin
