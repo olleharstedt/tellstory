@@ -282,7 +282,7 @@ The flag mini-language is available as expected, so you can print `(flag1 AND fl
 
 #### Namespaces
 
-**Work in progress**
+_Work in progress_
 
 When you include many different files from within another file, names of variables and macros might clash. To solve this, we use namespaces, a common concept from programming languages. Basically, each file has its own namespace, meaning you can't read variables, flags, macros and so on from other files. If you want to do that, you have to use the _global_ namespace explicitly, like this:
 
