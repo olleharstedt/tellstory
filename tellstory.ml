@@ -302,6 +302,81 @@ module Make(Dice : D) : T = struct
     )
 
   (**
+   * Return global namespace in state
+   *
+   * @param state
+   * @return namespace
+   *)
+  let get_global_namespace state =
+    Hashtbl.find state.namespace_tbl "global"
+
+  (**
+   * Get namespace with name from state
+   * If namespace does not exists, it will be created
+   *
+   * @param state
+   * @param name string
+   * @return namespace option
+   *)
+  let get_namespace state name : namespace option =
+    if Hashtbl.mem state.namespace_tbl name then
+      Some (Hashtbl.find state.namespace_tbl name)
+    else 
+      None
+      
+  (**
+   * Creates a new empty namespace
+   *
+   * @param name string Name of namespace
+   * @return namespace
+   *)
+  let new_namespace name =
+    {
+      name;
+      var_tbl = ((Hashtbl.create 20) : var_tbl);
+      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
+      record_tbl = ((Hashtbl.create 20) : record_tbl);
+      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
+    }
+
+  (**
+   * Creates a new namespace with name and adds it to the state
+   * Raises exception if namespace already exists
+   *
+   * @param state state
+   * @param name string
+   * @return namespace
+   *)
+  let create_namespace state name =
+    if Hashtbl.mem state.namespace_tbl name then
+      raise (Namespace_exception (sprintf "Namespace with name '%s' already exists in this state" name))
+    else begin
+      log_trace (sprintf "new namespace created with name '%s'" name);
+      let new_namespace = new_namespace name in
+      Hashtbl.add state.namespace_tbl name new_namespace;
+      new_namespace
+    end
+
+  (**
+   * Get namespace with name @name, or creates a new one
+   * with this name if no one is present
+   *
+   * @param state
+   * @param name string
+   * @return namespace
+   *)
+  let get_namespace_or_create state name =
+    if Hashtbl.mem state.namespace_tbl name then
+      Hashtbl.find state.namespace_tbl name
+    else begin
+      log_trace (sprintf "new namespace created with name '%s'" name);
+      let new_namespace = new_namespace name in
+      Hashtbl.add state.namespace_tbl name new_namespace;
+      new_namespace
+    end
+
+
+  (**
    * Get list of possible alts to consider, conserning flags
    *
    * @param alts Xml.Element list
@@ -427,15 +502,29 @@ module Make(Dice : D) : T = struct
           raise (Alt_exception "Illegal alt in macro/deck")
     )
 
-  (** Parse macro *)
-  let parse_macro xml : macro = match xml with
-    | Xml.Element ("macro", [("name", name)], alts) ->
-        let alts = parse_alts alts in
-        {name; alts}
-    | Xml.Element ("macro", [], _) ->
-        raise (Macro_exception "Macro has no name attribute")
-    | Xml.Element ("macro", _, []) ->
-        raise (Macro_exception "Macro has no alts")
+  (** 
+   * Parse macro tag
+   *
+   * @param xml Xml.xml
+   * @return macro
+   *)
+  let parse_macro (xml) (state : state) : (macro * namespace option) = match xml with
+    | Xml.Element ("macro", attrs, alts) ->
+        let namespace_name = find_attribute attrs "namespace" in
+        let macro_name = find_attribute attrs "name" in
+        begin match macro_name, namespace_name with
+        | Some ("name", macro_name), Some ("namespace", namespace_name) ->
+            let alts = parse_alts alts in
+            let namespace = get_namespace_or_create state namespace_name in
+            ({name = macro_name; alts}, Some namespace)
+        | Some ("name", macro_name), _ ->
+            let alts = parse_alts alts in
+            ({name = macro_name; alts}, None)
+        | None , _ ->
+            raise (Macro_exception "Macro has no name attribute")
+        | _, _ ->
+            raise (Internal_error "Macro definition is super weird")
+        end
     | _ ->
         raise (Internal_error "Macro definition is weird")
 
@@ -447,22 +536,22 @@ module Make(Dice : D) : T = struct
    * @param macro_tbl hash table
    * @return unit
    *)
-  let store_macro (macro : macro) macro_tbl =
-    if Hashtbl.mem macro_tbl macro.name then
-      raise (Macro_exception ("Macro with name " ^ macro.name ^ " already exists"))
+  let store_macro (macro : macro) namespace =
+    if Hashtbl.mem namespace.macro_tbl macro.name then
+      raise (Macro_exception (sprintf "Macro with name '%s' already exists" macro.name))
     else
-      Hashtbl.add macro_tbl macro.name macro
+      Hashtbl.add namespace.macro_tbl macro.name macro
 
 
   (**
    * Eval macro used in alt or inline, like <alt useMacro="name"> or {#name}
    *
    * @param name string
-   * @param macro_tbl hash table
+   * @param namespace namespace
    * @return string
    * @raise Macro_exception if name is not a macro
    *)
-  let eval_macro name (macro_tbl : macro_tbl) =
+  let eval_macro name (namespace : namespace) =
     (* Aux function to check for <alt></alt> *)
     let check_for_empty_content c =
       match c with
@@ -472,8 +561,8 @@ module Make(Dice : D) : T = struct
           ()
     in
 
-    if Hashtbl.mem macro_tbl name then begin
-      let macro = Hashtbl.find macro_tbl name in
+    if Hashtbl.mem namespace.macro_tbl name then begin
+      let macro = Hashtbl.find namespace.macro_tbl name in
       (*let alt = choose_alt macro.alts in*)
       let alts = macro.alts in
       let alt = match nth alts (Dice.dice (List.length alts)) with
@@ -483,7 +572,7 @@ module Make(Dice : D) : T = struct
       check_for_empty_content alt.content;
       alt.content
     end else
-      raise (Macro_exception (sprintf "useMacro: Found no macro '%s'" name))
+      raise (Macro_exception (sprintf "useMacro: Found no macro '%s' in namespace '%s'" name namespace.name))
 
   (**
    * Choose card from deck and remove it from the deck.
@@ -532,6 +621,53 @@ module Make(Dice : D) : T = struct
           log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
           result
 
+  (**
+   * @param content string
+   * @param pattern string Regexp pattern as string to match namespace for variable, record, macro etc
+   * @param state state
+   * @param default_namespace namespace
+   * @return (namespace, content)
+   *)
+  and get_inline_namespace 
+    (content :string) 
+    (pattern : string) 
+    (state : state) 
+    (default_namespace : namespace) =
+    (* Check for inline namespace like {namespace\var} *)
+    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+)}" content with Not_found -> [||] in
+    let matches = Array.to_list (
+      Array.map (fun m ->
+        let substrings = Pcre.get_substrings m in
+        let s = substrings.(0) in
+        (* Strip {} *)
+        let s = String.sub s 1 (String.length s - 2) in
+        let slash_index = String.index s '\\' in
+        let s = String.sub s 0 slash_index in
+        (*printf "substring = %s\n" s;*)
+        s
+      ) matches
+    ) in
+
+    (* Abort if we found more than one namespace *)
+    if List.length matches > 1 then 
+      raise (Internal_error (sprintf "get_inline_namespace: More than one namespace found for content '%s'" content));
+
+    if List.length matches = 0 then 
+      (default_namespace, content)
+
+    (* Found inline namespace, so pick first and use that instead, and remove namespace from content *)
+    else begin match hd matches with
+    | None ->
+        raise (Internal_error (sprintf "get_inline_namespace: Found one namespace, but no match?"))
+    | Some namespace_name ->
+      begin match get_namespace state namespace_name with
+      | None ->
+          raise (Variable_exception (sprintf "Found no namespace with name '%s' for content '%s'" namespace_name content))
+      | Some namespace ->
+          let content = Pcre.replace ~pat:(namespace_name ^ "\\\\") ~templ:"" content in
+          namespace, content
+      end
+    end
 
   (**
    * Replace inline variable
@@ -741,7 +877,7 @@ module Make(Dice : D) : T = struct
     let con = replace_inline_content con in
     let con = replace_inline_variable con state namespace in
     let con = replace_inline_records con namespace.record_tbl in
-    let con = replace_inline_macros con namespace.macro_tbl in
+    let con = replace_inline_macros con namespace in
     let con = replace_inline_deck con state namespace in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
@@ -817,7 +953,7 @@ module Make(Dice : D) : T = struct
     | None, None, None ->
         fetch_content alt
     | Some (_, macro_name), None, None ->
-        eval_macro macro_name namespace.macro_tbl
+        eval_macro macro_name namespace
     | None, Some (_, deck_name), None ->
         log_trace "eval_alt: useDeck";
         eval_deck deck_name state namespace
@@ -1162,8 +1298,13 @@ module Make(Dice : D) : T = struct
         (* <macro> *)
         | Xml.Element ("macro", _, _) ->
             (* store macro *)
-            let macro = parse_macro s in
-            store_macro macro namespace.macro_tbl;
+            let (macro, namespace_option) = parse_macro s state in
+            begin match namespace_option with
+            | Some namespace ->
+                store_macro macro namespace;
+            | None ->
+                store_macro macro namespace;
+            end;
             "" (* Return empty string *)
 
         (* <variable> *)
@@ -1226,21 +1367,6 @@ module Make(Dice : D) : T = struct
     String.trim result
 
   (**
-   * Creates a new empty namespace
-   *
-   * @param name string Name of namespace
-   * @return namespace
-   *)
-  and new_namespace name =
-    {
-      name;
-      var_tbl = ((Hashtbl.create 20) : var_tbl);
-      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
-      record_tbl = ((Hashtbl.create 20) : record_tbl);
-      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
-    }
-
-  (**
    * Init state with global namespace and hash tables
    *
    * @param unit
@@ -1252,65 +1378,6 @@ module Make(Dice : D) : T = struct
     Hashtbl.add namespace_tbl "global" global_namespace;
     (* Return state *)
     {namespace_tbl}
-
-  (**
-   * Return global namespace in state
-   *
-   * @param state
-   * @return namespace
-   *)
-  and get_global_namespace state =
-    Hashtbl.find state.namespace_tbl "global"
-
-  (**
-   * Get namespace with name from state
-   * If namespace does not exists, it will be created
-   *
-   * @param state
-   * @param name string
-   * @return namespace option
-   *)
-  and get_namespace state name : namespace option =
-    if Hashtbl.mem state.namespace_tbl name then
-      Some (Hashtbl.find state.namespace_tbl name)
-    else 
-      None
-      
-  (**
-   * Creates a new namespace with name and adds it to the state
-   * Raises exception if namespace already exists
-   *
-   * @param state state
-   * @param name string
-   * @return namespace
-   *)
-  and create_namespace state name =
-    if Hashtbl.mem state.namespace_tbl name then
-      raise (Namespace_exception (sprintf "Namespace with name '%s' already exists in this state" name))
-    else begin
-      log_trace (sprintf "new namespace created with name '%s'" name);
-      let new_namespace = new_namespace name in
-      Hashtbl.add state.namespace_tbl name new_namespace;
-      new_namespace
-    end
-
-  (**
-   * Get namespace with name @name, or creates a new one
-   * with this name if no one is present
-   *
-   * @param state
-   * @param name string
-   * @return namespace
-   *)
-  and get_namespace_or_create state name =
-    if Hashtbl.mem state.namespace_tbl name then
-      Hashtbl.find state.namespace_tbl name
-    else begin
-      log_trace (sprintf "new namespace created with name '%s'" name);
-      let new_namespace = new_namespace name in
-      Hashtbl.add state.namespace_tbl name new_namespace;
-      new_namespace
-    end
 
   (**
    * Return string of XML-file with story etc.
