@@ -634,7 +634,7 @@ module Make(Dice : D) : T = struct
     (state : state) 
     (default_namespace : namespace) =
     (* Check for inline namespace like {namespace\var} *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+)}" content with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:pattern content with Not_found -> [||] in
     let matches = Array.to_list (
       Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
@@ -751,11 +751,15 @@ module Make(Dice : D) : T = struct
   (**
    * Replace inline macros like {#this}
    *
-   * @param con string Content
-   * @param macro_tbl hash table
+   * @param content string
+   * @param namespace
+   * @param namespace
    * @return string
    *)
-  and replace_inline_macros content macro_tbl =
+  and replace_inline_macros content state namespace =
+    (* Check for inline namespace like {namespace\#this} *)
+    let pattern = "{[a-zA-Z0-9_]+\\\\(?:#[a-zA-Z0-9_]+)}" in
+    let (namespace, content) = get_inline_namespace content pattern state namespace in
     (* Replace inline macros, like {#this} *)
     let matches = try Pcre.exec_all ~pat:"{#[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     let matches = Array.to_list (
@@ -769,7 +773,7 @@ module Make(Dice : D) : T = struct
     let rec replace_macros matches content = match matches with
     | [] -> content
     | mat::tail ->
-        let macro_content = eval_macro mat macro_tbl in
+        let macro_content = eval_macro mat namespace in
         let pattern = sprintf "{#%s}" mat in
         let content = Pcre.replace ~pat:pattern ~templ:macro_content content in
         replace_macros tail content
@@ -846,7 +850,7 @@ module Make(Dice : D) : T = struct
     let con = replace_inline_content con in
     let con = replace_inline_variable con state namespace in
     let con = replace_inline_records con namespace.record_tbl in
-    let con = replace_inline_macros con namespace in
+    let con = replace_inline_macros con state namespace in
     let con = replace_inline_deck con state namespace in
 
     (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
