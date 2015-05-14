@@ -662,7 +662,7 @@ module Make(Dice : D) : T = struct
     | Some namespace_name ->
       begin match get_namespace state namespace_name with
       | None ->
-          raise (Variable_exception (sprintf "Found no namespace with name '%s' for content '%s'" namespace_name content))
+          raise (Namespace_exception (sprintf "Found no namespace with name '%s' for content '%s'" namespace_name content))
       | Some namespace ->
           let content = Pcre.replace ~pat:(namespace_name ^ "\\\\") ~templ:"" content in
           namespace, content
@@ -680,39 +680,8 @@ module Make(Dice : D) : T = struct
    *)
   and replace_inline_variable content state (namespace : namespace) =
     (* Check for inline namespace like {namespace\var} *)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+)}" content with Not_found -> [||] in
-    let matches = Array.to_list (
-      Array.map (fun m ->
-        let substrings = Pcre.get_substrings m in
-        let s = substrings.(0) in
-        (* Strip {} *)
-        let s = String.sub s 1 (String.length s - 2) in
-        let slash_index = String.index s '\\' in
-        let s = String.sub s 0 slash_index in
-        (*printf "substring = %s\n" s;*)
-        s
-      ) matches
-    ) in
-    (* Abort if we found more than one namespace *)
-    if List.length matches > 1 then 
-      raise (Internal_error (sprintf "replace_inline_variable: More than one namespace found for content '%s'" content));
-
-    (* Default to namespace and content given by caller *)
-    let namespace, content = if List.length matches = 0 then 
-      namespace, content
-    (* Found inline namespace, so pick first and use that instead, and remove namespace from content *)
-    else begin match hd matches with
-    | None ->
-        raise (Internal_error (sprintf "replace_inline_variable: Found one namespace, but no match?"))
-    | Some namespace_name ->
-      begin match get_namespace state namespace_name with
-      | None ->
-          raise (Variable_exception (sprintf "Found no namespace with name '%s' for content '%s'" namespace_name content))
-      | Some namespace ->
-          let content = Pcre.replace ~pat:(namespace_name ^ "\\\\") ~templ:"" content in
-          namespace, content
-      end
-    end in
+    let pattern = "{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+)}" in
+    let (namespace, content) = get_inline_namespace content pattern state namespace in
 
     let var_tbl = namespace.var_tbl in
 
