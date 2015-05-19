@@ -505,28 +505,27 @@ module Make(Dice : D) : T = struct
   (** 
    * Parse macro tag
    *
-   * @param xml Xml.xml
-   * @return macro
+   * @param attrs Xml.xml list
+   * @param alts Xml.xml list
+   * @param state
+   * @return (macro * namespace option)
    *)
-  let parse_macro (xml) (state : state) : (macro * namespace option) = match xml with
-    | Xml.Element ("macro", attrs, alts) ->
-        let namespace_name = find_attribute attrs "namespace" in
-        let macro_name = find_attribute attrs "name" in
-        begin match macro_name, namespace_name with
-        | Some ("name", macro_name), Some ("namespace", namespace_name) ->
-            let alts = parse_alts alts in
-            let namespace = get_namespace_or_create state namespace_name in
-            ({name = macro_name; alts}, Some namespace)
-        | Some ("name", macro_name), _ ->
-            let alts = parse_alts alts in
-            ({name = macro_name; alts}, None)
-        | None , _ ->
-            raise (Macro_exception "Macro has no name attribute")
-        | _, _ ->
-            raise (Internal_error "Macro definition is super weird")
-        end
-    | _ ->
-        raise (Internal_error "Macro definition is weird")
+  let parse_macro attrs alts (state : state) : (macro * namespace option) =
+    let namespace_name = find_attribute attrs "namespace" in
+    let macro_name = find_attribute attrs "name" in
+    begin match macro_name, namespace_name with
+    | Some ("name", macro_name), Some ("namespace", namespace_name) ->
+        let alts = parse_alts alts in
+        let namespace = get_namespace_or_create state namespace_name in
+        ({name = macro_name; alts}, Some namespace)
+    | Some ("name", macro_name), _ ->
+        let alts = parse_alts alts in
+        ({name = macro_name; alts}, None)
+    | None , _ ->
+        raise (Macro_exception "Macro has no name attribute")
+    | _, _ ->
+        raise (Internal_error "Macro definition is super weird")
+    end
 
   (** 
    * Store macro in macro hash table. Raise exception if macro with this name
@@ -714,11 +713,17 @@ module Make(Dice : D) : T = struct
   (**
    * Replace inline records like {this.that}
    *
-   * @param content string Content
-   * @param record_tbl hash table
+   * @param content string
+   * @param state state
+   * @param namespace
    * @return string
    *)
-  and replace_inline_records content record_tbl =
+  and replace_inline_records content state namespace =
+
+    (* Check for inline namespace like {namespace\var.this} *)
+    let pattern = "{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+)}" in
+    let (namespace, content) = get_inline_namespace content pattern state namespace in
+
     (* Replace records like {this.here} *)
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     (* Matches as [[key, val], [key, val], ...] *)
@@ -734,7 +739,7 @@ module Make(Dice : D) : T = struct
       | [] -> content
       | [record_name; var_name] :: xs ->
           (* Get record and var name *)
-          let record = try Hashtbl.find record_tbl record_name with
+          let record = try Hashtbl.find namespace.record_tbl record_name with
             Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
           in
           let var = try Hashtbl.find record var_name with
@@ -843,13 +848,15 @@ module Make(Dice : D) : T = struct
    * Eval content to replace inline variables, records and macros
    * Used in sentence and alt
    *
-   * @param con string
+   * @param con string content
+   * @param state state
+   * @param namespace namespace
    * @return string
    *)
   and eval_content con state namespace =
     let con = replace_inline_content con in
     let con = replace_inline_variable con state namespace in
-    let con = replace_inline_records con namespace.record_tbl in
+    let con = replace_inline_records con state namespace in
     let con = replace_inline_macros con state namespace in
     let con = replace_inline_deck con state namespace in
 
@@ -1182,6 +1189,7 @@ module Make(Dice : D) : T = struct
 
   (**
    * Parses ifSet="" and return the result
+   * Boolean lang
    *
    * @param attrs Xml.Element list
    * @return bool
@@ -1269,9 +1277,9 @@ module Make(Dice : D) : T = struct
               ""
 
         (* <macro> *)
-        | Xml.Element ("macro", _, _) ->
+        | Xml.Element ("macro", attrs, alts) ->
             (* store macro *)
-            let (macro, namespace_option) = parse_macro s state in
+            let (macro, namespace_option) = parse_macro attrs alts state in
             begin match namespace_option with
             | Some namespace ->
                 store_macro macro namespace;
@@ -1302,9 +1310,28 @@ module Make(Dice : D) : T = struct
             ""
 
         (* <record> *)
-        | Xml.Element ("record", [("name", name)], alts) when (record_is_ok name alts namespace.record_tbl) ->
-            eval_record name alts namespace.record_tbl;
-            ""
+        | Xml.Element ("record", attrs, alts) ->
+            let record_name = find_attribute attrs "name" in
+            let namespace_name = find_attribute attrs "namespace" in
+            begin match record_name, namespace_name with
+            | Some ("name", record_name), None ->
+                if record_is_ok record_name alts namespace.record_tbl then begin
+                  eval_record record_name alts namespace.record_tbl;
+                  ""
+                end else
+                  (* record_is_ok will throw exception if record is fail *)
+                  ""
+            | Some ("name", record_name), Some ("namespace", namespace_name) ->
+                let namespace = get_namespace_or_create state namespace_name in
+                if record_is_ok record_name alts namespace.record_tbl then begin
+                  eval_record record_name alts namespace.record_tbl;
+                  ""
+                end else
+                  (* record_is_ok will throw exception if record is fail *)
+                  ""
+            | _, _ ->
+                raise (Record_exception (sprintf "Attributes wrong for record"))
+            end
 
         (* <deck> *)
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
