@@ -23,4 +23,18 @@
   <!-- Global namespace implied -->
   <sentence>Is that you, {#cat}?</sentence>
 
+  <!-- Namespace using record -->
+  <record name="gender" namespace="stereotypes">
+    <alt>
+      <he>he</he>
+      <role>loud and strong</role>
+    </alt>
+    <alt>
+      <he>she</he>
+      <role>quiet and strong</role>
+    </alt>
+  </record>
+
+  <sentence namespace="stereotypes">{gender.he} is {gender.role}.</sentence>
+
 </story>
