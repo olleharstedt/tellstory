@@ -10,7 +10,7 @@ On Ubuntu:
 * Clone repository
 * Install OCaml like `sudo apt-get install ocaml ocaml-findlib opam`
 * Opam needs some configuration, look it up
-* Use opam to install xml-light, pcre, menhir
+* Use opam to install xml-light, pcre, menhir, core, bolt
 * Print `make` in dir
 * Use `./tellstory filename.xml` to render story.
 
