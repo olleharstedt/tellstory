@@ -17,22 +17,42 @@
 %}
 
 %token <string> WORD
+%token DECKSIGN
+%token MACROSIGN
+%token RECORDDOT
+%token QUOTE
+%token BACKSLASH
+
 (*
 %token BACKSLASH
 *)
 %token EOL
 
-%start <Ast.term> main
+%start <Ast.nameterm> main
 
 %%
 
 main:
-| e = expr EOL
+| e = nameterm EOL
     { e }
 
-expr:
+nameterm:
+| n = term
+    { Term n }
+| w = WORD BACKSLASH n = term
+    { Nameterm (w, n) }
+
+term:
 | w = WORD
     { Variable w }
+| DECKSIGN w = WORD
+    { Deck w }
+| MACROSIGN w = WORD
+    { Macro w }
+| w = WORD RECORDDOT u = WORD
+    { Record (w, u) }
+| QUOTE w = WORD QUOTE
+    { Content w }
     (*
 | e = term
     { e }

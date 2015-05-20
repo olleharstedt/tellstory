@@ -20,18 +20,20 @@
       expr
  *)
 
+(* List like 'oneitem' or 'one|two|three' *)
 type expr =
-  | Single of nameterm
-  | Many of nameterm list
+  | Expr of nameterm list
 
+(* Either 'var' or 'namespace\var' *)
 and nameterm =
-  | Namespace of string * term
+  | Nameterm of string * term
   | Term of term
 
+(* Atom like 'var' or '$deck' *)
 and term =
   | Variable of string
-  | Record
-  | Macro
-  | Deck
-  | Content
+  | Record of string * string
+  | Macro of string
+  | Deck of string
+  | Content of string
 [@@deriving show]

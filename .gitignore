@@ -11,6 +11,9 @@
 lexer.ml
 parser.ml
 parser.mli
+tlexer.ml
+tparser.ml
+tparser.mli
 tags
 tellstory
 test

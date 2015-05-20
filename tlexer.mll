@@ -30,7 +30,6 @@ and token = parse
     { token lexbuf }
 | '\n'
     { EOL }
-    (*
 | '\\'
     { BACKSLASH }
 | '$'
@@ -41,7 +40,6 @@ and token = parse
     { RECORDDOT }
 | '"'
     { QUOTE }
-*)
 | ['a'-'z' 'A'-'Z' '_' '0'-'9']+ as i
     { WORD i }
 | eof
