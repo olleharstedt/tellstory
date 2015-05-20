@@ -22,25 +22,32 @@
 %token RECORDDOT
 %token QUOTE
 %token BACKSLASH
+%token BARLINE
 
 (*
 %token BACKSLASH
 *)
 %token EOL
 
-%start <Ast.nameterm> main
+%start <Ast.nameterm_list> main
 
 %%
 
 main:
-| e = nameterm EOL
+| e = exp_list EOL
     { e }
+
+exp_list:
+| e = separated_list(BARLINE, nameterm)
+    { Nameterm_list e }
 
 nameterm:
 | n = term
     { Term n }
 | w = WORD BACKSLASH n = term
     { Nameterm (w, n) }
+| QUOTE w = WORD QUOTE
+    { Content w }
 
 term:
 | w = WORD
@@ -51,8 +58,6 @@ term:
     { Macro w }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
-| QUOTE w = WORD QUOTE
-    { Content w }
     (*
 | e = term
     { e }

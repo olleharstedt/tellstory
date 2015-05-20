@@ -40,6 +40,7 @@ let _ =
   print_endline ""
   *)
 
+(** tmp for template_lang *)
 let () =
   let stdinbuf = Lexing.from_channel stdin in
   while true do
@@ -48,7 +49,7 @@ let () =
     try
       (* Run the parser on a single line of input. *)
       let ast = (Tparser.main Tlexer.token linebuf) in
-      let ast_string = Ast.show_nameterm ast in
+      let ast_string = Ast.show_nameterm_list ast in
       Printf.printf "%s\n%!" ast_string;
     with
     | Tlexer.Error msg ->

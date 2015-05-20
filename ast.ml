@@ -21,13 +21,14 @@
  *)
 
 (* List like 'oneitem' or 'one|two|three' *)
-type expr =
-  | Expr of nameterm list
+type nameterm_list =
+  | Nameterm_list of nameterm list
 
 (* Either 'var' or 'namespace\var' *)
 and nameterm =
   | Nameterm of string * term
   | Term of term
+  | Content of string
 
 (* Atom like 'var' or '$deck' *)
 and term =
@@ -35,5 +36,4 @@ and term =
   | Record of string * string
   | Macro of string
   | Deck of string
-  | Content of string
 [@@deriving show]
