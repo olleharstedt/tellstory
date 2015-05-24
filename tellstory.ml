@@ -18,6 +18,9 @@ open Core_list
 let log_trace msg =
   Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg
 
+let log_debug msg =
+  Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.DEBUG msg
+
 (**
  * Need to factor out dice function because in tests we want to control
  * return values.
@@ -360,7 +363,7 @@ module Make(Dice : D) : T = struct
     if Hashtbl.mem state.namespace_tbl name then
       raise (Namespace_exception (sprintf "Namespace with name '%s' already exists in this state" name))
     else begin
-      log_trace (sprintf "new namespace created with name '%s'" name);
+      log_debug (sprintf "new namespace created with name '%s'" name);
       let new_namespace = new_namespace name in
       Hashtbl.add state.namespace_tbl name new_namespace;
       new_namespace
@@ -384,6 +387,34 @@ module Make(Dice : D) : T = struct
       new_namespace
     end
 
+  (**
+   * Parses ifSet="" and return the result
+   * Boolean lang
+   *
+   * @param attrs Xml.Element list
+   * @return bool
+   * @raise Errors if parse failes
+   *)
+  let flags_is_ok attrs =
+    let ifSet = find_attribute attrs "ifSet" in
+    match ifSet with
+    | None ->
+        true
+    | Some ("ifSet", flags) ->
+        let lexing = Lexing.from_string flags in
+        let flags_ok = try Parser.main Lexer.token lexing with
+          | Lexer.Error msg ->
+              raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
+          | Parser.Error ->
+              raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
+          | Failure msg ->
+              let open Lexing in
+              raise (Internal_error (sprintf "line = %d; col = %d" lexing.lex_curr_p.pos_lnum lexing.lex_curr_p.pos_cnum))
+        in
+        flags_ok
+    | _ ->
+        raise (Internal_error "flags_is_ok: Weird result from find_attribute")
+
 
   (**
    * Get list of possible alts to consider, conserning flags
@@ -399,6 +430,8 @@ module Make(Dice : D) : T = struct
         let alts2 = filter alts ~f:(fun alt ->
           (* Have to check for flag condition to rule out some alts *)
           let attrs = Xml.attribs alt in
+          flags_is_ok attrs
+          (*
           let ifSet = find_attribute attrs "ifSet" in
           (* Did we find ifSet? *)
           begin match ifSet with
@@ -417,6 +450,7 @@ module Make(Dice : D) : T = struct
             | _ ->
                 raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
           end
+          *)
         ) in
         (*(iter alts2 ~f:(fun xml -> log_trace "alt = %s\n" (Xml.to_string xml)));*)
         alts2
@@ -493,8 +527,10 @@ module Make(Dice : D) : T = struct
         (* Check if flag is already set. If so, abort *)
         if Hashtbl.mem Globals.flags_tbl s then
           raise (Flag_already_set s)
-        else
+        else begin
+          log_debug (sprintf "set flag '%s'" s);
           Hashtbl.add Globals.flags_tbl s true
+        end
       ) fl
 
   (**
@@ -1264,34 +1300,6 @@ module Make(Dice : D) : T = struct
       raise (Deck_exception (sprintf "Deck with name '%s' already exists" deck.name))
     else
       Hashtbl.add deck_tbl deck.name deck
-
-  (**
-   * Parses ifSet="" and return the result
-   * Boolean lang
-   *
-   * @param attrs Xml.Element list
-   * @return bool
-   * @raise Errors if parse failes
-   *)
-  and flags_is_ok attrs =
-    let ifSet = find_attribute attrs "ifSet" in
-    match ifSet with
-    | None ->
-        true
-    | Some ("ifSet", flags) ->
-        let lexing = Lexing.from_string flags in
-        let flags_ok = try Parser.main Lexer.token lexing with
-          | Lexer.Error msg ->
-              raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
-          | Parser.Error ->
-              raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
-          | Failure msg ->
-              let open Lexing in
-              raise (Internal_error (sprintf "line = %d; col = %d" lexing.lex_curr_p.pos_lnum lexing.lex_curr_p.pos_cnum))
-        in
-        flags_ok
-    | _ ->
-        raise (Internal_error "flags_is_ok: Weird result from find_attribute")
 
   (**
    * Convert all sentences to strings
