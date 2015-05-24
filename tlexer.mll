@@ -38,12 +38,16 @@ and token = parse
     { MACROSIGN }
 | '.'
     { RECORDDOT }
+    (*
 | '"'
     { QUOTE }
+*)
 | '|'
     { BARLINE }
 | ['a'-'z' 'A'-'Z' '_' '0'-'9']+ as i
     { WORD i }
+| ['"'] ['a'-'z' 'A'-'Z' '_' '0'-'9' ' ']+ ['"'] as i
+    { QUOTE i }
 | eof
     { EOL}
 | _

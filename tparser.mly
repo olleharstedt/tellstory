@@ -20,7 +20,7 @@
 %token DECKSIGN
 %token MACROSIGN
 %token RECORDDOT
-%token QUOTE
+%token <string> QUOTE
 %token BACKSLASH
 %token BARLINE
 
@@ -46,7 +46,7 @@ nameterm:
     { Term n }
 | w = WORD BACKSLASH n = term
     { Nameterm (w, n) }
-| QUOTE w = WORD QUOTE
+| w = QUOTE
     { Content w }
 
 term:

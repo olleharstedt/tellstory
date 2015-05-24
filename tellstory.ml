@@ -42,6 +42,10 @@ module type T = sig
   val file_to_string : string -> state -> string
   val init_state : unit -> state
   val get_global_namespace : state -> namespace
+  val get_namespace : state -> string -> namespace option
+
+  (* Functions needed by eval_ast module *)
+  val eval_deck : string -> state -> namespace -> string
 end
 
 module Make(Dice : D) : T = struct
@@ -149,9 +153,14 @@ module Make(Dice : D) : T = struct
   type namespace_tbl = (string, namespace) Hashtbl.t
 
   (** Explicit state, pass around every where... *)
+  (** TODO: Include default namespace? *)
   type state = {
     namespace_tbl : namespace_tbl;
   }
+
+  (* Want to construct Ast_eval.Make(this) - how?
+  let module Ast_eval = module Ast_eval.Make
+  *)
 
   (** List of attributes allowed in <sentence> tag *)
   let allowed_sentence_attributes = ((Hashtbl.create 5) : ((string, bool) Hashtbl.t))
@@ -321,9 +330,9 @@ module Make(Dice : D) : T = struct
   let get_namespace state name : namespace option =
     if Hashtbl.mem state.namespace_tbl name then
       Some (Hashtbl.find state.namespace_tbl name)
-    else 
+    else
       None
-      
+
   (**
    * Creates a new empty namespace
    *
@@ -401,6 +410,7 @@ module Make(Dice : D) : T = struct
                 let split_flags = (Str.split (Str.regexp "[ \t]+") flags) in
 
                 (* Check so all flags are set in hash table. *)
+                (* TODO: This should use boolean lang *)
                 for_all split_flags ~f:(fun flag ->
                   Hashtbl.mem Globals.flags_tbl flag
                 )
@@ -410,6 +420,7 @@ module Make(Dice : D) : T = struct
         ) in
         (*(iter alts2 ~f:(fun xml -> log_trace "alt = %s\n" (Xml.to_string xml)));*)
         alts2
+
 
   (**
    * Chose an alt to use, depending on flags
@@ -502,7 +513,7 @@ module Make(Dice : D) : T = struct
           raise (Alt_exception "Illegal alt in macro/deck")
     )
 
-  (** 
+  (**
    * Parse macro tag
    *
    * @param attrs Xml.xml list
@@ -527,7 +538,7 @@ module Make(Dice : D) : T = struct
         raise (Internal_error "Macro definition is super weird")
     end
 
-  (** 
+  (**
    * Store macro in macro hash table. Raise exception if macro with this name
    * already exists.
    *
@@ -574,6 +585,38 @@ module Make(Dice : D) : T = struct
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s' in namespace '%s'" name namespace.name))
 
   (**
+   * Evaluate a record and return its content
+   *
+   * @param record_name string
+   * @param var_name string
+   * @param namespace namespace
+   * @return string
+   * @raise Record_exception
+   *)
+  let eval_record record_name var_name namespace =
+    let record = try Hashtbl.find namespace.record_tbl record_name with
+      Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
+    in
+    let var = try Hashtbl.find record var_name with
+      Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
+    in
+    var
+
+  (**
+   * Evaluate variable and return its content
+   *
+   * @param var_name string
+   * @param namespace namespace
+   * @return string
+   * @raise Variable_exception
+   *)
+  let eval_var var_name namespace =
+    try
+      Hashtbl.find namespace.var_tbl var_name
+    with
+        Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s' in namespace '%s'. Check that you defined it with <variable name=\"%s\">..." var_name namespace.name var_name))
+
+  (**
    * Choose card from deck and remove it from the deck.
    * Return card content.
    *
@@ -592,7 +635,7 @@ module Make(Dice : D) : T = struct
       let card = nth deck.alts (Dice.dice (length deck.alts)) in
       match card with
       | None -> raise (Deck_exception ("Found no card"))
-      | Some card -> 
+      | Some card ->
           (* Create a new deck without the card we picked *)
           (* Card = alt in this context *)
           (* Filter logic:
@@ -627,10 +670,10 @@ module Make(Dice : D) : T = struct
    * @param default_namespace namespace
    * @return (namespace, content)
    *)
-  and get_inline_namespace 
-    (content :string) 
-    (pattern : string) 
-    (state : state) 
+  and get_inline_namespace
+    (content :string)
+    (pattern : string)
+    (state : state)
     (default_namespace : namespace) =
     (* Check for inline namespace like {namespace\var} *)
     let matches = try Pcre.exec_all ~pat:pattern content with Not_found -> [||] in
@@ -648,10 +691,10 @@ module Make(Dice : D) : T = struct
     ) in
 
     (* Abort if we found more than one namespace *)
-    if List.length matches > 1 then 
+    if List.length matches > 1 then
       raise (Internal_error (sprintf "get_inline_namespace: More than one namespace found for content '%s'" content));
 
-    if List.length matches = 0 then 
+    if List.length matches = 0 then
       (default_namespace, content)
 
     (* Found inline namespace, so pick first and use that instead, and remove namespace from content *)
@@ -682,8 +725,6 @@ module Make(Dice : D) : T = struct
     let pattern = "{[a-zA-Z0-9_]+\\\\(?:[a-zA-Z0-9_]+)}" in
     let (namespace, content) = get_inline_namespace content pattern state namespace in
 
-    let var_tbl = namespace.var_tbl in
-
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_]+}" content with Not_found -> [||] in
     let matches = Array.to_list (
       Array.map (fun m ->
@@ -698,15 +739,11 @@ module Make(Dice : D) : T = struct
     (* Replace inline variables, like {this} *)
     let rec replace_variables matches content = match matches with
       | [] -> content
-      | x::xs ->
-          let pattern = "{" ^ x ^ "}" in
-          let replacement = try
-              Hashtbl.find var_tbl x
-            with
-              Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s' in namespace '%s'. Check that you defined it with <variable name=\"%s\">..." x namespace.name x))
-          in
-          let content = Pcre.replace ~pat:pattern ~templ:replacement content in
-          replace_variables xs content
+      | var_name::vars ->
+          let pattern = sprintf "{%s}" var_name in
+          let var_content = eval_var var_name namespace in
+          let new_content = Pcre.replace ~pat:pattern ~templ:var_content content in
+          replace_variables vars new_content
     in
     replace_variables matches_uniq content
 
@@ -739,15 +776,10 @@ module Make(Dice : D) : T = struct
       | [] -> content
       | [record_name; var_name] :: xs ->
           (* Get record and var name *)
-          let record = try Hashtbl.find namespace.record_tbl record_name with
-            Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
-          in
-          let var = try Hashtbl.find record var_name with
-            Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
-          in
+          let record_content = eval_record record_name var_name namespace in
           let pattern = sprintf "{%s.%s}" record_name var_name in
-          let content = Pcre.replace ~pat:pattern ~templ:var content in
-          replace_records xs content
+          let new_content = Pcre.replace ~pat:pattern ~templ:record_content content in
+          replace_records xs new_content
       | _ ->
           raise (Internal_error "eval_content: replace_records: Wrong structure in list")
     in
@@ -793,7 +825,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and replace_inline_content con =
-    let matches = try Pcre.exec_all ~pat:"{\"[a-zA-Z0-9_\\s]+\"}" con with Not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{\"[a-za-z0-9_\\s]+\"}" con with not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
         let substrings = Pcre.get_substrings m in
@@ -854,6 +886,51 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content con state namespace =
+    let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|a-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = Array.to_list (
+      ArrayLabels.map matches ~f:(fun m ->
+        let substrings = Pcre.get_substrings m in
+        let s = substrings.(0) in
+        (* Strip brackets *)
+        let s = String.sub s 1 (String.length s - 2) in
+        (*printf "match = %s\n" s;*)
+        s
+      )
+    ) in
+    let rec replace_content matches con =
+      match matches with
+      | [] -> con
+      | match_::tail ->
+          (*
+          log_trace "mat = %s\n" mat;
+          log_trace "con = %s\n" con;
+          *)
+          (*
+          let replacement = String.sub mat 1 (String.length mat - 2) in
+          let mat = sprintf "{%s}" mat in
+          let mat = Pcre.quote mat in
+          let con = Pcre.replace ~pat:mat ~templ:replacement con in
+          *)
+          (*printf "match_ = %s\n" match_;*)
+          let linebuf = Lexing.from_string match_ in
+          let ast = try (Tparser.main Tlexer.token linebuf) with
+            | Tlexer.Error msg ->
+                raise (Parser_error (sprintf "inline: Lexer error %s" msg))
+            | Tparser.Error ->
+                raise (Parser_error (sprintf "inline: Syntax error at offset %d" (Lexing.lexeme_start linebuf)))
+            | Failure msg ->
+                let open Lexing in
+                raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))
+          in
+          let evaluated_ast = eval_ast ast state namespace in
+          let match_with_brackets = sprintf "{%s}" match_ in
+          let match_with_brackets_quote = Pcre.quote match_with_brackets in
+          let new_con = Pcre.replace ~pat:match_with_brackets_quote ~templ:evaluated_ast con in
+          replace_content tail new_con
+    in
+    replace_content matches con
+
+    (*
     let con = replace_inline_content con in
     let con = replace_inline_variable con state namespace in
     let con = replace_inline_records con state namespace in
@@ -865,7 +942,7 @@ module Make(Dice : D) : T = struct
     let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"\\s]+}" con with Not_found -> [||] in
     let matches = Array.to_list matches in
     (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
-    let matches_and_replaces = map matches ~f:(fun m -> 
+    let matches_and_replaces = map matches ~f:(fun m ->
       let substrings = Pcre.get_substrings m in
       let substrings_tuples = ArrayLabels.map substrings ~f:(fun substring ->
         (* Strip {} *)
@@ -902,6 +979,7 @@ module Make(Dice : D) : T = struct
     *)
 
     con
+    *)
 
   (**
    * Eval <alt> to its content
@@ -1118,7 +1196,7 @@ module Make(Dice : D) : T = struct
    * @param state state
    * @return void
    *)
-  and eval_variable name alts (state : state) namespace =
+  and save_variable name alts (state : state) namespace =
     match choose_alt alts with
     | None ->
         raise (Variable_exception (sprintf "No alt could be chosen for variable '%s'" name))
@@ -1134,7 +1212,7 @@ module Make(Dice : D) : T = struct
    * @param record_tbl record_tbl
    * @return void
    *)
-  and eval_record name alts record_tbl =
+  and save_record name alts record_tbl =
 
     (* Choose alt *)
     let alt = match nth alts (Dice.dice (List.length alts)) with
@@ -1271,7 +1349,7 @@ module Make(Dice : D) : T = struct
 
         (* <ifSet name="flag AND flag2 ..."> ... </ifSet> *)
         | Xml.Element ("ifSet", [("name", flag_expression)], children) ->
-            if flags_is_ok [("ifSet", flag_expression)] then 
+            if flags_is_ok [("ifSet", flag_expression)] then
               print_sentences (Xml.Element ("", [], children)) state namespace
             else
               ""
@@ -1298,12 +1376,12 @@ module Make(Dice : D) : T = struct
               match name, namespace_name with
               | Some ("name", name), None ->
                   variable_is_ok name alts namespace;
-                  eval_variable name alts state namespace
+                  save_variable name alts state namespace
               | Some ("name", name), Some ("namespace", namespace_name) ->
                   (* Don't use default namespace *)
                   let local_namespace = get_namespace_or_create state namespace_name in
                   variable_is_ok name alts local_namespace;
-                  eval_variable name alts state local_namespace
+                  save_variable name alts state local_namespace
               | _, _ ->
                   raise (Variable_exception (sprintf "Attributes wrong for variable"))
             end;
@@ -1316,7 +1394,7 @@ module Make(Dice : D) : T = struct
             begin match record_name, namespace_name with
             | Some ("name", record_name), None ->
                 if record_is_ok record_name alts namespace.record_tbl then begin
-                  eval_record record_name alts namespace.record_tbl;
+                  save_record record_name alts namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -1324,7 +1402,7 @@ module Make(Dice : D) : T = struct
             | Some ("name", record_name), Some ("namespace", namespace_name) ->
                 let namespace = get_namespace_or_create state namespace_name in
                 if record_is_ok record_name alts namespace.record_tbl then begin
-                  eval_record record_name alts namespace.record_tbl;
+                  save_record record_name alts namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -1349,9 +1427,9 @@ module Make(Dice : D) : T = struct
             )
 
         (* Unknown tag or error *)
-        | Xml.Element (what, _, _) -> 
+        | Xml.Element (what, _, _) ->
             raise (Unknown_tag what)
-        | _ -> 
+        | _ ->
             raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
@@ -1399,6 +1477,92 @@ module Make(Dice : D) : T = struct
     let story = fetch_node xml "story" in
     let global_namespace = Hashtbl.find state.namespace_tbl "global" in
     print_sentences story state global_namespace
+
+  (** Evaluate AST, part of template lang. Factor in own module? How? Interdependencies. *)
+
+  (**
+   * @param term
+   * @param state state
+   * @param namespace namespace option
+   * @return string
+   *)
+  and eval_term term state namespace =
+    let open Ast in
+    match term with
+    | Variable var_name ->
+        eval_var var_name namespace
+    | Record (record_name, value) ->
+        eval_record record_name value namespace
+    | Macro macro_name ->
+        eval_macro macro_name namespace
+    | Deck deck_name ->
+        eval_deck deck_name state namespace
+
+  (**
+   * @param term
+   * @param state state
+   * @return string
+   *)
+  (*
+  and eval_term_without_namespace term state =
+    let open Ast in
+    match term with
+    | Variable var ->
+        var
+    | Record (key, value) ->
+        value
+    | Macro macro_name ->
+        macro_name
+    | Deck deck_name ->
+        deck_name
+        *)
+
+  (**
+   * Eval nameterm
+   *
+   * @param nameterm nameterm
+   * @param state state
+   * @param default_namespace namespace
+   * @return string
+   *)
+  and eval_nameterm nameterm state default_namespace =
+    let open Ast in
+    match nameterm with
+    | Nameterm (namespace_name, term) ->
+        let namespace = get_namespace state namespace_name in
+        begin match namespace with
+        | Some namespace ->
+            eval_term term state namespace
+        | None ->
+            raise (Eval_ast_exception (sprintf "Found no namespace with name '%s'" namespace_name))
+        end
+    | Term term ->
+        eval_term term state default_namespace
+    | Content content ->
+        let content_without_quotes = String.sub content 1 (String.length content - 2) in
+        content_without_quotes
+
+  (**
+   * Eval AST for inline template language
+   *
+   * @param ast ast
+   * @param dice int -> int
+   * @param state state
+   * @param default_namespace namespace
+   * @return string
+   *)
+  and eval_ast ast state default_namespace : string =
+    let open Ast in
+    match ast with
+    | Nameterm_list nameterms ->
+        let length = length nameterms in
+        let chosen_nameterm = nth nameterms (Dice.dice length) in
+        begin match chosen_nameterm with
+        | Some nameterm ->
+            eval_nameterm nameterm state default_namespace
+        | None ->
+            raise (Eval_ast_exception "Could not chose a nameterm")
+        end
 
   (**
    * Eval <story> tag and all its children (macros, records, etc), returns the string

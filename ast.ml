@@ -20,6 +20,8 @@
       expr
  *)
 
+exception Eval_ast_exception of string
+
 (* List like 'oneitem' or 'one|two|three' *)
 type nameterm_list =
   | Nameterm_list of nameterm list
@@ -37,3 +39,9 @@ and term =
   | Macro of string
   | Deck of string
 [@@deriving show]
+
+(*
+module type T = sig
+  val eval_ast : nameterm_list -> (int -> int) -> state -> namespace -> string
+end
+*)
