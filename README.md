@@ -282,34 +282,25 @@ The flag mini-language is available as expected, so you can print `(flag1 AND fl
 
 #### Namespaces
 
-_Work in progress_
+When you include many different files from within another file, names of variables and macros might clash. To solve this, we use namespaces, a common concept from programming languages. Each file creates its own namespace. Can also create new namespaces just by naming them, like `<variable name="asd" namespace="new_namespace">asd</variable>`.
 
-When you include many different files from within another file, names of variables and macros might clash. To solve this, we use namespaces, a common concept from programming languages. Basically, each file has its own namespace, meaning you can't read variables, flags, macros and so on from other files. If you want to do that, you have to use the _global_ namespace explicitly, like this:
+The namespace "global" is used by default.
 
-    <ifSet name="flag1_from_another_file" namespace="global">...</ifSet>
+To add a variable to a specific namespace (and not to global), write this:
 
-Same pattern is used for variables, macros, records, decks etc.
+    <variable name="var" namespace="my_namespace">
+      <alt>This variable is in namespace "my_namespace".</alt>
+    </variable>
 
-    <include file="other_file.xml" />
+The same attribute `namespace` can be used when declaring macros, decks, records etc.
 
-    <sentence>
-      Write variable from other file:
-        <alt 
-    </sentence>
+To use a specific namespace in a sentence:
 
-Each file creates its own namespace. Can also create new namespaces just by naming them, like `<variable name="asd" namespace="new_namespace">asd</variable>`.
+    <sentence namespace="my_namespace">{var}?</sentence>
 
-Optional use of namespaces? Too much changes in source, not possible? Just pass global namespace around instead. Option on command-line? `./tellstory --use-namespaces myfile.xml`. Compilcated, so good if not mandatory, or behaviour you can add.
+You can also specify which namespace to use inline:
 
-    <useNamespaces> ??
-
-Inline namespace?
-
-    {other_file\variable1}
-
-always optional. use-case?
-
-    <story default_namespace=""></story>
+    <sentence namespace="my_namespace">{my_namespace\var}?</sentence>
 
 Possible future features
 ------------------------
@@ -323,7 +314,6 @@ Possible future features
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
-* Namespaces - how and where? Just use prefix? Make state explicit - record? `<namespace>...</namespace`. Or `<variable name="var1" namespace="global">asd</variable>`. Always local namespace by default? Except when declaring global namespace.
 * Loops? for 1 to 10 pick card/include/blaha
 * Functions inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
@@ -331,7 +321,6 @@ Possible future features
 TODO
 ----
 
-* Proper regexp for inlining, e.g. this should not parse: {"content"|variable with spaces}
 * Don't throw sentence exception everywhere... Confusing. Only for `<sentence>` tag.
 
 Use-cases
@@ -339,3 +328,4 @@ Use-cases
 
 * Timeline. Each day something is happening. "Day 1: ... Day 2: ..."
 * Generate table for treasure, meetings, ...
+* Generate character
