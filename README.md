@@ -317,6 +317,7 @@ Possible future features
 * Loops? for 1 to 10 pick card/include/blaha
 * Functions inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
+* Nesting namespaces
 
 TODO
 ----
