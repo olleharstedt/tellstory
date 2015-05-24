@@ -1475,8 +1475,20 @@ module Make(Dice : D) : T = struct
           exit 0;
     in
     let story = fetch_node xml "story" in
-    let global_namespace = Hashtbl.find state.namespace_tbl "global" in
-    print_sentences story state global_namespace
+
+    (* Get possible namespace attribute for <story> *)
+    let attrs = Xml.attribs story in
+    let namespace_attr = find_attribute attrs "namespace" in
+    begin match namespace_attr with
+    | Some ("namespace", namespace_name) ->
+        let namespace = get_namespace_or_create state namespace_name in
+        print_sentences story state namespace
+    | None ->
+        let global_namespace = Hashtbl.find state.namespace_tbl "global" in
+        print_sentences story state global_namespace
+    | _ ->
+        raise (Internal_error "Couldn't find namespace attribute for story tag")
+    end;
 
   (** Evaluate AST, part of template lang. Factor in own module? How? Interdependencies. *)
 
