@@ -34,9 +34,7 @@ let _ =
   | ex ->
       Printexc.to_string ex
   in
-  print_endline "";
-  print_endline string_story;
-  print_endline ""
+  printf "%s\n" string_story;
 
 (** tmp for template_lang *)
 (*
