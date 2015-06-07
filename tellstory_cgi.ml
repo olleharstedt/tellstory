@@ -16,7 +16,14 @@ let process (cgi : Netcgi.cgi) =
 		~content_type:"text/html; charset=\"utf-8\"\r\n\r\n"
 		();
 
-  printf "<!DOCTYPE html><html><head></head><body><p>Hej</p></body></html>";
+  cgi#out_channel#output_string "<!DOCTYPE html>
+    <html>
+      <head>
+      </head>
+      <body>
+        <p>Hej</p>
+      </body>
+    </html>";
 
 	(* Flush the output buffer. *)
 	cgi#out_channel#commit_work();
