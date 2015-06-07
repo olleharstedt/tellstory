@@ -27,6 +27,8 @@
 
 # Menhir.
 
+SHELL := /bin/bash
+
 ifndef MENHIR
   MENHIR         := menhir
 endif
@@ -278,6 +280,11 @@ test: tellstory.cmx test.ml
 
 cgi: tellstory.cmx tellstory_cgi.ml
 	ocamlfind ocamlopt -g -o tellstory.cgi -package xml-light,str,pcre,core,oUnit,bolt,netcgi2 -thread -linkpkg globals.cmx lexer.cmx parser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx tellstory_cgi.ml
+	if [ $$? -eq 0 ]; then \
+		sudo cp /home/olle/kod/starfable/program3/tellstory/tellstory.cgi /usr/share/nginx/html/cgi-bin; \
+	else \
+		echo "FAIL"; \
+	fi
 
 .PHONY: clean
 
