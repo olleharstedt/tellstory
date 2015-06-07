@@ -16,7 +16,9 @@ let process (cgi : Netcgi.cgi) =
 		~content_type:"text/html; charset=\"utf-8\"\r\n\r\n"
 		();
 
-  cgi#out_channel#output_string
+  let story = cgi#argument_value "story" in
+
+  let html = sprintf
     "<!DOCTYPE html>
       <html>
         <head>
@@ -27,17 +29,20 @@ let process (cgi : Netcgi.cgi) =
             <textarea name='story' cols='50' rows='8'></textarea>
             <input type='submit' value='Tell story' />
           </form>
+          <p>%s</p>
         </body>
-      </html>";
+      </html>"
+    story
+  in
+
+  cgi#out_channel#output_string html;
 
 	(* Flush the output buffer. *)
 	cgi#out_channel#commit_work();
 
   cgi#finalize()
 
-
 let _ =
   let config = Netcgi.default_config in
   let buffered _ ch = new Netchannels.buffered_trans_channel ch in
-  (*Netcgi_cgi.run ~config:config ~output_type:(`Transactional buffered) process*)
-  Netcgi_test.run ~config:config ~output_type:(`Transactional buffered) process
+  Netcgi_cgi.run ~config:config ~output_type:(`Transactional buffered) process
