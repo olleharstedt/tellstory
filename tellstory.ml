@@ -1472,6 +1472,7 @@ module Make(Dice : D) : T = struct
    * @param string filename
    * @param state state
    * @return string
+   * @TODO: Factor out so this can be used both from command line and web page.
    *)
   and file_to_string filename (state : state) =
 
@@ -1483,7 +1484,16 @@ module Make(Dice : D) : T = struct
           exit 0;
     in
     let story = fetch_node xml "story" in
+    story_to_string story state
 
+  (**
+   * Parse <story> element and output string
+   *
+   * @param story Xml.xml
+   * @param state state
+   * @return string
+   *)
+  and story_to_string story state =
     (* Get possible namespace attribute for <story> *)
     let attrs = Xml.attribs story in
     let namespace_attr = find_attribute attrs "namespace" in
@@ -1496,9 +1506,9 @@ module Make(Dice : D) : T = struct
         print_sentences story state global_namespace
     | _ ->
         raise (Internal_error "Couldn't find namespace attribute for story tag")
-    end;
+    end
 
-  (** Evaluate AST, part of template lang. Factor in own module? How? Interdependencies. *)
+  (** Evaluate AST, part of template lang. TODO: Factor out in own module? How? Interdependencies. *)
 
   (**
    * @param term
