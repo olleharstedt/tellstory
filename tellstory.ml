@@ -1529,25 +1529,6 @@ module Make(Dice : D) : T = struct
         eval_deck deck_name state namespace
 
   (**
-   * @param term
-   * @param state state
-   * @return string
-   *)
-  (*
-  and eval_term_without_namespace term state =
-    let open Ast in
-    match term with
-    | Variable var ->
-        var
-    | Record (key, value) ->
-        value
-    | Macro macro_name ->
-        macro_name
-    | Deck deck_name ->
-        deck_name
-        *)
-
-  (**
    * Eval nameterm
    *
    * @param nameterm nameterm
