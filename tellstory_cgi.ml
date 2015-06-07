@@ -21,7 +21,11 @@ let process (cgi : Netcgi.cgi) =
       <head>
       </head>
       <body>
-        <p>Hej</p>
+        <p>Randomize text using XML.</p>
+        <form method='post' action='tellstory.cgi'>
+          <textarea name='story' cols='50' rows='8'>
+          </textarea>
+        </form>
       </body>
     </html>";
 
