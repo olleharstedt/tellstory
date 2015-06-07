@@ -16,18 +16,19 @@ let process (cgi : Netcgi.cgi) =
 		~content_type:"text/html; charset=\"utf-8\"\r\n\r\n"
 		();
 
-  cgi#out_channel#output_string "<!DOCTYPE html>
-    <html>
-      <head>
-      </head>
-      <body>
-        <p>Randomize text using XML.</p>
-        <form method='post' action='tellstory.cgi'>
-          <textarea name='story' cols='50' rows='8'>
-          </textarea>
-        </form>
-      </body>
-    </html>";
+  cgi#out_channel#output_string
+    "<!DOCTYPE html>
+      <html>
+        <head>
+        </head>
+        <body>
+          <p>Randomize text using XML.</p>
+          <form method='post' action='tellstory.cgi'>
+            <textarea name='story' cols='50' rows='8'></textarea>
+            <input type='submit' value='Tell story' />
+          </form>
+        </body>
+      </html>";
 
 	(* Flush the output buffer. *)
 	cgi#out_channel#commit_work();
