@@ -276,6 +276,9 @@ endef
 test: tellstory.cmx test.ml
 	ocamlfind ocamlopt -g -o test -package xml-light,str,pcre,core,oUnit,bolt -thread -linkpkg globals.cmx lexer.cmx parser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx test.ml
 
+cgi: tellstory.cmx tellstory_cgi.ml
+	ocamlfind ocamlopt -g -o tellstory.cgi -package xml-light,str,pcre,core,oUnit,bolt,netcgi2 -thread -linkpkg globals.cmx lexer.cmx parser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx tellstory_cgi.ml
+
 .PHONY: clean
 
 clean::
