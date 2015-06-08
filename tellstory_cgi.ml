@@ -15,6 +15,10 @@ open Printf
 open ListLabels
 open Tellstory
 
+type ('a, 'b) result = 
+  | Ok of 'a
+  | Error of 'b
+
 (* Create an HTML escaping function for the UTF-8 encoding. *)
 let escape_html = Netencoding.Html.encode ~in_enc:`Enc_utf8 ()
 
@@ -36,19 +40,18 @@ let process (cgi : Netcgi.cgi) =
       end
     ) in
     let state = Tellstory.init_state () in
-    let xml = try Some (Xml.parse_string story) with 
+    let xml_or_error = try Ok (Xml.parse_string story) with 
       | Xml.Error (msg, pos) ->
-          cgi#out_channel#output_string (sprintf "Error while parsing XML file %d: %s" (Xml.line pos) (Xml.error_msg msg));
-          None
+          Error (sprintf "Error while parsing XML on line %d: %s" (Xml.line pos) (Xml.error_msg msg))
     in
-    begin match xml with
-    | Some xml ->
+    begin match xml_or_error with
+    | Ok xml ->
         begin try Tellstory.story_to_string xml state with
         | ex ->
             Printexc.to_string ex
         end
-    | None ->
-        "No XML?"
+    | Error error_msg ->
+        error_msg
     end
   end else "" in
 
