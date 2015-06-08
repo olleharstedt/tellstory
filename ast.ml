@@ -38,7 +38,7 @@ and term =
   | Record of string * string
   | Macro of string
   | Deck of string
-[@@deriving show]
+(*[@@deriving show]*)
 
 (*
 module type T = sig
