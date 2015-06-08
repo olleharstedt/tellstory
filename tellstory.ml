@@ -1446,8 +1446,7 @@ module Make(Dice : D) : T = struct
             log_trace (Printexc.to_string ex);
             log_trace (Printexc.get_backtrace ());
             (*raise (Sentence_problem (sen, string_of_exn ex))*)
-            print_endline (string_of_exn ex);
-            exit 0
+            string_of_exn ex
     ) in
     let result = List.fold_left (^) "" string_sentences in
     log_trace (sprintf "print_sentences result = %s\n" result);
