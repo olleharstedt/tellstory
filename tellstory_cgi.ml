@@ -15,13 +15,35 @@ open Printf
 open ListLabels
 open Tellstory
 
-type ('a, 'b) result = 
+(* TODO: Included by default? *)
+type ('a, 'b) result =
   | Ok of 'a
   | Error of 'b
 
 (* Create an HTML escaping function for the UTF-8 encoding. *)
 let escape_html = Netencoding.Html.encode ~in_enc:`Enc_utf8 ()
 
+(**
+ * Read examples as <option> from dir ../examples
+ * Use with <select>
+ *
+ * @return string
+ *)
+let get_examples () =
+  let open Unix in
+  let d = opendir "../examples" in
+  try while true do begin
+    let file = readdir d in
+    ()
+  end done
+  with End_of_file -> closedir d
+
+(**
+ * Main cgi function
+ *
+ * @param cgi Netcgi.cgi
+ * @return unit
+ *)
 let process (cgi : Netcgi.cgi) =
 	cgi#set_header
 		~cache:`No_cache
@@ -40,7 +62,7 @@ let process (cgi : Netcgi.cgi) =
       end
     ) in
     let state = Tellstory.init_state () in
-    let xml_or_error = try Ok (Xml.parse_string story) with 
+    let xml_or_error = try Ok (Xml.parse_string story) with
       | Xml.Error (msg, pos) ->
           Error (sprintf "Error while parsing XML on line %d: %s" (Xml.line pos) (Xml.error_msg msg))
     in
@@ -55,6 +77,7 @@ let process (cgi : Netcgi.cgi) =
     end
   end else "" in
 
+  let something = get_examples () in
 
   let html = sprintf
     "<!DOCTYPE html>
@@ -82,6 +105,9 @@ let process (cgi : Netcgi.cgi) =
 
   cgi#finalize()
 
+(**
+ * Run something
+ *)
 let _ =
   let config = Netcgi.default_config in
   let buffered _ ch = new Netchannels.buffered_trans_channel ch in
