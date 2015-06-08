@@ -31,12 +31,31 @@ let escape_html = Netencoding.Html.encode ~in_enc:`Enc_utf8 ()
  *)
 let get_examples () =
   let open Unix in
+  let result = ref ([] : (string * string) list) in
   let d = opendir "../examples" in
-  try while true do begin
+  (try while true do begin
     let file = readdir d in
-    ()
+    (* Skip these two "files" *)
+    if file = "." || file = ".." then
+      (* Do nothing *)
+      ()
+    else begin
+      (* Read file *)
+      let in_channel = open_in (sprintf "../examples/%s" file) in
+      let file_content = ref "" in
+      (try while true do begin
+        let line = input_line in_channel in
+        file_content := !file_content ^ (escape_html line) ^ "\n"
+      end done
+      with End_of_file -> close_in in_channel);
+      result := (file, !file_content) :: !result
+    end
   end done
-  with End_of_file -> closedir d
+  with End_of_file -> closedir d);
+
+  List.fold_left (fun sum (name, content) -> 
+    sprintf "%s<option value='%s'>%s</option>" sum content name
+  ) "" !result
 
 (**
  * Main cgi function
@@ -51,6 +70,7 @@ let process (cgi : Netcgi.cgi) =
 		();
 
   let story = cgi#argument_value "story" in
+  let example = cgi#argument_value "example" in
 
   let result = if story <> "" then begin
     Random.self_init ();
@@ -70,31 +90,48 @@ let process (cgi : Netcgi.cgi) =
     | Ok xml ->
         begin try Tellstory.story_to_string xml state with
         | ex ->
-            Printexc.to_string ex
+            (escape_html (Printexc.to_string ex))
         end
     | Error error_msg ->
         error_msg
     end
   end else "" in
 
-  let something = get_examples () in
+  let examples = get_examples () in
 
   let html = sprintf
     "<!DOCTYPE html>
       <html>
         <head>
           <title>Tellstory</title>
+          <script>
+            function example_changed(that) {
+              var textarea = document.getElementById('story_textarea');
+              var file_content = that.options[that.selectedIndex].value;
+              //var str = file_content.replace(/(?:\\r\\n|\\r|\\n)/g, '<br />');
+              textarea.value = file_content;
+              //console.log(str);
+            }
+          </script>
         </head>
         <body>
           <p>Randomize text using XML</p>
+          <p>Examples:</p>
+          <!--
           <form method='post' action='tellstory.cgi'>
-            <textarea name='story' cols='50' rows='8'>%s</textarea>
+            <select id='examples' name='example' onchange='this.form.submit();'></select><br /><br />
+          </form>
+          -->
+          <select id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
+          <form method='post' action='tellstory.cgi'>
+            <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
             <input type='submit' value='Tell story' />
           </form>
           <p>%s</p>
         </body>
       </html>"
-    story
+    examples
+    (if example = "" then story else example)
     result
   in
 
