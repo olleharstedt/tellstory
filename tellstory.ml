@@ -43,6 +43,7 @@ module type T = sig
   val fetch_node : Xml.xml -> string -> Xml.xml
   val print_sentences : Xml.xml -> state -> namespace -> string
   val file_to_string : string -> state -> string
+  val story_to_string : Xml.xml -> state -> string
   val init_state : unit -> state
   val get_global_namespace : state -> namespace
   val get_namespace : state -> string -> namespace option

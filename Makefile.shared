@@ -279,7 +279,7 @@ test: tellstory.cmx test.ml
 	ocamlfind ocamlopt -g -o test -package xml-light,str,pcre,core,oUnit,bolt -thread -linkpkg globals.cmx blexer.cmx bparser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx test.ml
 
 cgi: tellstory.cmx tellstory_cgi.ml
-	ocamlfind ocamlopt -g -o tellstory.cgi -package xml-light,str,pcre,core,oUnit,bolt,netcgi2 -thread -linkpkg globals.cmx blexer.cmx bparser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx tellstory_cgi.ml
+	ocamlfind ocamlopt -o tellstory.cgi -package xml-light,str,pcre,core,oUnit,bolt,netcgi2 -thread -linkpkg globals.cmx blexer.cmx bparser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx tellstory_cgi.ml
 	if [ $$? -eq 0 ]; then \
 		sudo cp /home/olle/kod/starfable/program3/tellstory/tellstory.cgi /usr/share/nginx/html/cgi-bin; \
 	else \
