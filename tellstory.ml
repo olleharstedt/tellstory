@@ -1111,7 +1111,7 @@ module Make(Dice : D) : T = struct
    *)
   and only_alts alts =
     List.for_all (fun a -> match a with
-      | Xml.Element ("alt", _, [Xml.PCData _]) -> true
+      | Xml.Element ("alt", _, _) -> true
       | _ -> false
     ) alts
 
