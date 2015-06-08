@@ -13,7 +13,7 @@
 (**************************************************************************)
 
 {
-  open Parser
+  open Bparser
 
   exception Error of string
 

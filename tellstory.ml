@@ -402,10 +402,10 @@ module Make(Dice : D) : T = struct
         true
     | Some ("ifSet", flags) ->
         let lexing = Lexing.from_string flags in
-        let flags_ok = try Parser.main Lexer.token lexing with
-          | Lexer.Error msg ->
+        let flags_ok = try ((Bparser.main Blexer.token) lexing) with
+          | Blexer.Error msg ->
               raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
-          | Parser.Error ->
+          | Bparser.Error ->
               raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
           | Failure msg ->
               let open Lexing in
