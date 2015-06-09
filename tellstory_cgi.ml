@@ -48,13 +48,14 @@ let get_examples () =
         file_content := !file_content ^ (escape_html line) ^ "\n"
       end done
       with End_of_file -> close_in in_channel);
+      (*eprintf "file_content = %s" !file_content;*)
       result := (file, !file_content) :: !result
     end
   end done
   with End_of_file -> closedir d);
 
   List.fold_left (fun sum (name, content) -> 
-    sprintf "%s<option value='%s'>%s</option>" sum content name
+    sprintf "%s<option value=\"%s\">%s</option>" sum content name
   ) "" !result
 
 (**
@@ -108,20 +109,14 @@ let process (cgi : Netcgi.cgi) =
             function example_changed(that) {
               var textarea = document.getElementById('story_textarea');
               var file_content = that.options[that.selectedIndex].value;
-              //var str = file_content.replace(/(?:\\r\\n|\\r|\\n)/g, '<br />');
               textarea.value = file_content;
-              //console.log(str);
             }
           </script>
         </head>
         <body>
-          <p>Randomize text using XML</p>
+          <h2>Randomize text using XML</h2>
+          <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
           <p>Examples:</p>
-          <!--
-          <form method='post' action='tellstory.cgi'>
-            <select id='examples' name='example' onchange='this.form.submit();'></select><br /><br />
-          </form>
-          -->
           <select id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
           <form method='post' action='tellstory.cgi'>
             <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
