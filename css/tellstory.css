@@ -1,0 +1,28 @@
+#main-wrapper {
+  width: 50%;
+  min-width: 800px;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+#examples {
+  width: 20%;
+}
+
+#generated-story {
+  padding: 15px 15px 15px;
+}
+
+.border {
+  border-color: #DDD;
+  border-width: 1px;
+  border-radius: 4px 4px 0px 0px;
+  border-style: solid;
+}
+
+.CodeMirror {
+  border: 1px solid #EEE;
+  height: 350px;
+}
