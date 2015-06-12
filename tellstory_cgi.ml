@@ -186,16 +186,18 @@ let process (cgi : Netcgi.cgi) =
             </script>
           </head>
           <body>
-            <div id='main-wrapper'>
+            <div id='main-wrapper' class='content'>
               <h2>Randomize text using XML</h2>
               <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
               <p>Examples:</p>
               <select class='form-control' id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
               <form method='post' action='tellstory'> <!-- Rewrite rule necessary to get this to work -->
-                <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
+                <textarea id='story_textarea' name='story' cols='100' rows='50'>%s</textarea><br /><br />
                 <input class='btn btn-primary' type='submit' value='Tell story' />
               </form>
-              <p id='generated-story'>%s</p>
+              <br />
+              <p>Result:</p>
+              <p id='generated-story' class='border'>%s</p>
             </div>
           </body>
         </html>"
