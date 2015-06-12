@@ -156,11 +156,31 @@ let process (cgi : Netcgi.cgi) =
         <html>
           <head>
             <title>Tellstory</title>
+            <link rel='stylesheet' href='/css/normalize.css'>
+            <link rel='stylesheet' href='/css/bootstrap.css'>
+            <script src='/js/codemirror.js'></script>
+            <link rel='stylesheet' href='/css/codemirror.css'>
+            <script src='/js/xml.js'></script>
             <script>
+
+              var myCodeMirror;
+
+              window.onload = function () {
+                var textArea = document.getElementById('story_textarea');
+                myCodeMirror = CodeMirror.fromTextArea(textArea, {
+                  mode: 'xml',
+                  lineNumbers: true
+                });
+              }
+
+              /**
+               * Change story when user click select drop-down
+               * @param that select object
+               * @return void
+               */
               function example_changed(that) {
-                var textarea = document.getElementById('story_textarea');
                 var file_content = that.options[that.selectedIndex].value;
-                textarea.value = file_content;
+                myCodeMirror.setValue(file_content);
               }
             </script>
           </head>
@@ -168,10 +188,10 @@ let process (cgi : Netcgi.cgi) =
             <h2>Randomize text using XML</h2>
             <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
             <p>Examples:</p>
-            <select id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
-            <form method='post' action='tellstory.cgi'>
+            <select class='form-control' id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
+            <form method='post' action='tellstory'> <!-- Rewrite rule necessary to get this to work -->
               <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
-              <input type='submit' value='Tell story' />
+              <input class='btn btn-default' type='submit' value='Tell story' />
             </form>
             <p>%s</p>
           </body>
