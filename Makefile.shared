@@ -282,6 +282,7 @@ cgi: tellstory.cmx tellstory_cgi.ml
 	ocamlfind ocamlopt -o tellstory.cgi -package xml-light,str,pcre,core,oUnit,bolt,netcgi2 -thread -linkpkg globals.cmx blexer.cmx bparser.cmx ast.cmx tlexer.cmx tparser.cmx tellstory.cmx tellstory_cgi.ml
 	if [ $$? -eq 0 ]; then \
 		sudo cp /home/olle/kod/starfable/program3/tellstory/tellstory.cgi /usr/share/nginx/html/cgi-bin; \
+		sudo cp /home/olle/kod/starfable/program3/tellstory/css/tellstory.css /usr/share/nginx/html/css/; \
 	else \
 		echo "FAIL"; \
 	fi

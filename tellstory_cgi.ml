@@ -161,6 +161,7 @@ let process (cgi : Netcgi.cgi) =
             <script src='/js/codemirror.js'></script>
             <link rel='stylesheet' href='/css/codemirror.css'>
             <script src='/js/xml.js'></script>
+            <link rel='stylesheet' href='/css/tellstory.css'>
             <script>
 
               var myCodeMirror;
@@ -185,15 +186,17 @@ let process (cgi : Netcgi.cgi) =
             </script>
           </head>
           <body>
-            <h2>Randomize text using XML</h2>
-            <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
-            <p>Examples:</p>
-            <select class='form-control' id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
-            <form method='post' action='tellstory'> <!-- Rewrite rule necessary to get this to work -->
-              <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
-              <input class='btn btn-default' type='submit' value='Tell story' />
-            </form>
-            <p>%s</p>
+            <div id='main-wrapper'>
+              <h2>Randomize text using XML</h2>
+              <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
+              <p>Examples:</p>
+              <select class='form-control' id='examples' name='example' onchange='example_changed(this);'>%s</select><br /><br />
+              <form method='post' action='tellstory'> <!-- Rewrite rule necessary to get this to work -->
+                <textarea id='story_textarea' name='story' cols='100' rows='20'>%s</textarea><br /><br />
+                <input class='btn btn-primary' type='submit' value='Tell story' />
+              </form>
+              <p id='generated-story'>%s</p>
+            </div>
           </body>
         </html>"
       examples
