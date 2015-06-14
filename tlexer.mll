@@ -46,10 +46,10 @@ and token = parse
     { BARLINE }
 | ['a'-'z' 'A'-'Z' '_' '0'-'9']+ as i
     { WORD i }
-| ['"'] ['a'-'z' 'A'-'Z' '_' '0'-'9' ' ']+ ['"'] as i
+| ['"'] [^ '"']+ ['"'] as i
     { QUOTE i }
 | eof
     { EOL}
 | _
-    { raise (Error (Printf.sprintf "At offset %d: unexpected character.\n" (Lexing.lexeme_start lexbuf))) }
+    { raise (Error (Printf.sprintf "At offset %d: unexpected character: %s.\n" (Lexing.lexeme_start lexbuf)(Lexing.lexeme lexbuf))) }
 
