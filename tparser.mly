@@ -14,6 +14,7 @@
 
 %{
   open Ast
+  open Sedlexing
 %}
 
 %token <string> WORD

@@ -288,10 +288,13 @@ cgi: tellstory.cmx tellstory_cgi.ml
 
 sedlex: ast.ml tparser.ml tlexer.ml template_test.ml sedlex_menhir.ml
 	ocamlfind ocamlopt -c ast.ml
-	menhir --ocamlc 'ocamlfind ocamlc -thread -package sedlex -package menhirLib' --explain --infer tparser.mly
+	menhir -v --ocamlc 'ocamlfind ocamlopt -thread -package sedlex,menhirLib sedlex.cmx sedlexing.cmx' --explain --infer tparser.mly
+	ocamlfind ocamlopt -c -package sedlex tparser.mli
+	ocamlfind ocamlopt -c -package sedlex tparser.ml
 	ocamlfind ocamlopt -c -package sedlex -linkpkg tlexer.ml
 	ocamlfind ocamlopt -o template_test -package sedlex -linkpkg tparser.cmx tlexer.cmx template_test.ml
 	ocamlfind ocamlopt -package sedlex,menhirLib  tparser.cmx sedlex_menhir.ml -c
+	#ocamlbuild -use-menhir -tag thread -use-ocamlfind -quiet -pkg menhirLib,core,bolt,xml-light,pcre,str,sedlex tparser.native
 
 .PHONY: clean
 
