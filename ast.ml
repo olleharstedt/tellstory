@@ -31,7 +31,6 @@ and nameterm =
   | Nameterm of string * term
   | Term of term
   | Content of string
-  | Error
 
 (* Atom like 'var' or '$deck' *)
 and term =
