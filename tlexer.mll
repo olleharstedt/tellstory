@@ -51,5 +51,5 @@ and token = parse
 | eof
     { EOL}
 | _
-    { raise (Error (Printf.sprintf "At offset %d: unexpected character: %s.\n" (Lexing.lexeme_start lexbuf)(Lexing.lexeme lexbuf))) }
+    { raise (Error (Printf.sprintf "unexpected character: %s\n" (Lexing.lexeme lexbuf))) }
 
