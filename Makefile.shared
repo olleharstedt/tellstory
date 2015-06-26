@@ -286,13 +286,6 @@ cgi: tellstory.cmx tellstory_cgi.ml
 		echo "FAIL"; \
 	fi
 
-sedlex: ast.ml tparser.ml tlexer.ml template_test.ml sedlex_menhir.ml
-	ocamlfind ocamlopt -c ast.ml
-	menhir --ocamlc 'ocamlfind ocamlc -thread -package sedlex -package menhirLib' --explain --infer tparser.mly
-	ocamlfind ocamlopt -c -package sedlex -linkpkg tlexer.ml
-	ocamlfind ocamlopt -o template_test -package sedlex -linkpkg tparser.cmx tlexer.cmx template_test.ml
-	ocamlfind ocamlopt -package sedlex,menhirLib  tparser.cmx sedlex_menhir.ml -c
-
 .PHONY: clean
 
 clean::
