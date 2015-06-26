@@ -13,7 +13,6 @@ exception No_filename
 
 
 (* Main *)
-(*
 let _ =
   Printexc.record_backtrace true;
 
@@ -36,9 +35,9 @@ let _ =
       Printexc.to_string ex
   in
   printf "%s\n" string_story;
-  *)
 
 (** tmp for template_lang *)
+(*
 let () =
   let stdinbuf = Lexing.from_channel stdin in
   while true do
@@ -55,3 +54,4 @@ let () =
     | Tparser.Error ->
         Printf.fprintf stderr "At offset %d: syntax error.\n%!" (Lexing.lexeme_start linebuf)
   done
+*)
