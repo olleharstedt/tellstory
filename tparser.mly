@@ -14,6 +14,10 @@
 
 %{
   open Ast
+
+  let parser_error s =
+    print_endline s;
+    flush stdout
 %}
 
 %token <string> WORD
@@ -48,6 +52,8 @@ nameterm:
     { Nameterm (w, n) }
 | w = QUOTE
     { Content w }
+| error
+    { parser_error "NOPE"; Error}
 
 term:
 | w = WORD
@@ -58,6 +64,7 @@ term:
     { Macro w }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
+
     (*
 | e = term
     { e }

@@ -31,6 +31,7 @@ and nameterm =
   | Nameterm of string * term
   | Term of term
   | Content of string
+  | Error
 
 (* Atom like 'var' or '$deck' *)
 and term =
@@ -38,7 +39,7 @@ and term =
   | Record of string * string
   | Macro of string
   | Deck of string
-(*[@@deriving show]*)
+[@@deriving show]
 
 (*
 module type T = sig
