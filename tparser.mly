@@ -58,6 +58,7 @@ term:
     { Macro w }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
+
     (*
 | e = term
     { e }

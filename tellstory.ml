@@ -949,12 +949,22 @@ module Make(Dice : D) : T = struct
           let con = Pcre.replace ~pat:mat ~templ:replacement con in
           *)
           (*printf "match_ = %s\n" match_;*)
+          log_trace (sprintf "eval_content: match_ = %s" (String.escaped match_));
           let linebuf = Lexing.from_string match_ in
           let ast = try (Tparser.main Tlexer.token linebuf) with
             | Tlexer.Error msg ->
-                raise (Parser_error (sprintf "inline: Lexer error %s" msg))
+                (*
+                let tok = Lexing.lexeme linebuf in
+                print_endline tok;
+                *)
+                raise (Parser_error (sprintf "%s" msg))
             | Tparser.Error ->
-                raise (Parser_error (sprintf "inline: Syntax error at offset %d" (Lexing.lexeme_start linebuf)))
+                (*
+                let tok = Lexing.lexeme linebuf in
+                print_endline tok;
+                *)
+                (* raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf)))) *)
+                raise (Parser_error (sprintf "Could not parse '%s'" match_ ))
             | Failure msg ->
                 let open Lexing in
                 raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))
@@ -1550,6 +1560,7 @@ module Make(Dice : D) : T = struct
     | Term term ->
         eval_term term state default_namespace
     | Content content ->
+        log_trace (sprintf "eval_nameterm: content = %s " content);
         let content_without_quotes = String.sub content 1 (String.length content - 2) in
         content_without_quotes
 
