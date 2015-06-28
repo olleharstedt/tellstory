@@ -923,7 +923,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content con state namespace =
-    let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|åäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
         let substrings = Pcre.get_substrings m in
