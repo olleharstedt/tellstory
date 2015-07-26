@@ -1,5 +1,7 @@
 Small program to render random texts from XML-file. See `examples/` for example usage.
 
+Can be tried out on this home page: tonesoftales.com/tellstory
+
 Installation
 ------------
 
