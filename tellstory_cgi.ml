@@ -187,6 +187,7 @@ let process (cgi : Netcgi.cgi) =
           </head>
           <body>
             <div id='main-wrapper' class='content'>
+              <img src='/img/header.png' />
               <h2>Randomize text using XML</h2>
               <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
               <p>Examples:</p>
