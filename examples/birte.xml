@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <macro name="name">
+    <alt>Birte</alt>
+    <alt>Olle</alt>
+    <alt>Hitler</alt>
+  </macro>
+
+  <sentence>This is a {"sentence"|"joke"|"foreskin"} that {"Birte"|"Hitler"} once {"threw"|"cut off"}.</sentence>
+
+</story>
