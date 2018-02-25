@@ -2,6 +2,84 @@
 <story>
 
   <include file="examples/age.xml" />
+  <include file="examples/gender.xml" />
 
-  <sentence>{#gender} {#age}</sentence>
+  <macro name="body">
+    <alt>fat</alt>
+    <alt>slim</alt>
+    <alt>strong</alt>
+    <alt>weak</alt>
+    <alt>can run far</alt>
+    <alt>short</alt>
+    <alt>tall</alt>
+    <alt>beautiful</alt>
+    <alt>ugly</alt>
+  </macro>
+
+  <deck name="disposition">
+    <alt>conflict seeking</alt>
+    <alt>conflict avoiding</alt>
+    <alt>introvert</alt>
+    <alt>sociable</alt>
+    <alt>intelligent</alt>
+    <alt>artistic</alt>
+    <alt>musical</alt>
+    <alt>book worm/knowledge junkie</alt>
+    <alt>handy</alt>
+    <alt>loves nature</alt>
+    <alt>follow rules, authority, tradition</alt>
+    <alt>have problems with authority</alt>
+  </deck>
+
+  <variable name="disp1">
+    <alt>{$disposition}</alt>
+  </variable>
+
+  <variable name="disp2">
+    <alt>{$disposition}</alt>
+  </variable>
+
+  <macro name="whyhomeless">
+    <alt>of conflict</alt>
+    <alt>{he} ran away</alt>
+    <alt>{he} was forced out</alt>
+    <alt>{he} killed the other rabbits</alt>
+    <alt>{he} was always homeless</alt>
+  </macro>
+
+  <macro name="room">
+    <alt>own big room</alt>
+    <alt>own small room</alt>
+    <alt>own medium room</alt>
+    <alt>own medium room</alt>
+    <alt>shared room with one</alt>
+    <alt>shared room with two</alt>
+    <alt>sleeping hall</alt>
+    <alt>homeless state (because {#whyhomeless})</alt>
+  </macro>
+
+  <macro name="owns">
+
+  </macro>
+
+  <!--
+  <macro name="skill">
+    <alt>cooking</alt>
+    <alt>fighting</alt>
+    <alt>hiding</alt>
+    <alt></alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+    <alt>hiding</alt>
+  </macro>
+  -->
+
+  <sentence>A {gender_def}, age {#age}, {disp1} and {disp2}, {#body}.</sentence>
+  <sentence>Lives in {#room}.</sentence>
 </story>
