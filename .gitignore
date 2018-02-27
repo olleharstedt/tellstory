@@ -8,6 +8,7 @@
 *.cmxs
 *.cmxa
 *.d
+*.cgi
 lexer.ml
 parser.ml
 parser.mli
