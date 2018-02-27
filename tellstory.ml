@@ -6,8 +6,7 @@
  *)
 
 open Printf
-open Core
-open Core_list
+open Core.List
 
 (**
  * Debug with Bolt
