@@ -10,11 +10,9 @@
   </macro>
 
   <macro name="weapon">
-    <alt>a sword</alt>
-    <alt>a dagger</alt>
-    <alt>an axe</alt>
+    <alt>a sword of {#material}</alt>
   </macro>
 
-  <sentence>You find {#weapon} made of {#material}</sentence>
+  <sentence>You find {#weapon}</sentence>
 
 </story>

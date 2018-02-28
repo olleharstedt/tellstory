@@ -972,7 +972,12 @@ module Make(Dice : D) : T = struct
           let match_with_brackets = sprintf "{%s}" match_ in
           let match_with_brackets_quote = Pcre.quote match_with_brackets in
           let new_con = Pcre.replace ~pat:match_with_brackets_quote ~templ:evaluated_ast con in
-          replace_content tail new_con
+          (* If there are matches inside the new evaluated content, do a recursive call *)
+          let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+          let final_con = if Array.length matches > 0 then
+            eval_content new_con state namespace
+          else new_con in
+          replace_content tail final_con
     in
     replace_content matches con
 
