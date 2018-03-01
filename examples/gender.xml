@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="gender">
   <macro name="gender">
-    <alt setFlag="man">man</alt>
-    <alt setFlag="woman">woman</alt>
+    <alt setFlag="man">male rabbit</alt>
+    <alt setFlag="woman">female rabbit</alt>
   </macro>
 
   <variable name="def">

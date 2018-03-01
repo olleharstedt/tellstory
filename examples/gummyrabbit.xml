@@ -88,25 +88,42 @@
   </macro>
   -->
 
-  <!--
-  <macro name="skill">
-    <alt>cooking</alt>
-    <alt>fighting</alt>
-    <alt>hiding</alt>
-    <alt></alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
-    <alt>hiding</alt>
+  <macro name="weapon">
+    <alt>bare hands</alt>
+    <alt>knife</alt>
+    <alt>sword</alt>
+    <alt>axe</alt>
+    <alt>gun</alt>
+    <alt>musque</alt>
+    <alt>sling-shot</alt>
+    <alt>boomerang</alt>
   </macro>
-  -->
+
+  <macro name="instrument">
+    <alt>flute</alt>
+    <alt>harpe</alt>
+    <alt>guitar</alt>
+    <alt>wissle</alt>
+    <alt>singing</alt>
+  </macro>
+
+  <deck name="skill">
+    <alt>cooking</alt>
+    <alt>fighting with {#weapon}</alt>
+    <alt>hiding</alt>
+    <alt>smooth-talking</alt>
+    <alt>making people obey</alt>
+    <alt>making a good impression</alt>
+    <alt>playing {#instrument}</alt>
+  </deck>
+
+  <variable name="skill1"><alt>{$skill}</alt></variable>
+  <variable name="skill2"><alt>{$skill}</alt></variable>
+  <variable name="skill3"><alt>{$skill}</alt></variable>
+  <variable name="skill4"><alt>{$skill}</alt></variable>
 
   <sentence>A {gender\def} called {name}, age {#age}, {disp1} and {disp2}.</sentence>
   <sentence>Body type: {#body}.</sentence>
   <sentence>Lives in {#room}.</sentence>
+  <sentence>Excells at {skill1} but is very bad at {skill2}.</sentence>
 </story>
