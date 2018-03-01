@@ -41,10 +41,10 @@
 
   <macro name="whyhomeless">
     <alt>of conflict</alt>
-    <alt>{he} ran away</alt>
-    <alt>{he} was forced out</alt>
-    <alt>{he} killed the other rabbits</alt>
-    <alt>{he} was always homeless</alt>
+    <alt>{gender\he} ran away</alt>
+    <alt>{gender\he} was forced out</alt>
+    <alt>{gender\he} killed the other rabbits</alt>
+    <alt>{gender\he} was always homeless</alt>
   </macro>
 
   <macro name="room">
@@ -58,9 +58,11 @@
     <alt>homeless state (because {#whyhomeless})</alt>
   </macro>
 
+  <!--
   <macro name="owns">
 
   </macro>
+  -->
 
   <!--
   <macro name="skill">
@@ -80,6 +82,6 @@
   </macro>
   -->
 
-  <sentence>A {gender_def}, age {#age}, {disp1} and {disp2}, {#body}.</sentence>
+  <sentence>A {gender\def}, age {#age}, {disp1} and {disp2}, {#body}.</sentence>
   <sentence>Lives in {#room}.</sentence>
 </story>
