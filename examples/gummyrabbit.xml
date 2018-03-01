@@ -4,6 +4,13 @@
   <include file="examples/age.xml" />
   <include file="examples/gender.xml" />
 
+  <variable name="name">
+    <alt ifSet="man">Roger</alt>
+    <alt ifSet="man">Tony</alt>
+    <alt ifSet="woman">Beata</alt>
+    <alt ifSet="woman">Eleonora</alt>
+  </variable>
+
   <macro name="body">
     <alt>fat</alt>
     <alt>slim</alt>
@@ -64,12 +71,12 @@
   <variable name="furn3"><alt>{$furniture}</alt></variable>
 
   <macro name="room">
-    <alt>own big room with {furn1}, {furn2} and {furn3}.</alt>
-    <alt>own medium room with {furn1} and {furn2}.</alt>
-    <alt>own medium room with {furn1} and {furn2}.</alt>
-    <alt>own small room with {furn1}.</alt>
-    <alt>shared room with one, with {furn1} and {furn2}.</alt>
-    <alt>shared room with two, with {furn1}, {furn2} and {furn3}.</alt>
+    <alt>own big room with {furn1}, {furn2} and {furn3}</alt>
+    <alt>own medium-sized room with {furn1} and {furn2}</alt>
+    <alt>own medium-sized room with {furn1} and {furn2}</alt>
+    <alt>own small room with {furn1}</alt>
+    <alt>shared room with one, with {furn1} and {furn2}</alt>
+    <alt>shared room with two, with {furn1}, {furn2} and {furn3}</alt>
     <alt>sleeping hall</alt>
     <alt>homeless state (because {#whyhomeless})</alt>
   </macro>
@@ -99,7 +106,7 @@
   </macro>
   -->
 
-  <sentence>A {gender\def}, age {#age}, {disp1} and {disp2}.</sentence>
+  <sentence>A {gender\def} called {name}, age {#age}, {disp1} and {disp2}.</sentence>
   <sentence>Body type: {#body}.</sentence>
   <sentence>Lives in {#room}.</sentence>
 </story>

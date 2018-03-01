@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="gender">
   <macro name="gender">
-    <alt setFlag="gender_man">man</alt>
-    <alt setFlag="gender_woman">woman</alt>
+    <alt setFlag="man">man</alt>
+    <alt setFlag="woman">woman</alt>
   </macro>
 
   <variable name="def">
@@ -10,8 +10,8 @@
   </variable>
 
   <variable name="he">
-    <alt ifSet="gender_man">he</alt>
-    <alt ifSet="gender_woman">she</alt>
+    <alt ifSet="man">he</alt>
+    <alt ifSet="woman">she</alt>
   </variable>
 
   <!--
