@@ -47,16 +47,33 @@
     <alt>{gender\he} was always homeless</alt>
   </macro>
 
+  <deck name="furniture">
+    <alt>a bed</alt>
+    <alt>a table</alt>
+    <alt>a chair</alt>
+    <alt>a book shelf</alt>
+    <alt>a chest</alt>
+    <alt>a secret compartment</alt>
+    <alt>a warderob with lots of clothes</alt>
+    <alt>a warderob with some clothes</alt>
+    <alt>a warderob with almost no clothes</alt>
+  </deck>
+
+  <variable name="furn1"><alt>{$furniture}</alt></variable>
+  <variable name="furn2"><alt>{$furniture}</alt></variable>
+  <variable name="furn3"><alt>{$furniture}</alt></variable>
+
   <macro name="room">
-    <alt>own big room</alt>
-    <alt>own small room</alt>
-    <alt>own medium room</alt>
-    <alt>own medium room</alt>
-    <alt>shared room with one</alt>
-    <alt>shared room with two</alt>
+    <alt>own big room with {furn1}, {furn2} and {furn3}.</alt>
+    <alt>own medium room with {furn1} and {furn2}.</alt>
+    <alt>own medium room with {furn1} and {furn2}.</alt>
+    <alt>own small room with {furn1}.</alt>
+    <alt>shared room with one, with {furn1} and {furn2}.</alt>
+    <alt>shared room with two, with {furn1}, {furn2} and {furn3}.</alt>
     <alt>sleeping hall</alt>
     <alt>homeless state (because {#whyhomeless})</alt>
   </macro>
+
 
   <!--
   <macro name="owns">
@@ -82,6 +99,7 @@
   </macro>
   -->
 
-  <sentence>A {gender\def}, age {#age}, {disp1} and {disp2}, {#body}.</sentence>
+  <sentence>A {gender\def}, age {#age}, {disp1} and {disp2}.</sentence>
+  <sentence>Body type: {#body}.</sentence>
   <sentence>Lives in {#room}.</sentence>
 </story>
