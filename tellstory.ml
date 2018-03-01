@@ -309,7 +309,8 @@ module Make(Dice : D) : T = struct
    *)
   let find_attribute attributes name =
     find attributes ~f:(function
-      | (attr_name, _) ->
+      | (attr_name, what) ->
+          log_trace (sprintf "looking for attribute '%s', '%s'" attr_name what);
           name = attr_name
     )
 
@@ -396,11 +397,14 @@ module Make(Dice : D) : T = struct
    * @raise Errors if parse failes
    *)
   let flags_is_ok attrs =
+    log_trace "flags_is_ok";
     let ifSet = find_attribute attrs "ifSet" in
     match ifSet with
     | None ->
+        log_trace "ifSet None";
         true
     | Some ("ifSet", flags) ->
+        log_trace (sprintf "ifSet Some, flags: %s" flags);
         let lexing = Lexing.from_string flags in
         let flags_ok = try ((Bparser.main Blexer.token) lexing) with
           | Blexer.Error msg ->
@@ -507,6 +511,7 @@ module Make(Dice : D) : T = struct
       | Xml.Element (_, x::xs, [Xml.PCData alt_content]) -> raise (Too_many_attributes ("alt: " ^ alt_content))
       | _ -> None
     in
+    log_trace (sprintf "get_flags: flags: '%s'" (match flags with | None -> "" | Some flags -> flags));
     (* Split flag into list *)
     let flags_list = match flags with
       | None -> None
@@ -520,9 +525,14 @@ module Make(Dice : D) : T = struct
    * @param flags_list string list option
    * @return unit
    *)
-  let store_flags flags_list = match flags_list with
-      None -> ()
+  let store_flags flags_list = 
+    log_trace "store_flags";
+    match flags_list with
+    | None -> 
+        log_trace "store no flag, list empty";
+        ()
     | Some fl ->
+        log_trace (sprintf "store %d flags" (List.length fl));
       List.iter (fun s ->
         (* Check if flag is already set. If so, abort *)
         if Hashtbl.mem Globals.flags_tbl s then
@@ -588,6 +598,24 @@ module Make(Dice : D) : T = struct
     else
       Hashtbl.add namespace.macro_tbl macro.name macro
 
+  (**
+   * Look for setFlag attribute in attribute list
+   * and sets flags.
+   * @param attributes ?
+   * @return unit
+   *)
+  let set_flags attributes =
+    let setFlag = find_attribute attributes "setFlag" in
+    let flags_list = match setFlag with
+      | None ->
+          log_trace "eval_alt: found no flag in setFlag?"; 
+          None
+      | Some (_, flags) ->
+         log_trace (sprintf "eval_alt: found setFlag %s" flags);
+         Some (Str.split (Str.regexp "[ \t]+") flags)
+    in
+    store_flags flags_list
+
 
   (**
    * Eval macro used in alt or inline, like <alt useMacro="name"> or {#name}
@@ -615,7 +643,12 @@ module Make(Dice : D) : T = struct
         | Some alt -> alt
         | None -> raise (Macro_exception "No alt?")
       in
+      (*
+      log_trace (sprintf "eval_macro: alt: %s" alt.content);
+      (List.iter (fun (s1, s2) -> log_trace ("eval_macro: alt attributes: " ^ s1)) alt.attributes);
+      *)
       check_for_empty_content alt.content;
+      set_flags alt.attributes;
       alt.content
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s' in namespace '%s'" name namespace.name))
@@ -1040,17 +1073,11 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_alt alt (state : state) (namespace : namespace) =
+    log_trace (Xml.to_string alt);
     let attributes = Xml.attribs alt in
 
     (* Find attribute setFlag *)
-    let setFlag = find_attribute attributes "setFlag" in
-    let flags_list = match setFlag with
-      | None ->
-          None
-      | Some (_, flags) ->
-         Some (Str.split (Str.regexp "[ \t]+") flags)
-    in
-    store_flags flags_list;
+    set_flags attributes;
 
     (* Get macro to use as (string * string) tuple *)
     let useMacro = find_attribute attributes "useMacro" in
