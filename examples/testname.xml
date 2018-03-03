@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+
+  <include file="examples/gender.xml" />
+  <include file="examples/name.xml" />
+
+  <sentence>
+    {gender\def}
+  </sentence>
+
+  <variable name="A"><alt>{names\name}</alt></variable>
+
+  <sentence>
+    {A} - {gender\he}
+  </sentence>
+</story>

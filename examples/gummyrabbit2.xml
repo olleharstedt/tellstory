@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<story namespace="gummyrabbit">
-
-  <include file="examples/age.xml" />
-  <include file="examples/gender.xml" />
-  <include file="examples/name.xml" />
+<story namespace="gummyrabbit2">
 
   <variable name="name">
-    <alt>{names\$name}</alt>
+    <alt ifSet="man">Roger</alt>
+    <alt ifSet="man">Tony</alt>
+    <alt ifSet="woman">Beata</alt>
+    <alt ifSet="woman">Eleonora</alt>
   </variable>
 
   <macro name="body">
@@ -121,7 +120,7 @@
   <variable name="skill3"><alt>{$skill}</alt></variable>
   <variable name="skill4"><alt>{$skill}</alt></variable>
 
-  <sentence>A {gender\def} called {gummyrabbit\name}, age {age\#age}, {disp1} and {disp2}.</sentence>
+  <sentence>A {gender\def} called {gummyrabbit2\name}, age {age\#age}, {disp1} and {disp2}.</sentence>
   <sentence>Body type: {#body}.</sentence>
   <sentence>Lives in {#room}.</sentence>
   <sentence>Excells at {skill1} but is very bad at {skill2}.</sentence>

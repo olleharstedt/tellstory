@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="relations">
+
+  <deck name="bunny1deck">
+    <alt include="examples/gummyrabbit.xml" />
+  </deck>
+
+  <variable name="bunn1"><alt>{$bunny1deck}</alt></variable>
+
+  <deck name="bunny2deck">
+    <alt include="examples/gummyrabbit2.xml" />
+  </deck>
+
+  <variable name="bunn2"><alt>{$bunny2deck}</alt></variable>
+
+  <!--
+  <deck name="names">
+    <alt>Stuart</alt>
+    <alt>Penny</alt>
+    <alt>Bill</alt>
+    <alt>Roger</alt>
+    <alt>Amanda</alt>
+  </deck>
+  -->
+
+  <variable name="A"><alt>{gummyrabbit\name}</alt></variable>
+  <variable name="B"><alt>{gummyrabbit2\name}</alt></variable>
+
+  <deck name="relationAB">
+    <alt>{A} loves {B}</alt>
+    <alt>{A} likes {B}</alt>
+    <alt>{A} is indifferent to {B}</alt>
+    <alt>{A} hates {B}</alt>
+  </deck>
+
+  <deck name="relationBA">
+    <alt>{B} loves {A}</alt>
+    <alt>{B} hates {A}</alt>
+  </deck>
+
+  <variable name="rel1"><alt>{$relationAB}</alt></variable>
+  <variable name="rel2"><alt>{$relationBA}</alt></variable>
+
+  <sentence>{bunn1}</sentence>
+  <br/>
+  <sentence>{bunn2}</sentence>
+  <br/>
+  <sentence>
+    {rel1} and {rel2}.
+  </sentence>
+</story>

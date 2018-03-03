@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="names">
+
+  <deck name="name">
+    <alt ifSet="man">Roger</alt>
+    <alt ifSet="man">Tony</alt>
+    <alt ifSet="man">Mittens</alt>
+    <alt ifSet="man">Andrew</alt>
+    <alt ifSet="man">Bill</alt>
+    <alt ifSet="man">Cristopher</alt>
+    <alt ifSet="man">Didrik</alt>
+    <alt ifSet="man">Fredric</alt>
+    <alt ifSet="man">Gustaf</alt>
+
+    <alt ifSet="woman">Ada</alt>
+    <alt ifSet="woman">Beata</alt>
+    <alt ifSet="woman">Chris</alt>
+    <alt ifSet="woman">Dea</alt>
+    <alt ifSet="woman">Eleonora</alt>
+    <alt ifSet="woman">Eva</alt>
+    <alt ifSet="woman">Friderike</alt>
+    <alt ifSet="woman">Gammy</alt>
+    <alt ifSet="woman">Inga</alt>
+    <alt ifSet="woman">Jill</alt>
+    <alt ifSet="woman">Karmen</alt>
+  </deck>
+
+</story>
