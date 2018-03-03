@@ -284,7 +284,7 @@ The flag mini-language is available as expected, so you can print `(flag1 AND fl
 
 #### Clearing variables, macros and flags
 
-Sometimes you want to include one file more than once in your setup. In such a case, it can be useful to clear everything that was used so it can be redefined and generated anew. To do this, use the `<clear>` tag.
+Sometimes you want to include a file more than once in your setup. In such a case, it can be useful to clear everything that was used so it can be redefined and generated anew. To do this, use the `<clear>` tag.
 
     <clear type="macro" name="myMacro" ignore-not-found="1" />
 
@@ -316,7 +316,7 @@ To use a specific namespace in a sentence:
 
 You can also specify which namespace to use inline:
 
-    <sentence namespace="my_namespace">{my_namespace\var}?</sentence>
+    <sentence>{my_namespace\var}?</sentence>
 
 Possible future features
 ------------------------
