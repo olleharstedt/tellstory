@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="gender">
+
+  <!-- Clear all the stuff if used more than once -->
+  <clear type="flag" name="man" ignore-not-found="1" />
+  <clear type="flag" name="woman" ignore-not-found="1" />
+  <clear type="macro" name="gender" ignore-not-found="1" />
+  <clear type="variable" name="def" ignore-not-found="1" />
+  <clear type="variable" name="he" ignore-not-found="1" />
+
   <macro name="gender">
     <alt setFlag="man">male rabbit</alt>
     <alt setFlag="woman">female rabbit</alt>

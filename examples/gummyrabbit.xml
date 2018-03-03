@@ -9,6 +9,7 @@
     <alt>{names\$name}</alt>
   </variable>
 
+
   <macro name="body">
     <alt>fat</alt>
     <alt>slim</alt>

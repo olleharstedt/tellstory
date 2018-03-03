@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="gummyrabbit2">
 
+  <include file="examples/gender.xml" />
+
+
   <variable name="name">
-    <alt ifSet="man">Roger</alt>
-    <alt ifSet="man">Tony</alt>
-    <alt ifSet="woman">Beata</alt>
-    <alt ifSet="woman">Eleonora</alt>
+    <alt>{names\$name}</alt>
   </variable>
 
   <macro name="body">
