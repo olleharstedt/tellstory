@@ -282,6 +282,20 @@ In the same way you can use `ifSet` as its own tag:
 
 The flag mini-language is available as expected, so you can print `(flag1 AND flag2) OR NOT flag3` etc in flag condition.
 
+#### Clearing variables, macros and flags
+
+Sometimes you want to include one file more than once in your setup. In such a case, it can be useful to clear everything that was used so it can be redefined and generated anew. To do this, use the `<clear>` tag.
+
+    <clear type="macro" name="myMacro" ignore-not-found="1" />
+
+If the macro has not be defined before, the clear command will abort the execution. To ignore such errors, use the `ignore-not-found` attribute as given above.
+
+Other examples:
+
+    <clear type="variable" name="myVariable" ignore-not-found="1" />
+
+    <clear type="flag" name="theDragonHasCome" ignore-not-found="1" />
+
 #### Namespaces
 
 When you include many different files from within another file, names of variables and macros might clash. To solve this, we use namespaces, a common concept from programming languages. Each file creates its own namespace. Can also create new namespaces just by naming them, like `<variable name="asd" namespace="new_namespace">asd</variable>`.
