@@ -72,6 +72,7 @@ module Make(Dice : D) : T = struct
   exception Xml_exception of string
   exception Include_exception of string * exn
   exception Namespace_exception of string
+  exception Clear_exception of string
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -695,6 +696,64 @@ module Make(Dice : D) : T = struct
       Hashtbl.find namespace.var_tbl var_name
     with
         Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s' in namespace '%s'. Check that you defined it with <variable name=\"%s\">..." var_name namespace.name var_name))
+
+  (**
+   * @param namespace namespace
+   * @param typ string
+   * @param name string
+   * @return unit
+   *)
+  let clear namespace attrs = 
+
+    (* Fetch name from attributes *)
+    let name = match find_attribute attrs "name" with
+      | Some ("name", name) -> name
+      | Some _ -> raise (Internal_error "Internal error in clear function 1")
+      | None -> raise (Clear_exception "Missing attribute 'name' for <clear> tag")
+    in
+
+    (* Check if ignore-not-found is set to 1 *)
+    let ignore_not_found = match find_attribute attrs "ignore-not-found" with
+      | Some ("ignore-not-found", "1") -> true
+      | Some _ | None -> false
+    in
+
+    let typ = find_attribute attrs "type" in
+    match typ with
+    | Some ("type", "macro") -> begin
+        try
+          let _ = Hashtbl.find namespace.macro_tbl name in
+          Hashtbl.remove namespace.macro_tbl name;
+        with
+          Not_found -> 
+            if ignore_not_found then
+              ()
+            else
+              raise (Clear_exception (sprintf "Found no macro to clear with name '%s'" name))
+    end
+    | Some ("type", "variable") -> begin
+        try
+          let _ = Hashtbl.find namespace.var_tbl name in
+          Hashtbl.remove namespace.var_tbl name;
+        with
+          Not_found -> 
+            if ignore_not_found then
+              ()
+            else
+              raise (Clear_exception (sprintf "Found no variable to clear with name '%s'" name))
+    end
+    | Some ("type", "flag") -> begin
+          if Hashtbl.mem Globals.flags_tbl name then
+            Hashtbl.remove Globals.flags_tbl name
+          else if not ignore_not_found then
+            raise (Clear_exception (sprintf "Found no flag to clear with name '%s'" name))
+    end
+    | Some ("type", typ) ->
+        raise (Clear_exception (sprintf "Unknown type in clear: %s" typ))
+    | Some _ ->
+        raise (Internal_error "Internal error in clear function 2")
+    | None ->
+        raise (Clear_exception "Missing attribute 'type' for <clear> tag")
 
   (**
    * Choose card from deck and remove it from the deck.
@@ -1487,6 +1546,10 @@ module Make(Dice : D) : T = struct
             | ex ->
                 raise (Include_exception ("Can't include file", ex))
             )
+
+        | Xml.Element ("clear", attrs, []) ->
+            clear namespace attrs;
+            ""
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
