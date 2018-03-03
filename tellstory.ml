@@ -426,7 +426,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return Xml.Element list
    *)
-  let get_possible_alts alts = match alts with
+  let get_possible_xml_alts alts = match alts with
     | [] ->
         []
     | alts ->
@@ -452,11 +452,22 @@ module Make(Dice : D) : T = struct
                   Hashtbl.mem Globals.flags_tbl flag
                 )
             | _ ->
-                raise (Internal_error "get_possible_alts: Illegal struct of ifSet")
+                raise (Internal_error "get_possible_xml_alts: Illegal struct of ifSet")
           end
           *)
         ) in
         (*(iter alts2 ~f:(fun xml -> log_trace "alt = %s\n" (Xml.to_string xml)));*)
+        alts2
+
+  (**
+   * As get_possible_xml_alts, but with deck alts.
+   *)
+  let get_possible_alts alts = match alts with
+    | [] -> []
+    | alt ->
+        let alts2 = filter alts ~f:(fun alt ->
+          flags_is_ok alt.attributes
+        ) in
         alts2
 
 
@@ -467,7 +478,7 @@ module Make(Dice : D) : T = struct
    * @return Xml.Element option
    *)
   let choose_alt alts =
-    let possible_alts = get_possible_alts alts in
+    let possible_alts = get_possible_xml_alts alts in
     (* Debug info
     iter possible_alts ~f:(fun alt ->
       match Xml.children alt with
@@ -638,7 +649,7 @@ module Make(Dice : D) : T = struct
     if Hashtbl.mem namespace.macro_tbl name then begin
       let macro = Hashtbl.find namespace.macro_tbl name in
       (*let alt = choose_alt macro.alts in*)
-      let alts = macro.alts in
+      let alts = get_possible_alts macro.alts in
       let alt = match nth alts (Dice.dice (List.length alts)) with
         | Some alt -> alt
         | None -> raise (Macro_exception "No alt?")
@@ -695,13 +706,14 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   let rec eval_deck deck_name (state : state) (namespace : namespace) =
-    log_trace "eval_deck\n";
+      log_trace "eval_deck\n";
       let deck = try Hashtbl.find namespace.deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
       in
       (* Abort if no cards are left in deck *)
       if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
-      let card = nth deck.alts (Dice.dice (length deck.alts)) in
+      let cards = get_possible_alts deck.alts in
+      let card = nth cards (Dice.dice (length cards)) in
       match card with
       | None -> raise (Deck_exception ("Found no card"))
       | Some card ->
