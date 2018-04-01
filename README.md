@@ -211,7 +211,7 @@ To roll a dice, you need to first define its name and number of sides, like so:
 
     <dice name="d6" sides="6" />
 
-You roll it using the inline construct '%':
+You roll it using the inline construct `%`:
 
     <sentence>Roll the dice! You get {%d6}.</sentence>
 
