@@ -205,6 +205,20 @@ Deck is a way to randomize alternatives without any single alternative being cho
 
 When all cards have been "picked", the deck can't be used again. (Possible TODO: Add support to re-shuffle deck.)
 
+#### Dice
+
+To roll a dice, you need to first define its name and number of sides, like so:
+
+    <dice name="d6" sides="6" />
+
+You roll it using the inline construct '%':
+
+    <sentence>Roll the dice! You get {%d6}.</sentence>
+
+You can roll one dice multiple times on one use by adding a dot and a number:
+
+    <sentence>Roll the dice twice! You get {%d6.2}.</sentence>
+
 #### Inlining alternatives, macros, variables, records and deck
 
 Instead of using `<alt useMacro="macro_name">`, you can use the short-hand inline `{#macro_name}`:
