@@ -756,8 +756,8 @@ module Make(Dice : D) : T = struct
       Not_found -> raise (Dice_exception (sprintf "No such dice: '%s'" dice_name))
     in
     let value = ref 0 in
-    for i = 0 to number_of_dice do
-      value := Random.int (dice.sides) + 1;
+    for i = 1 to number_of_dice do
+      value := !value + Random.int (dice.sides) + 1;
     done;
     string_of_int !value
 

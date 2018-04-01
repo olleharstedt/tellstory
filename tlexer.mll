@@ -48,6 +48,8 @@ and token = parse
 *)
 | '|'
     { BARLINE }
+| ['0'-'9']+ as i
+    { INT (int_of_string i) }
 | ['a'-'z' 'A'-'Z' '_' '0'-'9']+ as i
     { WORD i }
 | ['"'] [^ '"']+ ['"'] as i
