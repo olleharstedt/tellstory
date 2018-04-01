@@ -19,6 +19,8 @@
 
 }
 
+(* OBS: When adding new token, don't forget to add it in reg expr in tellstory.ml *)
+
 rule line = parse
 | ([^'\n']* '\n') as line
     { line }
@@ -34,6 +36,8 @@ and token = parse
     { BACKSLASH }
 | '$'
     { DECKSIGN }
+| '%'
+    { DICESIGN }
 | '#'
     { MACROSIGN }
 | '.'

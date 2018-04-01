@@ -9,6 +9,7 @@
       record.this
       #macro
       $deck
+      %dice
       "inline content"
     nameterm:
       namespace\term
@@ -38,6 +39,7 @@ and term =
   | Record of string * string
   | Macro of string
   | Deck of string
+  | Dice of string * int
 [@@deriving show]
 
 (*

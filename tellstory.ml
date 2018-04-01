@@ -63,12 +63,13 @@ module Make(Dice : D) : T = struct
   exception Error_parsing_xml
   exception Unknown_tag of string
   exception Sentence_problem of string * string (* Message, string of exn *)
-  exception Macro_exception of string
+  exception Dice_exception of string
   exception Variable_exception of string
   exception Record_exception of string
   exception Alt_exception of string
   exception Parser_error of string
   exception Deck_exception of string
+  exception Macro_exception of string
   exception Xml_exception of string
   exception Include_exception of string * exn
   exception Namespace_exception of string
@@ -109,7 +110,6 @@ module Make(Dice : D) : T = struct
   }
 
   (** Data types for storing decks *)
-
   type deck = {
     name : string;
     alts : alt list;  (* When an alt is chosen it's removed from list (card is picked). Remove and replace in deck hashtable? *)
@@ -117,6 +117,12 @@ module Make(Dice : D) : T = struct
 
   (** Types for storing records *)
   type record = (string, string) Hashtbl.t
+
+  (** Type for storing <dice> tags *)
+  type dice = {
+    name : string;
+    sides : int;
+  }
 
   (** Hash table to store macros. Macros are randomized each use. *)
   (*
@@ -144,6 +150,7 @@ module Make(Dice : D) : T = struct
   type var_tbl = (string, string) Hashtbl.t
   type deck_tbl = (string, deck) Hashtbl.t
   type record_tbl = (string, record) Hashtbl.t
+  type dice_tbl = (string, dice) Hashtbl.t
 
   (** Namespace of macros, variables, ... *)
   type namespace = {
@@ -152,6 +159,7 @@ module Make(Dice : D) : T = struct
     var_tbl : var_tbl;
     record_tbl : record_tbl;
     deck_tbl : deck_tbl;
+    dice_tbl : dice_tbl;
   }
 
   type namespace_tbl = (string, namespace) Hashtbl.t
@@ -351,6 +359,7 @@ module Make(Dice : D) : T = struct
       macro_tbl = ((Hashtbl.create 20) : macro_tbl);
       record_tbl = ((Hashtbl.create 20) : record_tbl);
       deck_tbl = ((Hashtbl.create 20) : deck_tbl);
+      dice_tbl = ((Hashtbl.create 20) : dice_tbl);
     }
 
   (**
@@ -587,10 +596,10 @@ module Make(Dice : D) : T = struct
         let alts = parse_alts alts in
         let namespace = get_namespace_or_create state namespace_name in
         ({name = macro_name; alts}, Some namespace)
-    | Some ("name", macro_name), _ ->
+    | Some ("name", macro_name), None ->
         let alts = parse_alts alts in
         ({name = macro_name; alts}, None)
-    | None , _ ->
+    | None, _ ->
         raise (Macro_exception "Macro has no name attribute")
     | _, _ ->
         raise (Internal_error "Macro definition is super weird")
@@ -601,7 +610,7 @@ module Make(Dice : D) : T = struct
    * already exists.
    *
    * @param macro
-   * @param macro_tbl hash table
+   * @param namespace namespace
    * @return unit
    *)
   let store_macro (macro : macro) namespace =
@@ -609,6 +618,43 @@ module Make(Dice : D) : T = struct
       raise (Macro_exception (sprintf "Macro with name '%s' already exists" macro.name))
     else
       Hashtbl.add namespace.macro_tbl macro.name macro
+
+  (**
+   * @param attrs Xml.xml list
+   * @param state
+   * @return (dice * namespace option)
+   *)
+  let parse_dice attrs (state : state) : (dice * namespace option) =
+    let namespace_name = find_attribute attrs "namespace" in
+    let dice_name = find_attribute attrs "name" in
+    let sides = find_attribute attrs "sides" in
+    begin match dice_name, namespace_name, sides with
+    | Some ("name", dice_name), Some ("namespace", namespace_name), Some ("sides", sides) ->
+        let namespace = get_namespace_or_create state namespace_name in
+        let sides = int_of_string sides in
+        ({name = dice_name; sides}, Some namespace)
+    | Some ("name", dice_name), None, Some ("sides", sides) ->
+        let sides = int_of_string sides in
+        ({name = dice_name; sides}, None)
+    | None, _, _ ->
+        raise (Dice_exception "Dice tag lacks name attribute")
+    | _, _, None ->
+        raise (Dice_exception "Dice tag lacks sides attribute")
+    | _, _, _ ->
+        raise (Internal_error "Dice definition is super weird")
+    end
+
+  (**
+   * @param dice
+   * @param namespace namespace
+   * @return unit
+   *)
+  let store_dice (dice : dice) namespace =
+    if Hashtbl.mem namespace.dice_tbl dice.name then
+      raise (Macro_exception (sprintf "Dice with name '%s' already exists" dice.name))
+    else
+      Hashtbl.add namespace.dice_tbl dice.name dice
+
 
   (**
    * Look for setFlag attribute in attribute list
@@ -696,6 +742,25 @@ module Make(Dice : D) : T = struct
       Hashtbl.find namespace.var_tbl var_name
     with
         Not_found -> raise (Variable_exception (sprintf "Could not find variable '%s' in namespace '%s'. Check that you defined it with <variable name=\"%s\">..." var_name namespace.name var_name))
+
+  (**
+   * Roll the dice and return string of value.
+   * @param name string
+   * @param int number_of_dice
+   * @param namespace namespace
+   * @return string
+   * @raise Dice_exception
+   *)
+  let eval_dice dice_name number_of_dice namespace =
+    let dice = try Hashtbl.find namespace.dice_tbl dice_name with
+      Not_found -> raise (Dice_exception (sprintf "No such dice: '%s'" dice_name))
+    in
+    let value = ref 0 in
+    for i = 0 to number_of_dice do
+      value := Random.int (dice.sides) + 1;
+    done;
+    string_of_int !value
+
 
   (**
    * @param namespace namespace
@@ -1026,7 +1091,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content con state namespace =
-    let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[\"$#%\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches = Array.to_list (
       ArrayLabels.map matches ~f:(fun m ->
         let substrings = Pcre.get_substrings m in
@@ -1539,6 +1604,17 @@ module Make(Dice : D) : T = struct
             store_deck {name; alts} namespace.deck_tbl;
             ""
 
+        (* <dice> *)
+        | Xml.Element ("dice", attrs, []) ->
+            let (dice, namespace_option) = parse_dice attrs state in
+            begin match namespace_option with
+            | Some namespace ->
+                store_dice dice namespace;
+            | None ->
+                store_dice dice namespace;
+            end;
+            ""
+
         (* <include file=""> *)
         | Xml.Element ("include", [("file", filename)], []) ->
             (* TODO: Copied from main.ml, factorize? *)
@@ -1643,6 +1719,8 @@ module Make(Dice : D) : T = struct
         eval_macro macro_name namespace
     | Deck deck_name ->
         eval_deck deck_name state namespace
+    | Dice (dice_name, number_of_dice) ->
+        eval_dice dice_name number_of_dice namespace
 
   (**
    * Eval nameterm
@@ -1681,6 +1759,7 @@ module Make(Dice : D) : T = struct
    *)
   and eval_ast ast state default_namespace : string =
     let open Ast in
+    (* print_endline (Ast.show_nameterm_list ast); *)
     match ast with
     | Nameterm_list nameterms ->
         let length = length nameterms in

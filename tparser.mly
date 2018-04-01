@@ -16,8 +16,12 @@
   open Ast
 %}
 
+(* OBS: When adding new token, don't forget to add it in reg expr in tellstory.ml *)
+
 %token <string> WORD
+%token <int> NUMBER
 %token DECKSIGN
+%token DICESIGN
 %token MACROSIGN
 %token RECORDDOT
 %token <string> QUOTE
@@ -56,6 +60,10 @@ term:
     { Deck w }
 | MACROSIGN w = WORD
     { Macro w }
+| DICESIGN w  = WORD RECORDDOT i = NUMBER
+    { Dice (w, i) }
+| DICESIGN w = WORD 
+    { Dice (w, 1) }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
 

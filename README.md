@@ -225,14 +225,17 @@ For decks we use the character `$`, like this:
 
     <sentence>Pick a card, any card: {$deck}.</sentence>
 
+For dice we use the character `%`:
+
+    <sentence>Roll the dice! You get {%my_dice}.</sentence>
+
 #### Inline randomization
 
 Choose between variable, record or macro directly in sentence content without writing `<alt>`:s, using barline `|`.
 
-Example where one of three alternatives will be chosen:
+Example where one of four alternatives will be chosen:
 
-    <sentence>Could be any of this: {#macro1|record.something|variable}.</sentence>
-
+    <sentence>Could be any of this: {#macro1|$deck|record.something|variable}.</sentence>
 
 #### Include
 

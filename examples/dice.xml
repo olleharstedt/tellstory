@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="dice">
+  <dice name="d6" sides="6" />
+
+  <sentence>
+    Roll the dice! You got {%d6}. Roll two dice! You got {%d6.2}.
+  </sentence>
+</story>
