@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="starfable">
+  <dice name="d6" sides="6" />
+  <dice name="dAge" sides="100" />
+
+  <variable name="age">
+    <alt>{%dAge}</alt>
+  </variable>
+
+  <variable name="race">
+    <alt setFlag="rabbit">kanin</alt>
+    <alt setFlag="lion">lejon</alt>
+    <alt setFlag="rat">råtta</alt>
+    <alt setFlag="bird">fågel</alt>
+  </variable>
+
+  <variable name="gender">
+    <alt>Manlig</alt>
+    <alt>Kvinnlig</alt>
+  </variable>
+
+  <record name="props">
+    <alt>
+      <contacts>{%d6.2}</contacts>
+      <resources>{%d6.2}</resources>
+      <smart>{%d6.2}</smart>
+      <learning>{%d6.2}</learning>
+      <aggressivity>{%d6.2}</aggressivity>
+      <diplomacy>{%d6.2}</diplomacy>
+      <health>{%d6.2}</health>
+    </alt>
+  </record>
+
+  <variable name="job">
+    <alt ifSet="rabbit">Facklig</alt>
+    <alt ifSet="lion">Statlig</alt>
+    <alt ifSet="rat">Företagsägare</alt>
+    <alt ifSet="bird">Präst</alt>
+  </variable>
+
+  <sentence>
+    {gender} {race}, {age} år gammal, {job}.
+    Kontakter:     {props.contacts}
+    Resurser:      {props.resources}
+    Aggressivitet: {props.aggressivity}
+    Diplomati:     {props.diplomacy}
+    Smart:         {props.smart}
+    Lärdom:        {props.learning}
+  </sentence>
+</story>
