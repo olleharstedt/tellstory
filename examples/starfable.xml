@@ -41,11 +41,15 @@
     <alt>hälsa</alt>
   </deck>
 
-  <macro name="change">
+  <deck name="change">
     <alt>+</alt>
     <alt>-</alt>
     <alt> </alt>
-  </macro>
+    <alt> </alt>
+    <alt> </alt>
+    <alt> </alt>
+    <alt> </alt>
+  </deck>
 
   <variable name="job">
     <alt ifSet="rabbit">facklig byråkrat</alt>
@@ -76,14 +80,19 @@
     <alt ifSet="bird">munk/nunna</alt>
   </variable>
 
-  <sentence>
-    {gender} {race}, {age} år gammal, {job}.
-    Kontakter:     {props.contacts} {#change}
-    Resurser:      {props.resources} {#change}
-    Aggressivitet: {props.aggressivity} {#change}
-    Diplomati:     {props.diplomacy} {#change}
-    Smart:         {props.smart} {#change}
-    Lärdom:        {props.learning} {#change}
-    Hälsa          {props.health} {#change}
-  </sentence>
+  <sentence>{gender} {race}, {age} år gammal, {job}.</sentence>
+  <br/>
+  <sentence>Kontakter:     {props.contacts} {$change}</sentence>
+  <br/>
+  <sentence>Resurser:      {props.resources} {$change}</sentence>
+  <br/>
+  <sentence>Aggressivitet: {props.aggressivity} {$change}</sentence>
+  <br/>
+  <sentence>Diplomati:     {props.diplomacy} {$change}</sentence>
+  <br/>
+  <sentence>Smart:         {props.smart} {$change}</sentence>
+  <br/>
+  <sentence>Lärdom:        {props.learning} {$change}</sentence>
+  <br/>
+  <sentence>Hälsa          {props.health} {$change}</sentence>
 </story>

@@ -48,7 +48,8 @@ module type T = sig
   val get_namespace : state -> string -> namespace option
 
   (* Functions needed by eval_ast module *)
-  val eval_deck : string -> state -> namespace -> string
+  (* TODO: ? *)
+  (*val eval_deck : string -> state -> namespace -> string*)
 end
 
 module Make(Dice : D) : T = struct
@@ -699,7 +700,6 @@ module Make(Dice : D) : T = struct
       (*let alt = choose_alt macro.alts in*)
       let alts = get_possible_alts macro.alts in
       let random_nr = Dice.dice (List.length alts) in
-      (*print_endline ("eval macro " ^ name ^ (string_of_int random_nr));*)
       let alt = match nth alts random_nr with
         | Some alt -> alt
         | None -> raise (Macro_exception "No alt?")
@@ -710,7 +710,6 @@ module Make(Dice : D) : T = struct
       *)
       check_for_empty_content alt.content;
       set_flags alt.attributes;
-      (*print_endline alt.content;*)
       alt.content
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s' in namespace '%s'" name namespace.name))
@@ -834,43 +833,45 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   let rec eval_deck deck_name (state : state) (namespace : namespace) =
-      log_trace "eval_deck\n";
-      let deck = try Hashtbl.find namespace.deck_tbl deck_name with
+    log_trace "eval_deck\n";
+    let deck = try Hashtbl.find namespace.deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
-      in
-      (* Abort if no cards are left in deck *)
-      if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
-      let cards = get_possible_alts deck.alts in
-      let card = nth cards (Dice.dice (length cards)) in
-      match card with
-      | None -> raise (Deck_exception ("Found no card"))
-      | Some card ->
-          (* Create a new deck without the card we picked *)
-          (* Card = alt in this context *)
-          (* Filter logic:
-           * We want to filter the card we just picked.
-           * All cards that are not identical to this card should return false (not filter)
-           * The card is identical to the card we picked IF:
-           *   content = content AND attributes are equal (name && content of attribues are equal)
-           *)
-          let new_alts = filter deck.alts ~f:(fun alt ->
-            not (compare_alt alt card)
-          ) in
-          let new_deck = {
-            name = deck.name;
-            alts = new_alts;
-          } in
-          log_trace "old_deck: ";
-          print_deck deck;
-          log_trace "new deck: ";
-          print_deck new_deck;
-          Hashtbl.remove namespace.deck_tbl deck.name;
-          Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
-          (* Build Xml.xml <alt> out of record *)
-          let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
-          let result = eval_alt alt state namespace in
-          log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
-          result
+    in
+
+    (* Abort if no cards are left in deck *)
+    if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+    let cards = get_possible_alts deck.alts in
+    let pick_nr = Dice.dice (length cards) in
+    let card = nth cards pick_nr in
+
+    match card with
+    | None -> raise (Deck_exception ("Found no card"))
+    | Some card ->
+        (* Create a new deck without the card we picked *)
+        (* Card = alt in this context *)
+        (* Filter logic:
+         * We want to filter the card we just picked.
+         * All cards that are not identical to this card should return false (not filter)
+         * The card is identical to the card we picked IF:
+         *   content = content AND attributes are equal (name && content of attribues are equal)
+         *)
+        let new_alts = filteri deck.alts ~f:(fun i alt ->
+          i != pick_nr
+        ) in
+        let new_deck = {
+          name = deck.name;
+          alts = new_alts;
+        } in
+        log_trace "old_deck: ";
+        log_trace "new deck: ";
+        print_deck new_deck;
+        Hashtbl.remove namespace.deck_tbl deck.name;
+        Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
+        (* Build Xml.xml <alt> out of record *)
+        let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
+        let result = eval_alt alt state namespace in
+        log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
+        result
 
   (**
    * @param content string
@@ -1025,7 +1026,6 @@ module Make(Dice : D) : T = struct
       match matches with
       | [] -> content
       | mat::tail ->
-          print_endline mat;
           let macro_content = eval_macro mat namespace in
           let pattern = sprintf "{#%s}" mat in
           let content = Pcre.replace_first ~pat:pattern ~templ:macro_content content in
@@ -1103,114 +1103,29 @@ module Make(Dice : D) : T = struct
    *)
   and eval_content con state namespace =
     let matches = try Pcre.exec_all ~pat:"{[\"$#%\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
-    let matches = Array.to_list (
-      ArrayLabels.map matches ~f:(fun m ->
+    let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
-        let s = substrings.(0) in
-        (* Strip brackets *)
-        let s = String.sub s 1 (String.length s - 2) in
-        (*printf "match = %s\n" s;*)
-        s
-      )
-    ) in
-    let rec replace_content matches con =
-      match matches with
-      | [] -> con
-      | match_::tail ->
-          (*
-          log_trace "mat = %s\n" mat;
-          log_trace "con = %s\n" con;
-          *)
-          (*
-          let replacement = String.sub mat 1 (String.length mat - 2) in
-          let mat = sprintf "{%s}" mat in
-          let mat = Pcre.quote mat in
-          let con = Pcre.replace ~pat:mat ~templ:replacement con in
-          *)
-          (*printf "match_ = %s\n" match_;*)
-          log_trace (sprintf "eval_content: match_ = %s" (String.escaped match_));
-          let linebuf = Lexing.from_string match_ in
-          let ast = try (Tparser.main Tlexer.token linebuf) with
-            | Tlexer.Error msg ->
-                (*
-                let tok = Lexing.lexeme linebuf in
-                print_endline tok;
-                *)
-                raise (Parser_error (sprintf "%s" msg))
-            | Tparser.Error ->
-                (*
-                let tok = Lexing.lexeme linebuf in
-                print_endline tok;
-                *)
-                (* raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf)))) *)
-                raise (Parser_error (sprintf "Could not parse '%s'" match_ ))
-            | Failure msg ->
-                let open Lexing in
-                raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))
-          in
-          let evaluated_ast = eval_ast ast state namespace in
-          let match_with_brackets = sprintf "{%s}" match_ in
-          let match_with_brackets_quote = Pcre.quote match_with_brackets in
-          let new_con = Pcre.replace_first ~pat:match_with_brackets_quote ~templ:evaluated_ast con in
-          (* If there are matches inside the new evaluated content, do a recursive call *)
-          let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
-          let final_con = if Array.length matches > 0 then
-            eval_content new_con state namespace
-          else new_con in
-          replace_content tail final_con
+        let s_with_braces = substrings.(0) in
+        let s_without_braces = String.sub s_with_braces 1 (String.length s_with_braces - 2) in
+        let ast = parse_ast s_without_braces in
+        let evaled = eval_ast ast state namespace in
+        (s_with_braces, evaled)
+      ) matches
     in
-    replace_content matches con
+    let new_con = ref con in
+    Array.iter (fun (match_with_braces, replacement) ->
+      let match_with_brackets_quote = Pcre.quote match_with_braces in
+      new_con := Pcre.replace_first ~pat:match_with_brackets_quote ~templ:replacement !new_con;
+      (* Check if eval was evaled to another pattern. *)
+      let matches = try Pcre.exec_all ~pat:"{[\"$#%\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
+      if Array.length matches > 0 then begin
+        let final_replacement = eval_content replacement state namespace in
+        let replacement_quote = Pcre.quote replacement in
+        new_con := Pcre.replace_first ~pat:replacement_quote ~templ:final_replacement !new_con;
+      end
+    ) matches_and_replacements;
 
-    (*
-    let con = replace_inline_content con in
-    let con = replace_inline_variable con state namespace in
-    let con = replace_inline_records con state namespace in
-    let con = replace_inline_macros con state namespace in
-    let con = replace_inline_deck con state namespace in
-
-    (* Replace inline randomization like {this | and_this.too | #and_that} (without space - ppx problem) *)
-    (*let matches = try Pcre.exec_all ~pat:"{([a-zA-Z0-9_#\\.]+|\"[a-z]+\"|\\|)}" con with Not_found -> [||] in*)
-    let matches = try Pcre.exec_all ~pat:"{[a-zA-Z0-9_\\|#\\.\\\"\\s]+}" con with Not_found -> [||] in
-    let matches = Array.to_list matches in
-    (* Get tuples like what to match and what to replace it with: (match, replace_with_this) *)
-    let matches_and_replaces = map matches ~f:(fun m ->
-      let substrings = Pcre.get_substrings m in
-      let substrings_tuples = ArrayLabels.map substrings ~f:(fun substring ->
-        (* Strip {} *)
-        let no_braces = String.sub substring 1 (String.length substring - 2) in
-        let split_by_bar = Pcre.split ~pat:"\\|" no_braces in
-        let alt = match nth split_by_bar (Dice.dice (List.length split_by_bar)) with
-          | Some alt -> alt
-          | None -> raise (Internal_error (sprintf "eval_content: found no alternative when splitting '%s'" substring))
-        in
-        (*
-        iter split_by_bar ~f:(fun s ->
-          print_endline s;
-          print_endline (eval_content (sprintf "{%s}" s))
-        );
-        *)
-        (substring, eval_content (sprintf "{%s}" alt) state namespace)
-      ) in
-      substrings_tuples.(0)
-    ) in
-    let rec replace_randomization matches con = match matches with
-    | [] -> con
-    | (mat, repl)::tail ->
-        let mat = Pcre.quote mat in
-        let con = Pcre.replace_first ~pat:mat ~templ:repl con in
-        replace_randomization tail con
-    in
-    let con = replace_randomization matches_and_replaces con in
-
-    (*
-    iter matches_and_replaces ~f:(fun (x, y) ->
-      print_endline x;
-      print_endline y
-    );
-    *)
-
-    con
-    *)
+    !new_con
 
   (**
    * Eval <alt> to its content
@@ -1227,6 +1142,7 @@ module Make(Dice : D) : T = struct
     set_flags attributes;
 
     (* Get macro to use as (string * string) tuple *)
+    (** TODO: Add useDice *)
     let useMacro = find_attribute attributes "useMacro" in
     let useDeck = find_attribute attributes "useDeck" in
     let _include = find_attribute attributes "include" in
@@ -1254,7 +1170,6 @@ module Make(Dice : D) : T = struct
 
   (**
    * Eval sentence, changin {bla} to variable content
-   *
    * @param sen string
    * @param state
    * @param namespace
@@ -1537,7 +1452,7 @@ module Make(Dice : D) : T = struct
 
         (* <br /> *)
         | Xml.Element ("br", _, _) ->
-            "\n\n"
+            "\n"
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
@@ -1771,7 +1686,6 @@ module Make(Dice : D) : T = struct
    *)
   and eval_ast ast state default_namespace : string =
     let open Ast in
-    (* print_endline (Ast.show_nameterm_list ast); *)
     match ast with
     | Nameterm_list nameterms ->
         let length = length nameterms in
@@ -1782,6 +1696,31 @@ module Make(Dice : D) : T = struct
         | None ->
             raise (Eval_ast_exception "Could not chose a nameterm")
         end
+
+  (**
+   * Lex and parse ast.
+   * @param match_ preg match for {foo}
+   * @return ast
+   *)
+  and parse_ast match_ =
+    let linebuf = Lexing.from_string match_ in
+    let ast = try (Tparser.main Tlexer.token linebuf) with
+      | Tlexer.Error msg ->
+          (*
+          let tok = Lexing.lexeme linebuf in
+          *)
+          raise (Parser_error (sprintf "%s" msg))
+      | Tparser.Error ->
+          (*
+          let tok = Lexing.lexeme linebuf in
+          *)
+          (* raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf)))) *)
+          raise (Parser_error (sprintf "Could not parse '%s'" match_ ))
+      | Failure msg ->
+          let open Lexing in
+          raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))
+    in
+    ast
 
   (**
    * Eval <story> tag and all its children (macros, records, etc), returns the string
