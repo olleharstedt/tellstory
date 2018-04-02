@@ -43,8 +43,8 @@
 
   <macro name="change">
     <alt>+</alt>
-    <alt>.</alt>
     <alt>-</alt>
+    <alt> </alt>
   </macro>
 
   <variable name="job">
@@ -78,18 +78,12 @@
 
   <sentence>
     {gender} {race}, {age} år gammal, {job}.
-    Kontakter:     {props.contacts}{#change}
-    Resurser:      {props.resources}{#change}
-    Aggressivitet: {props.aggressivity}{#change}
-    Diplomati:     {props.diplomacy}{#change}
-    Smart:         {props.smart}{#change}
-    Lärdom:        {props.learning}{#change}
-  </sentence>
-  <br/>
-  <sentence>
-    Vill bli bättre på {$propsDeck}
-  </sentence>
-  <sentence>
-    genom att offra {$propsDeck}.
+    Kontakter:     {props.contacts} {#change}
+    Resurser:      {props.resources} {#change}
+    Aggressivitet: {props.aggressivity} {#change}
+    Diplomati:     {props.diplomacy} {#change}
+    Smart:         {props.smart} {#change}
+    Lärdom:        {props.learning} {#change}
+    Hälsa          {props.health} {#change}
   </sentence>
 </story>

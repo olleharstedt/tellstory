@@ -688,7 +688,8 @@ module Make(Dice : D) : T = struct
     let check_for_empty_content c =
       match c with
       | "" ->
-          raise (Alt_exception "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")
+          ()
+          (*raise (Alt_exception "Empty content for <alt>. Check so no <alt> is defined as <alt></alt>")*)
       | _ ->
           ()
     in
