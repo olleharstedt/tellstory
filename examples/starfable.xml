@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="starfable">
+
+  <!-- Define two dice: d6 and d100 -->
   <dice name="d6" sides="6" />
   <dice name="dAge" sides="100" />
 
+  <!-- Store d100 roll in variable called "age" -->
   <variable name="age">
     <alt>{%dAge}</alt>
   </variable>
 
+  <!-- Store race in variable called "race" -->
   <variable name="race">
     <alt setFlag="rabbit">kanin</alt>
     <alt setFlag="lion">lejon</alt>
@@ -14,11 +18,13 @@
     <alt setFlag="bird">fågel</alt>
   </variable>
 
+  <!-- Decide gender -->
   <variable name="gender">
     <alt>Manlig</alt>
     <alt>Kvinnlig</alt>
   </variable>
 
+  <!-- Roll basic properties, 2d6 for each -->
   <record name="props">
     <alt>
       <contacts>{%d6.2}</contacts>
@@ -31,16 +37,8 @@
     </alt>
   </record>
 
-  <deck name="propsDeck">
-    <alt>kontakter</alt>
-    <alt>resurser</alt>
-    <alt>smart</alt>
-    <alt>lärdom</alt>
-    <alt>aggressivitet</alt>
-    <alt>diplomati</alt>
-    <alt>hälsa</alt>
-  </deck>
-
+  <!-- Contruct a deck with card, used for increase/decrease property -->
+  <!-- 7 cards, 5 empty, one card + and one card - -->
   <deck name="change">
     <alt>+</alt>
     <alt>-</alt>
@@ -51,6 +49,7 @@
     <alt> </alt>
   </deck>
 
+  <!-- Pick job, depending on which race flag was set -->
   <variable name="job">
     <alt ifSet="rabbit">facklig byråkrat</alt>
     <alt ifSet="rabbit">praktisk industri, mekaniker</alt>
@@ -80,6 +79,7 @@
     <alt ifSet="bird">munk/nunna</alt>
   </variable>
 
+  <!-- Output everything! -->
   <sentence>{gender} {race}, {age} år gammal, {job}.</sentence>
   <br/>
   <sentence>Kontakter:     {props.contacts} {$change}</sentence>
