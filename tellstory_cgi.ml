@@ -187,7 +187,7 @@ let process (cgi : Netcgi.cgi) =
           </head>
           <body>
             <div id='main-wrapper' class='content'>
-              <img src='/img/header.png' />
+              <img src='img/header.png' />
               <h2>Randomize text using XML</h2>
               <p>Read the manual <a href='https://github.com/olleharstedt/tellstory'>here</a>.</p>
               <p>Examples:</p>
@@ -196,7 +196,7 @@ let process (cgi : Netcgi.cgi) =
                 %s
               </select><br /><br />
               <form method='post' action='tellstory'> <!-- Rewrite rule necessary to get this to work -->
-                <textarea id='story_textarea' name='story' cols='100' rows='50'>%s</textarea><br /><br />
+                <textarea id='story_textarea' name='story' cols='80' rows='50'>%s</textarea><br /><br />
                 <input class='btn btn-primary' type='submit' value='Tell story' />
               </form>
               <br />
