@@ -697,7 +697,9 @@ module Make(Dice : D) : T = struct
       let macro = Hashtbl.find namespace.macro_tbl name in
       (*let alt = choose_alt macro.alts in*)
       let alts = get_possible_alts macro.alts in
-      let alt = match nth alts (Dice.dice (List.length alts)) with
+      let random_nr = Dice.dice (List.length alts) in
+      (*print_endline ("eval macro " ^ name ^ (string_of_int random_nr));*)
+      let alt = match nth alts random_nr with
         | Some alt -> alt
         | None -> raise (Macro_exception "No alt?")
       in
@@ -707,6 +709,7 @@ module Make(Dice : D) : T = struct
       *)
       check_for_empty_content alt.content;
       set_flags alt.attributes;
+      (*print_endline alt.content;*)
       alt.content
     end else
       raise (Macro_exception (sprintf "useMacro: Found no macro '%s' in namespace '%s'" name namespace.name))
@@ -1012,13 +1015,20 @@ module Make(Dice : D) : T = struct
         s
       )
     ) in
-    let rec replace_macros matches content = match matches with
-    | [] -> content
-    | mat::tail ->
-        let macro_content = eval_macro mat namespace in
-        let pattern = sprintf "{#%s}" mat in
-        let content = Pcre.replace ~pat:pattern ~templ:macro_content content in
-        replace_macros tail content
+    (**
+     * @param matches
+     * @param content
+     * @return string?
+     *)
+    let rec replace_macros matches content = 
+      match matches with
+      | [] -> content
+      | mat::tail ->
+          print_endline mat;
+          let macro_content = eval_macro mat namespace in
+          let pattern = sprintf "{#%s}" mat in
+          let content = Pcre.replace_first ~pat:pattern ~templ:macro_content content in
+          replace_macros tail content
     in
     replace_macros matches content
 
@@ -1140,7 +1150,7 @@ module Make(Dice : D) : T = struct
           let evaluated_ast = eval_ast ast state namespace in
           let match_with_brackets = sprintf "{%s}" match_ in
           let match_with_brackets_quote = Pcre.quote match_with_brackets in
-          let new_con = Pcre.replace ~pat:match_with_brackets_quote ~templ:evaluated_ast con in
+          let new_con = Pcre.replace_first ~pat:match_with_brackets_quote ~templ:evaluated_ast con in
           (* If there are matches inside the new evaluated content, do a recursive call *)
           let matches = try Pcre.exec_all ~pat:"{[\"$#\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
           let final_con = if Array.length matches > 0 then
@@ -1221,21 +1231,22 @@ module Make(Dice : D) : T = struct
     let _include = find_attribute attributes "include" in
 
     (* Get content either from macro, deck or alt.content *)
-    let cont = match useMacro, useDeck, _include with
-    | None, None, None ->
-        fetch_content alt
-    | Some (_, macro_name), None, None ->
-        eval_macro macro_name namespace
-    | None, Some (_, deck_name), None ->
-        log_trace "eval_alt: useDeck";
-        eval_deck deck_name state namespace
-    | None, None, Some (_, filename) ->
-        log_trace "eval_alt: file_to_string";
-        (try file_to_string filename state with
-        | ex ->
-            raise (Include_exception ("Can't evalutate <alt>", ex)))
-    | _ ->
-        raise (Alt_exception "Both useMacro, useDeck and include attributes?")
+    let cont = 
+      match useMacro, useDeck, _include with
+      | None, None, None ->
+          fetch_content alt
+      | Some (_, macro_name), None, None ->
+          eval_macro macro_name namespace
+      | None, Some (_, deck_name), None ->
+          log_trace "eval_alt: useDeck";
+          eval_deck deck_name state namespace
+      | None, None, Some (_, filename) ->
+          log_trace "eval_alt: file_to_string";
+          (try file_to_string filename state with
+          | ex ->
+              raise (Include_exception ("Can't evalutate <alt>", ex)))
+      | _ ->
+          raise (Alt_exception "Both useMacro, useDeck and include attributes?")
     in
 
     eval_content cont state namespace

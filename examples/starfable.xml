@@ -31,20 +31,65 @@
     </alt>
   </record>
 
+  <deck name="propsDeck">
+    <alt>kontakter</alt>
+    <alt>resurser</alt>
+    <alt>smart</alt>
+    <alt>lärdom</alt>
+    <alt>aggressivitet</alt>
+    <alt>diplomati</alt>
+    <alt>hälsa</alt>
+  </deck>
+
+  <macro name="change">
+    <alt>+</alt>
+    <alt>.</alt>
+    <alt>-</alt>
+  </macro>
+
   <variable name="job">
-    <alt ifSet="rabbit">Facklig</alt>
-    <alt ifSet="lion">Statlig</alt>
-    <alt ifSet="rat">Företagsägare</alt>
-    <alt ifSet="bird">Präst</alt>
+    <alt ifSet="rabbit">facklig byråkrat</alt>
+    <alt ifSet="rabbit">praktisk industri, mekaniker</alt>
+    <alt ifSet="rabbit">fraktpilot</alt>
+    <alt ifSet="rabbit">kock</alt>
+    <alt ifSet="rabbit">polis eller vakt</alt>
+    <alt ifSet="rabbit">milis</alt>
+    <alt ifSet="rabbit">sjuksyrra</alt>
+    <alt ifSet="rabbit">hotellägare, pub eller dylikt</alt>
+
+    <alt ifSet="lion">statlig byråkrat</alt>
+    <alt ifSet="lion">militär</alt>
+    <alt ifSet="lion">specialtrupp</alt>
+    <alt ifSet="lion">aristokrat</alt>
+    <alt ifSet="lion">ritualledare</alt>
+
+    <alt ifSet="rat">styrelseproffs</alt>
+    <alt ifSet="rat">företagsägare</alt>
+    <alt ifSet="rat">hacker</alt>
+    <alt ifSet="rat">diversehandel, försäljare</alt>
+    <alt ifSet="rat">investerare, kapitalistängel</alt>
+
+    <alt ifSet="bird">präst</alt>
+    <alt ifSet="bird">arkitekt</alt>
+    <alt ifSet="bird">forskare</alt>
+    <alt ifSet="bird">eremit</alt>
+    <alt ifSet="bird">munk/nunna</alt>
   </variable>
 
   <sentence>
     {gender} {race}, {age} år gammal, {job}.
-    Kontakter:     {props.contacts}
-    Resurser:      {props.resources}
-    Aggressivitet: {props.aggressivity}
-    Diplomati:     {props.diplomacy}
-    Smart:         {props.smart}
-    Lärdom:        {props.learning}
+    Kontakter:     {props.contacts}{#change}
+    Resurser:      {props.resources}{#change}
+    Aggressivitet: {props.aggressivity}{#change}
+    Diplomati:     {props.diplomacy}{#change}
+    Smart:         {props.smart}{#change}
+    Lärdom:        {props.learning}{#change}
+  </sentence>
+  <br/>
+  <sentence>
+    Vill bli bättre på {$propsDeck}
+  </sentence>
+  <sentence>
+    genom att offra {$propsDeck}.
   </sentence>
 </story>
