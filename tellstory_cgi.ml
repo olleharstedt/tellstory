@@ -58,7 +58,7 @@ let read_file filename =
   !file_content
 
 (**
- * Read examples as <option> from dir ../examples
+ * Read examples as <option> from dir examples/
  * Use with <select>
  *
  * @return string
@@ -66,7 +66,7 @@ let read_file filename =
 let get_examples () =
   let open Unix in
   let result = ref ([] : (string * string) list) in
-  let d = opendir "../examples" in
+  let d = opendir "/var/www/html/tellstory/examples" in
   (try while true do begin
     let file = readdir d in
     (* Skip these two "files" *)
@@ -75,7 +75,7 @@ let get_examples () =
       ()
     else begin
       (* Read file *)
-      let filename = (sprintf "../examples/%s" file) in
+      let filename = (sprintf "/var/www/html/tellstory/examples/%s" file) in
       let file_content = read_file_escape filename in
       result := (file, file_content) :: !result
       (*
@@ -201,7 +201,8 @@ let process (cgi : Netcgi.cgi) =
               </form>
               <br />
               <p>Result:</p>
-              <p id='generated-story' class='border'>%s</p>
+              <p id='generated-story' class='border' style='white-space: pre;'>%s
+              </p>
             </div>
           </body>
         </html>"
@@ -214,8 +215,10 @@ let process (cgi : Netcgi.cgi) =
       | "" ->
           "No filename given"
       | filename ->
-          let file_content = read_file (sprintf "../examples/%s.xml" filename) in
-          tellstory file_content
+          let file_content = read_file (sprintf "/var/www/html/tellstory/examples/%s.xml" filename) in
+          "<!DOCTYPE html><html><head></head><body><code style='white-space: pre;'>"
+          ^ (tellstory file_content)
+          ^ "</code></body></html>"
       end
   | unknown_op ->
       sprintf "Unknown op: %s" unknown_op
