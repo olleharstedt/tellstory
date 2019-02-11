@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="starfable">
+
+  <!-- Define two dice: d6 and d100 -->
+  <dice name="d6" sides="6" />
+  <dice name="dAge" sides="100" />
+
+  <!-- Store d100 roll in variable called "age" -->
+  <variable name="age">
+    <alt>{%dAge}</alt>
+  </variable>
+
+  <!-- Store race in variable called "race" -->
+  <variable name="race">
+    <alt setFlag="rabbit">kanin</alt>
+    <alt setFlag="lion">lejon</alt>
+    <alt setFlag="rat">råtta</alt>
+    <alt setFlag="bird">fågel</alt>
+  </variable>
+
+  <!-- Decide gender -->
+  <variable name="gender">
+    <alt>Manlig</alt>
+    <alt>Kvinnlig</alt>
+  </variable>
+
+  <!-- Roll basic properties, 2d6 for each -->
+  <record name="props">
+    <alt>
+      <contacts>{%d6.2}</contacts>
+      <resources>{%d6.2}</resources>
+      <smart>{%d6.2}</smart>
+      <learning>{%d6.2}</learning>
+      <aggressivity>{%d6.2}</aggressivity>
+      <diplomacy>{%d6.2}</diplomacy>
+      <health>{%d6.2}</health>
+    </alt>
+  </record>
+
+  <!-- Contruct a deck with card, used for increase/decrease property -->
+  <!-- 7 cards, 5 empty, one card + and one card - -->
+  <deck name="change">
+    <alt>+</alt>
+    <alt>-</alt>
+    <alt> </alt>
+    <alt> </alt>
+    <alt> </alt>
+    <alt> </alt>
+    <alt> </alt>
+  </deck>
+
+  <!-- Pick job, depending on which race flag was set -->
+  <variable name="job">
+    <alt ifSet="rabbit">facklig byråkrat</alt>
+    <alt ifSet="rabbit">praktisk industri, mekaniker</alt>
+    <alt ifSet="rabbit">fraktpilot</alt>
+    <alt ifSet="rabbit">kock</alt>
+    <alt ifSet="rabbit">polis eller vakt</alt>
+    <alt ifSet="rabbit">milis</alt>
+    <alt ifSet="rabbit">sjuksyrra</alt>
+    <alt ifSet="rabbit">hotellägare, pub eller dylikt</alt>
+
+    <alt ifSet="lion">statlig byråkrat</alt>
+    <alt ifSet="lion">militär</alt>
+    <alt ifSet="lion">specialtrupp</alt>
+    <alt ifSet="lion">aristokrat</alt>
+    <alt ifSet="lion">ritualledare</alt>
+
+    <alt ifSet="rat">styrelseproffs</alt>
+    <alt ifSet="rat">företagsägare</alt>
+    <alt ifSet="rat">hacker</alt>
+    <alt ifSet="rat">diversehandel, försäljare</alt>
+    <alt ifSet="rat">investerare, kapitalistängel</alt>
+
+    <alt ifSet="bird">präst</alt>
+    <alt ifSet="bird">arkitekt</alt>
+    <alt ifSet="bird">forskare</alt>
+    <alt ifSet="bird">eremit</alt>
+    <alt ifSet="bird">munk/nunna</alt>
+  </variable>
+
+  <!-- Output everything! -->
+  <!--
+  <sentence>{gender} {race}, {age} år gammal, {job}.</sentence>
+  <br/>
+  -->
+  <sentence>Contacts:     {props.contacts} {$change}</sentence>
+  <br/>
+  <sentence>Resources:    {props.resources} {$change}</sentence>
+  <br/>
+  <sentence>Agressivity:  {props.aggressivity} {$change}</sentence>
+  <br/>
+  <sentence>Diplomacy:    {props.diplomacy} {$change}</sentence>
+  <br/>
+  <sentence>Intelligence: {props.smart} {$change}</sentence>
+  <br/>
+  <sentence>Knowledge:    {props.learning} {$change}</sentence>
+  <br/>
+  <sentence>Health        {props.health} {$change}</sentence>
+</story>
