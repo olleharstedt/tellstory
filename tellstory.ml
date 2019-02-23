@@ -129,6 +129,7 @@ module Make(Dice : D) : T = struct
   type graph = {
     name : string;
     nodes : graph_node list;
+    current_node : int;
   }
 
   (** Types for storing records *)
@@ -924,6 +925,28 @@ module Make(Dice : D) : T = struct
         result
 
   (**
+   * @param graph
+   * @return graph_node
+   *)
+  and pick_new_node graph =
+    ()
+
+  (**
+   * @param graph_name string
+   * @param state state
+   * @param namespace namespace
+   * @return string
+   *)
+  and eval_graph graph_name state namespace =
+    log_trace "eval_graph\n";
+    let graph = try Hashtbl.find namespace.graph_tbl graph_name with
+      | Not_found -> raise (Graph_exception (sprintf "Found no graph with name '%s'" graph_name))
+    in
+
+    let next_node = pick_new_node graph in
+    ""
+
+  (**
    * @param content string
    * @param pattern string Regexp pattern as string to match namespace for variable, record, macro etc
    * @param state state
@@ -1152,7 +1175,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content con state namespace =
-    let matches = try Pcre.exec_all ~pat:"{[\"$#%\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[\"$#%@\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
         let s_with_braces = substrings.(0) in
@@ -1602,7 +1625,8 @@ module Make(Dice : D) : T = struct
 
         | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
             let nodes = parse_nodes nodes in
-            store_graph {name; nodes} namespace.graph_tbl;
+            let current_node = 1 in
+            store_graph {name; nodes; current_node} namespace.graph_tbl;
             ""
 
         (* <dice> *)
@@ -1720,6 +1744,8 @@ module Make(Dice : D) : T = struct
         eval_macro macro_name namespace
     | Deck deck_name ->
         eval_deck deck_name state namespace
+    | Graph graph_name ->
+        eval_graph graph_name state namespace
     | Dice (dice_name, number_of_dice) ->
         eval_dice dice_name number_of_dice namespace
 

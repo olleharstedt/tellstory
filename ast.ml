@@ -9,6 +9,7 @@
       record.this
       #macro
       $deck
+      @graph
       %dice
       "inline content"
     nameterm:

@@ -205,6 +205,22 @@ Deck is a way to randomize alternatives without any single alternative being cho
 
 When all cards have been "picked", the deck can't be used again. (Possible TODO: Add support to re-shuffle deck.)
 
+#### Graphs
+
+In a graph, you have nodes that connect to other nodes. When picking a new node randomly, you only pick a node that's _connected_ to the present node.
+
+    <graph name="my_graph">
+      <node id="1" connections="2,3">Center node</node>
+      <node id="2" connections="1">Other content</node>
+      <node id="3" connections="1">Third node content</node>
+    </graph>
+
+    <sentence>{@my_graph}</sentence>
+    <sentence>{@my_graph}</sentence>
+    <sentence>{@my_graph}</sentence>
+    <sentence>{@my_graph}</sentence>
+    <sentence>{@my_graph}</sentence>
+
 #### Dice
 
 To roll a dice, you need to first define its name and number of sides, like so:
@@ -343,6 +359,7 @@ Possible future features
 * Many stories in one file, choose one randomly.
 * Export to PDF or markdown.
 * Web interface
+* Community where you an share story snippets and use each other's stories.
 * Use-case where we want to generate many characters, all with different names and genders, where no name is used more than once.
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
