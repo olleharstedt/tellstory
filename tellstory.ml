@@ -600,6 +600,38 @@ module Make(Dice : D) : T = struct
     )
 
   (**
+    id : int;
+    content : string;
+    (** List of nodes this node is connected to *)
+    connections : int list;
+    * @return graph_node list
+   *)
+  let parse_nodes nodes =
+    map nodes ~f:(fun node -> match node with
+    | Xml.Element ("node", attributes, [Xml.PCData content]) ->
+      let connections = begin match find_attribute attributes "connections" with
+        | Some (_, value) -> begin
+            let regexp = Str.regexp "," in
+            let splits = Str.split regexp value in
+            map splits ~f:(fun number -> int_of_string number)
+          end
+        | None -> raise (Graph_exception "Missing connections in graph node")
+      end in
+      let id = begin match find_attribute attributes "id" with
+        | Some (_, id) -> int_of_string id
+        | None -> raise (Graph_exception "Missing id of graph node")
+      end in
+      (* graph_node *)
+      {
+        id;
+        content;
+        connections;
+      }
+    | _ ->
+        raise (Graph_exception "Illegal node in graph")
+    )
+
+  (**
    * Parse macro tag
    *
    * @param attrs Xml.xml list
@@ -1436,6 +1468,13 @@ module Make(Dice : D) : T = struct
     else
       Hashtbl.add deck_tbl deck.name deck
 
+  and store_graph (graph : graph) graph_tbl =
+    if Hashtbl.mem graph_tbl graph.name then
+      raise (Deck_exception (sprintf "Deck with name '%s' already exists" graph.name))
+    else
+      Hashtbl.add graph_tbl graph.name graph
+
+
   (**
    * Convert all sentences to strings
    * And macros, variables, records, includes...
@@ -1562,8 +1601,9 @@ module Make(Dice : D) : T = struct
             ""
 
         | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
-            raise (Graph_exception ("here"))
-
+            let nodes = parse_nodes nodes in
+            store_graph {name; nodes} namespace.graph_tbl;
+            ""
 
         (* <dice> *)
         | Xml.Element ("dice", attrs, []) ->
