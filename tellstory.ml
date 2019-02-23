@@ -70,6 +70,7 @@ module Make(Dice : D) : T = struct
   exception Alt_exception of string
   exception Parser_error of string
   exception Deck_exception of string
+  exception Graph_exception of string
   exception Macro_exception of string
   exception Xml_exception of string
   exception Include_exception of string * exn
@@ -164,6 +165,7 @@ module Make(Dice : D) : T = struct
   type macro_tbl = (string, macro) Hashtbl.t
   type var_tbl = (string, string) Hashtbl.t
   type deck_tbl = (string, deck) Hashtbl.t
+  type graph_tbl = (string, graph) Hashtbl.t
   type record_tbl = (string, record) Hashtbl.t
   type dice_tbl = (string, dice) Hashtbl.t
 
@@ -174,6 +176,7 @@ module Make(Dice : D) : T = struct
     var_tbl : var_tbl;
     record_tbl : record_tbl;
     deck_tbl : deck_tbl;
+    graph_tbl : graph_tbl;
     dice_tbl : dice_tbl;
   }
 
@@ -374,6 +377,7 @@ module Make(Dice : D) : T = struct
       macro_tbl = ((Hashtbl.create 20) : macro_tbl);
       record_tbl = ((Hashtbl.create 20) : record_tbl);
       deck_tbl = ((Hashtbl.create 20) : deck_tbl);
+      graph_tbl = ((Hashtbl.create 20) : graph_tbl);
       dice_tbl = ((Hashtbl.create 20) : dice_tbl);
     }
 
@@ -1343,6 +1347,18 @@ module Make(Dice : D) : T = struct
     true
 
   (**
+   * @param name string
+   * @param nodes graph_node list
+   * @return bool
+   * @throws Graph_exception
+   *)
+  and graph_is_ok name nodes graph_tbl =
+    if Hashtbl.mem graph_tbl name then begin
+      raise (Graph_exception (sprintf "Graph name '%s' is already in use" name))
+    end;
+    true
+
+  (**
    * Eval <variable>
    * Adds variable to variable hash table
    *
@@ -1544,6 +1560,10 @@ module Make(Dice : D) : T = struct
             let alts = parse_alts alts in
             store_deck {name; alts} namespace.deck_tbl;
             ""
+
+        | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
+            raise (Graph_exception ("here"))
+
 
         (* <dice> *)
         | Xml.Element ("dice", attrs, []) ->
