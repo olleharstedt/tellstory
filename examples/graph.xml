@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <graph name="my_graph">
+    <node id="1" connections="2,3">Center node</node>
+    <node id="2" connections="1">Other content</node>
+    <node id="3" connections="1">Third node content</node>
+  </graph>
+</story>

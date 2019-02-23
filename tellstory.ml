@@ -116,6 +116,20 @@ module Make(Dice : D) : T = struct
     alts : alt list;  (* When an alt is chosen it's removed from list (card is picked). Remove and replace in deck hashtable? *)
   }
 
+  (** Graph node datatype *)
+  type graph_node = {
+    id : int;
+    content : string;
+    (** List of nodes this node is connected to *)
+    connections : int list;
+  }
+
+  (** Graph datatype *)
+  type graph = {
+    name : string;
+    nodes : graph_node list;
+  }
+
   (** Types for storing records *)
   type record = (string, string) Hashtbl.t
 

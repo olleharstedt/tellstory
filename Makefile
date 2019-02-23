@@ -2,7 +2,7 @@ INCLUDE					:= -package xml-light,str,pcre,core,bolt,ppx_deriving,ppx_deriving.r
 PGFLAGS         := --infer
 GENERATED       := bparser.ml bparser.mli blexer.ml
 # Change "main" to tellstory_cgi to compile CGI script.
-MODULES         := ast globals bparser blexer tparser tlexer tellstory tellstory_cgi
+MODULES         := ast globals bparser blexer tparser tlexer tellstory main
 EXECUTABLE      := tellstory
 OCAMLDEPWRAPPER := ocamldep.wrapper
 include Makefile.shared
