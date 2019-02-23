@@ -36,6 +36,8 @@ and token = parse
     { BACKSLASH }
 | '$'
     { DECKSIGN }
+| '@'
+    { GRAPHSIGN }
 | '%'
     { DICESIGN }
 | '#'

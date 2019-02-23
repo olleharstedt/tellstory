@@ -21,6 +21,7 @@
 %token <string> WORD
 %token <int> INT
 %token DECKSIGN
+%token GRAPHSIGN
 %token DICESIGN
 %token MACROSIGN
 %token RECORDDOT
@@ -58,6 +59,8 @@ term:
     { Variable w }
 | DECKSIGN w = WORD
     { Deck w }
+| GRAPHSIGN w = WORD
+    { Graph w }
 | MACROSIGN w = WORD
     { Macro w }
 | DICESIGN w  = WORD RECORDDOT i = INT

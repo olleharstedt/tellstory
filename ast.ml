@@ -39,6 +39,7 @@ and term =
   | Record of string * string
   | Macro of string
   | Deck of string
+  | Graph of string
   | Dice of string * int
 [@@deriving show]
 

@@ -5,4 +5,6 @@
     <node id="2" connections="1">Other content</node>
     <node id="3" connections="1">Third node content</node>
   </graph>
+
+  <sentence>{@my_graph}</sentence>
 </story>
