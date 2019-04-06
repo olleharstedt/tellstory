@@ -46,7 +46,7 @@
 
   <variable name="edu">
       <alt>Street</alt>
-      <alt>Elemtary</alt>
+      <alt>Elementary</alt>
       <alt>Highschool</alt>
       <alt>College/Gymnasium</alt>
       <alt>University</alt>
@@ -58,8 +58,10 @@
       <alt>Liberal</alt>
       <alt>Conservative</alt>
       <alt>Populist</alt>
+      <alt>Fascist</alt>
       <alt>Green</alt>
       <alt>Socialist</alt>
+      <alt>Communist</alt>
       <alt>Anarchist</alt>
       <alt>Don't care</alt>
   </variable>
@@ -90,6 +92,54 @@
       <alt>Family first</alt>
       <alt>Throw me to the wolves and I will return leading the pack</alt>
       <alt>It is better to light a candle than to curse the darkness</alt>
+      <alt>We must become the change we wish to see in the world</alt>
+      <alt>Liberty, equality, fraternity</alt>
+      <alt>I will survive</alt>
+      <alt>Every wall is a door</alt>
+      <alt>Vision without action is a daydream</alt>
+      <alt>Act or accept</alt>
+      <alt>You are what you think about all day long</alt>
+      <alt>Nothing really matters</alt>
+      <alt>If you’re going through hell, keep going</alt>
+      <alt>If you want to go fast, go alone. If you want to go far, go with others</alt>
+      <alt>Tomorrow is another day</alt>
+      <alt>Opportunities don’t happen. You create them</alt>
+      <alt>Progress, not perfection</alt>
+      <alt>He who hesitates is lost</alt>
+      <alt>Do no harm</alt>
+      <alt>Greatness is measured by courage and heart</alt>
+      <alt>Honesty is the best policy</alt>
+      <alt>All may have life, liberty, and the pursuit of happiness</alt>
+      <alt>A mind is like a parachute: it doesn’t work if it isn’t open </alt>
+      <alt>United we stand</alt>
+      <alt>Simplify</alt>
+      <alt>Death solves all problems - no person, no problem</alt>
+      <alt>Know your value</alt>
+      <alt>Take another step</alt>
+      <alt>He who has a why to live can bear almost any how</alt>
+      <alt>One thing at a time</alt>
+      <alt>Appreciate what you have</alt>
+      <alt>Renew your passions daily</alt>
+      <alt>It will come to you</alt>
+      <alt>Your pain today will be your strength tomorrow</alt>
+      <alt>Beyond fear lives freedom</alt>
+      <alt>By endurance we conquer</alt>
+      <alt>Do all the good you can</alt>
+      <alt>Action cures fear</alt>
+      <alt>Life is tough, but you are tougher</alt>
+      <alt>Life begins at the end of your comfort zone</alt>
+      <alt>Fortune favors the bold</alt>
+      <alt>Maximum effort</alt>
+      <alt>Life is pain</alt>
+      <alt>Reality is an illusion</alt>
+      <alt>Never ever give in</alt>
+      <alt>Work hard, play hard</alt>
+      <alt>When you can’t change the direction of the wind, adjust your sails</alt>
+      <alt>Every man dies. Not every man really lives</alt>
+      <alt>Life is either a daring adventure or nothing at all</alt>
+      <alt>Life's too mysterious to take too serious</alt>
+      <alt>There isn't a way things should be. There's just what happens, and what we do</alt>
+      <alt>Everything happens for a reason</alt>
   </variable>
 
   <sentence>Gender        {gender}</sentence><br/>
@@ -101,5 +151,6 @@
   <sentence>Religion      {religion}</sentence><br/>
   <sentence>Politics      {pol}</sentence><br/>
   <sentence>Sexuality     {sexuality}</sentence><br/>
+  <sentence>Motto         {motto}</sentence><br/>
 
 </story>
