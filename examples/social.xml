@@ -45,7 +45,7 @@
   </variable>
 
   <variable name="edu">
-      <alt>Street</alt>
+      <alt>None</alt>
       <alt>Elementary</alt>
       <alt>Highschool</alt>
       <alt>College/Gymnasium</alt>
@@ -140,6 +140,8 @@
       <alt>Life's too mysterious to take too serious</alt>
       <alt>There isn't a way things should be. There's just what happens, and what we do</alt>
       <alt>Everything happens for a reason</alt>
+      <alt>Don't sweat the petty things and don't pet the sweaty things</alt>
+      <alt>Do not set yourself on fire in order to keep others warm</alt>
   </variable>
 
   <sentence>Gender        {gender}</sentence><br/>
