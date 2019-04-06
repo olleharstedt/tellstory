@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="social">
+  <!-- Define two dice: d6 and d100 -->
+  <dice name="d6" sides="6" />
+  <dice name="dAge" sides="100" />
+
+  <!-- Decide gender -->
+  <variable name="gender">
+    <alt>Man</alt>
+    <alt>Woman</alt>
+  </variable>
+
+  <variable name="class">
+      <alt>Homeless</alt>
+      <alt>Poor</alt>
+      <alt>Avarage</alt>
+      <alt>Rich</alt>
+      <alt>Super rich</alt>
+  </variable>
+
+  <variable name="health">
+      <alt>Near dead</alt>
+      <alt>Poor</alt>
+      <alt>Normal</alt>
+      <alt>Fit</alt>
+      <alt>Ubermench</alt>
+  </variable>
+
+  <variable name="race">
+      <alt>European</alt>
+      <alt>African</alt>
+      <alt>Arab</alt>
+      <alt>Asian</alt>
+      <alt>Native</alt>
+  </variable>
+
+  <variable name="religion">
+      <alt>Christian</alt>
+      <alt>Muslim</alt>
+      <alt>Jewish</alt>
+      <alt>Hindu</alt>
+      <alt>Buddhist</alt>
+      <alt>Atheist</alt>
+      <alt>Non-religious</alt>
+  </variable>
+
+  <variable name="edu">
+      <alt>Street</alt>
+      <alt>Elemtary</alt>
+      <alt>Highschool</alt>
+      <alt>College/Gymnasium</alt>
+      <alt>University</alt>
+      <alt>PhD</alt>
+      <alt>Professor</alt>
+  </variable>
+
+  <variable name="pol">
+      <alt>Liberal</alt>
+      <alt>Conservative</alt>
+      <alt>Populist</alt>
+      <alt>Green</alt>
+      <alt>Socialist</alt>
+      <alt>Anarchist</alt>
+      <alt>Don't care</alt>
+  </variable>
+
+  <variable name="sexuality">
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
+      <alt>Homosexual</alt>
+      <alt>Trans</alt>
+  </variable>
+
+  <variable name="motto">
+      <alt>I am strong enough</alt>
+      <alt>Carpe diem</alt>
+      <alt>Faster, higher, stronger</alt>
+      <alt>Nothing is impossible</alt>
+      <alt>Always be a first-rate version of yourself, instead of a second-rate version of somebody else</alt>
+      <alt>“Good enough” isn’t good enough</alt>
+      <alt>Love, change it or leave it</alt>
+      <alt>Have courage and be kind</alt>
+      <alt>Successful people do things when they don’t want to</alt>
+      <alt>Breathe in courage, breathe out fear</alt>
+      <alt>Rome was not built in a day</alt>
+      <alt>Be the one to light a fire</alt>
+      <alt>Who needs life whan you have herion?</alt>
+      <alt>Family first</alt>
+      <alt>Throw me to the wolves and I will return leading the pack</alt>
+      <alt>It is better to light a candle than to curse the darkness</alt>
+  </variable>
+
+  <sentence>Gender        {gender}</sentence><br/>
+  <sentence>Age           {%dAge}</sentence><br/>
+  <sentence>Wealth        {class}</sentence><br/>
+  <sentence>Education     {edu}</sentence><br/>
+  <sentence>Health        {health}</sentence><br/>
+  <sentence>Race          {race}</sentence><br/>
+  <sentence>Religion      {religion}</sentence><br/>
+  <sentence>Politics      {pol}</sentence><br/>
+  <sentence>Sexuality     {sexuality}</sentence><br/>
+
+</story>
