@@ -21,7 +21,7 @@
   <variable name="health">
       <alt>Near dead</alt>
       <alt>Poor</alt>
-      <alt>Normal</alt>
+      <alt>Avarage</alt>
       <alt>Fit</alt>
       <alt>Ubermench</alt>
   </variable>
@@ -34,24 +34,34 @@
       <alt>Native</alt>
   </variable>
 
+  <variable name="atheist">
+      <alt>Atheist</alt>
+      <alt>Materialist</alt>
+      <alt>Existentialist</alt>
+      <alt>Agnostic</alt>
+  </variable>
+
   <variable name="religion">
       <alt>Christian</alt>
       <alt>Muslim</alt>
       <alt>Jewish</alt>
       <alt>Hindu</alt>
       <alt>Buddhist</alt>
-      <alt>Atheist</alt>
+      <alt>{atheist}</alt>
       <alt>Non-religious</alt>
   </variable>
 
   <variable name="edu">
       <alt>None</alt>
+      <alt>Street</alt>
+      <alt>Informal</alt>
       <alt>Elementary</alt>
       <alt>Highschool</alt>
       <alt>College/Gymnasium</alt>
       <alt>University</alt>
       <alt>PhD</alt>
       <alt>Professor</alt>
+      <alt>Genius</alt>
   </variable>
 
   <variable name="pol">
@@ -67,6 +77,10 @@
   </variable>
 
   <variable name="sexuality">
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
+      <alt>Heterosexual</alt>
       <alt>Heterosexual</alt>
       <alt>Heterosexual</alt>
       <alt>Heterosexual</alt>
