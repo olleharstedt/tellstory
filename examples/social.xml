@@ -13,17 +13,36 @@
   <variable name="class">
       <alt>Homeless</alt>
       <alt>Poor</alt>
-      <alt>Avarage</alt>
+      <alt>Middleclass</alt>
       <alt>Rich</alt>
       <alt>Super rich</alt>
   </variable>
 
+  <variable name="deathreason">
+      <alt>cancer</alt>
+      <alt>heart attach</alt>
+      <alt>brain injury</alt>
+      <alt>shot wound</alt>
+      <alt>fell</alt>
+      <alt>old age</alt>
+      <alt>drug overdose</alt>
+  </variable>
+
   <variable name="health">
-      <alt>Near dead</alt>
+      <alt>Near dead, {deathreason}</alt>
       <alt>Poor</alt>
-      <alt>Avarage</alt>
+      <alt>Normal</alt>
       <alt>Fit</alt>
-      <alt>Ubermench</alt>
+      <alt>Professional athlet</alt>
+  </variable>
+
+  <variable name="specnative">
+      <alt>North-American</alt>
+      <alt>South-American</alt>
+      <alt>Roma</alt>
+      <alt>Inuit</alt>
+      <alt>Australian</alt>
+      <alt>Mongol</alt>
   </variable>
 
   <variable name="race">
@@ -31,7 +50,7 @@
       <alt>African</alt>
       <alt>Arab</alt>
       <alt>Asian</alt>
-      <alt>Native</alt>
+      <alt>Native {specnative}</alt>
   </variable>
 
   <variable name="atheist">
@@ -47,6 +66,9 @@
       <alt>Jewish</alt>
       <alt>Hindu</alt>
       <alt>Buddhist</alt>
+      <alt>New-Age</alt>
+      <alt>Nature religion</alt>
+      <alt>Fanatic</alt>
       <alt>{atheist}</alt>
       <alt>Non-religious</alt>
   </variable>
@@ -61,7 +83,7 @@
       <alt>University</alt>
       <alt>PhD</alt>
       <alt>Professor</alt>
-      <alt>Genius</alt>
+      <alt>Genius professor</alt>
   </variable>
 
   <variable name="pol">
@@ -76,6 +98,11 @@
       <alt>Don't care</alt>
   </variable>
 
+  <variable name="trans">
+      <alt>Transvestine</alt>
+      <alt>Transexual</alt>
+  </variable>
+
   <variable name="sexuality">
       <alt>Heterosexual</alt>
       <alt>Heterosexual</alt>
@@ -86,7 +113,7 @@
       <alt>Heterosexual</alt>
       <alt>Heterosexual</alt>
       <alt>Homosexual</alt>
-      <alt>Trans</alt>
+      <alt>{trans}</alt>
   </variable>
 
   <variable name="motto">
@@ -160,10 +187,10 @@
 
   <sentence>Gender        {gender}</sentence><br/>
   <sentence>Age           {%dAge}</sentence><br/>
+  <sentence>Race          {race}</sentence><br/>
   <sentence>Wealth        {class}</sentence><br/>
   <sentence>Education     {edu}</sentence><br/>
   <sentence>Health        {health}</sentence><br/>
-  <sentence>Race          {race}</sentence><br/>
   <sentence>Religion      {religion}</sentence><br/>
   <sentence>Politics      {pol}</sentence><br/>
   <sentence>Sexuality     {sexuality}</sentence><br/>
