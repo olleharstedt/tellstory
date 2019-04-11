@@ -69,23 +69,33 @@
       <alt>Agnostic</alt>
   </variable>
 
+  <macro name="fanatic">
+      <alt></alt>
+      <alt></alt>
+      <alt></alt>
+      <alt></alt>
+      <alt></alt>
+      <alt>but doesn't really care</alt>
+      <alt>and devout</alt>
+      <alt>and fanatic</alt>
+  </macro>
+
   <variable name="religion">
-      <alt>Christian</alt>
-      <alt>Muslim</alt>
-      <alt>Jewish</alt>
-      <alt>Hindu</alt>
-      <alt>Buddhist</alt>
-      <alt>New-Age</alt>
-      <alt>Nature religion</alt>
-      <alt>Fanatic</alt>
-      <alt>{atheist}</alt>
+      <alt>Christian {#fanatic}</alt>
+      <alt>Muslim {#fanatic}</alt>
+      <alt>Jewish {#fanatic}</alt>
+      <alt>Hindu {#fanatic}</alt>
+      <alt>Buddhist {#fanatic}</alt>
+      <alt>New-Age {#fanatic}</alt>
+      <alt>Nature religion {#fanatic}</alt>
+      <alt>{atheist} {#fanatic}</alt>
       <alt>Non-religious</alt>
   </variable>
 
   <variable name="edu">
       <alt>None</alt>
       <alt>Street</alt>
-      <alt>Informal</alt>
+      <alt>By parents</alt>
       <alt>Elementary</alt>
       <alt>Highschool</alt>
       <alt>College/Gymnasium</alt>
