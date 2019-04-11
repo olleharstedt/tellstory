@@ -13,9 +13,16 @@
   <variable name="class">
       <alt>Homeless</alt>
       <alt>Poor</alt>
-      <alt>Middleclass</alt>
+      <alt>Middle class</alt>
       <alt>Rich</alt>
       <alt>Super rich</alt>
+  </variable>
+
+  <variable name="contacts">
+      <alt>Isolated</alt>
+      <alt>Few friends</alt>
+      <alt>Many friends</alt>
+      <alt>Knows everyone</alt>
   </variable>
 
   <variable name="deathreason">
@@ -31,6 +38,8 @@
   <variable name="health">
       <alt>Near dead, {deathreason}</alt>
       <alt>Poor</alt>
+      <alt>Obese</alt>
+      <alt>Overweight</alt>
       <alt>Normal</alt>
       <alt>Fit</alt>
       <alt>Professional athlet</alt>
@@ -88,9 +97,13 @@
 
   <variable name="pol">
       <alt>Liberal</alt>
+      <alt>Liberal</alt>
+      <alt>Liberal</alt>
+      <alt>Liberal</alt>
       <alt>Conservative</alt>
       <alt>Populist</alt>
       <alt>Fascist</alt>
+      <alt>Nazist</alt>
       <alt>Green</alt>
       <alt>Socialist</alt>
       <alt>Communist</alt>
@@ -189,6 +202,7 @@
   <sentence>Age           {%dAge}</sentence><br/>
   <sentence>Race          {race}</sentence><br/>
   <sentence>Wealth        {class}</sentence><br/>
+  <sentence>Contacts      {contacts}</sentence><br/>
   <sentence>Education     {edu}</sentence><br/>
   <sentence>Health        {health}</sentence><br/>
   <sentence>Religion      {religion}</sentence><br/>
