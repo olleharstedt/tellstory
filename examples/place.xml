@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="place">
+  <!-- Define two dice: d6 and d100 -->
+  <dice name="d6" sides="6" />
+  <dice name="dAge" sides="100" />
+
+  <variable name="gender">
+    <alt>Male</alt>
+    <alt>Female</alt>
+  </variable>
+
+  <variable name="place">
+      <alt setFlag="inside">Inside</alt>
+      <alt setFlag="outside">Outside</alt>
+  </variable>
+
+  <variable name="place2">
+      <alt setFlag="artif">artificial</alt>
+      <alt setFlag="natur">natural</alt>
+  </variable>
+
+  <variable name="size">
+      <alt>tiny</alt>
+      <alt>small</alt>
+      <alt>avarage size</alt>
+      <alt>big</alt>
+      <alt>enormous</alt>
+  </variable>
+
+  <variable name="age">
+      <alt>brand new</alt>
+      <alt>minutes old</alt>
+      <alt>days old</alt>
+      <alt>years old</alt>
+      <alt>thousands of years old</alt>
+      <alt>of avarage age</alt>
+      <alt>old</alt>
+      <alt>ancient</alt>
+  </variable>
+
+  <ifSet name="inside">
+      <ifSet name="artif">
+          <variable name="subplace">
+              <alt>House, {size}, {age}</alt>
+              <alt>Castle, {size}, {age}</alt>
+              <alt>Shop, {size}, {age}</alt>
+          </variable>
+      </ifSet>
+      <ifSet name="natur">
+          <variable name="subplace">
+              <alt>Cave, {size}</alt>
+          </variable>
+      </ifSet>
+  </ifSet>
+
+  <ifSet name="outside">
+      <ifSet name="artif">
+          <variable name="subplace">
+              <alt>Sports field</alt>
+              <alt>Pool</alt>
+              <alt>Garden, {size}, {age}</alt>
+              <alt>Agriculture</alt>
+          </variable>
+      </ifSet>
+      <ifSet name="natur">
+          <variable name="subplace">
+              <alt>Forest, {size}, {age}</alt>
+              <alt>Mountain</alt>
+              <alt>Open field</alt>
+          </variable>
+      </ifSet>
+  </ifSet>
+
+  <variable name="time">
+      <alt>Night</alt>
+      <alt>Day</alt>
+      <alt>Twilight</alt>
+      <alt>Sun set</alt>
+      <alt>Morning</alt>
+      <alt>Evening</alt>
+      <alt>Wolf hour</alt>
+  </variable>
+
+  <sentence>Gender        {gender}</sentence><br/>
+  <sentence>Age           {%dAge}</sentence><br/>
+  <sentence>Place         {subplace}</sentence><br/>
+  <sentence>Time          {time}</sentence><br/>
+</story>
