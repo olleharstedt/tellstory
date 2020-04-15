@@ -6,7 +6,7 @@
  *)
 
 open Printf
-open Core.List
+(*open Core.List*)
 
 (**
  * Debug with Bolt
@@ -15,10 +15,12 @@ open Core.List
  *
  *)
 let log_trace msg =
-  Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg
+    ()
+  (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
-  Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.DEBUG msg
+    ()
+  (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.DEBUG msg*)
 
 (**
  * Need to factor out dice function because in tests we want to control
@@ -243,15 +245,20 @@ module Make(Dice : D) : T = struct
   let print_deck (deck : deck) =
     log_trace (sprintf "%s\n" deck.name);
     log_trace "alts:\n";
-    iter deck.alts ~f:(fun alt ->
-      if length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
-      let attr = nth alt.attributes 0 in
+    List.iter (fun alt ->
+      if List.length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
+      (* TODO: Throws exception *)
+      let attr = List.nth alt.attributes 0 in
+      log_trace (sprintf "<alt>%s</alt>" alt.content)
+      (*
       match attr with
       | None ->
           log_trace (sprintf "<alt>%s</alt>" alt.content)
       | Some attr ->
           log_trace (sprintf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content)
+        *)
     )
+    deck.alts 
 
   (**
    * Fetch node which tag name = tag_name
@@ -333,14 +340,16 @@ module Make(Dice : D) : T = struct
    *
    * @param attributes ? Xml.Element list
    * @param name string
-   * @return Xml.Element option???
+   * @return Xml.Element option
    *)
   let find_attribute attributes name =
-    find attributes ~f:(function
+    match List.find (function
       | (attr_name, what) ->
           log_trace (sprintf "looking for attribute '%s', '%s'" attr_name what);
           name = attr_name
-    )
+    ) attributes with
+    | xml -> Some xml
+    | exception Not_found -> None
 
   (**
    * Return global namespace in state
@@ -428,8 +437,7 @@ module Make(Dice : D) : T = struct
    *)
   let flags_is_ok attrs =
     log_trace "flags_is_ok";
-    let ifSet = find_attribute attrs "ifSet" in
-    match ifSet with
+    match find_attribute attrs "ifSet" with
     | None ->
         log_trace "ifSet None";
         true
@@ -461,7 +469,7 @@ module Make(Dice : D) : T = struct
         []
     | alts ->
         (* Filter alts that don't belong *)
-        let alts2 = filter alts ~f:(fun alt ->
+        let alts2 = List.filter (fun alt ->
           (* Have to check for flag condition to rule out some alts *)
           let attrs = Xml.attribs alt in
           flags_is_ok attrs
@@ -485,7 +493,7 @@ module Make(Dice : D) : T = struct
                 raise (Internal_error "get_possible_xml_alts: Illegal struct of ifSet")
           end
           *)
-        ) in
+        ) alts in
         (*(iter alts2 ~f:(fun xml -> log_trace "alt = %s\n" (Xml.to_string xml)));*)
         alts2
 
@@ -495,9 +503,9 @@ module Make(Dice : D) : T = struct
   let get_possible_alts alts = match alts with
     | [] -> []
     | alt ->
-        let alts2 = filter alts ~f:(fun alt ->
+        let alts2 = List.filter (fun alt ->
           flags_is_ok alt.attributes
-        ) in
+        ) alts in
         alts2
 
 
@@ -505,7 +513,8 @@ module Make(Dice : D) : T = struct
    * Chose an alt to use, depending on flags
    *
    * @param alts Xml.Element list
-   * @return Xml.Element option
+   * @return Xml.Element
+   * @raise exception
    *)
   let choose_alt alts =
     let possible_alts = get_possible_xml_alts alts in
@@ -522,7 +531,7 @@ module Make(Dice : D) : T = struct
       (* TODO: Log debug info here? *)
       raise (Alt_exception "No possible alts to choose.")
     else
-      nth possible_alts (Dice.dice nr)
+      List.nth_opt possible_alts (Dice.dice nr)
 
   (**
    * Choose one of the alt:s in a sentence.
@@ -591,14 +600,14 @@ module Make(Dice : D) : T = struct
    * @return alt list
    *)
   let parse_alts alts =
-    map alts ~f:(fun alt -> match alt with
+    List.map (fun alt -> match alt with
       | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
           {content; attributes}
       | Xml.Element ("alt", attributes, []) ->
           {content = ""; attributes}
       | _ ->
           raise (Alt_exception "Illegal alt in macro/deck")
-    )
+    ) alts 
 
   (**
     id : int;
@@ -608,13 +617,13 @@ module Make(Dice : D) : T = struct
     * @return graph_node list
    *)
   let parse_nodes nodes =
-    map nodes ~f:(fun node -> match node with
+    List.map (fun node -> match node with
     | Xml.Element ("node", attributes, [Xml.PCData content]) ->
       let connections = begin match find_attribute attributes "connections" with
         | Some (_, value) -> begin
             let regexp = Str.regexp "," in
             let splits = Str.split regexp value in
-            map splits ~f:(fun number -> int_of_string number)
+            List.map (fun number -> int_of_string number) splits 
           end
         | None -> raise (Graph_exception "Missing connections in graph node")
       end in
@@ -630,7 +639,7 @@ module Make(Dice : D) : T = struct
       }
     | _ ->
         raise (Graph_exception "Illegal node in graph")
-    )
+    ) nodes 
 
   (**
    * Parse macro tag
@@ -751,9 +760,9 @@ module Make(Dice : D) : T = struct
       (*let alt = choose_alt macro.alts in*)
       let alts = get_possible_alts macro.alts in
       let random_nr = Dice.dice (List.length alts) in
-      let alt = match nth alts random_nr with
-        | Some alt -> alt
-        | None -> raise (Macro_exception "No alt?")
+      let alt = match List.nth alts random_nr with
+        | alt -> alt
+        | exception Not_found -> raise (Macro_exception "No alt?")
       in
       (*
       log_trace (sprintf "eval_macro: alt: %s" alt.content);
@@ -890,14 +899,14 @@ module Make(Dice : D) : T = struct
     in
 
     (* Abort if no cards are left in deck *)
-    if length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+    if List.length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
     let cards = get_possible_alts deck.alts in
-    let pick_nr = Dice.dice (length cards) in
-    let card = nth cards pick_nr in
+    let pick_nr = Dice.dice (List.length cards) in
+    let card = List.nth cards pick_nr in
 
     match card with
-    | None -> raise (Deck_exception ("Found no card"))
-    | Some card ->
+    | exception Not_found -> raise (Deck_exception ("Found no card"))
+    | card ->
         (* Create a new deck without the card we picked *)
         (* Card = alt in this context *)
         (* Filter logic:
@@ -906,9 +915,12 @@ module Make(Dice : D) : T = struct
          * The card is identical to the card we picked IF:
          *   content = content AND attributes are equal (name && content of attribues are equal)
          *)
-        let new_alts = filteri deck.alts ~f:(fun i alt ->
-          i != pick_nr
-        ) in
+        (** TODO: Start from 0 or 1? Previously used Core, but won't compile on ARM. *)
+        let i = ref (-1) in
+        let new_alts = List.filter (fun alt ->
+          i := !i + 1;
+          !i != pick_nr
+        ) deck.alts in
         let new_deck = {
           name = deck.name;
           alts = new_alts;
@@ -981,10 +993,10 @@ module Make(Dice : D) : T = struct
       (default_namespace, content)
 
     (* Found inline namespace, so pick first and use that instead, and remove namespace from content *)
-    else begin match hd matches with
-    | None ->
+    else begin match List.hd matches with
+    | exception Not_found->
         raise (Internal_error (sprintf "get_inline_namespace: Found one namespace, but no match?"))
-    | Some namespace_name ->
+    | namespace_name ->
       begin match get_namespace state namespace_name with
       | None ->
           raise (Namespace_exception (sprintf "Found no namespace with name '%s' for content '%s'" namespace_name content))
@@ -1441,9 +1453,9 @@ module Make(Dice : D) : T = struct
   and save_record name alts record_tbl =
 
     (* Choose alt *)
-    let alt = match nth alts (Dice.dice (List.length alts)) with
-      | Some alt -> alt
-      | None -> raise (Record_exception "No alt?")
+    let alt = match List.nth alts (Dice.dice (List.length alts)) with
+      | alt -> alt
+      | exception Not_found -> raise (Record_exception "No alt?")
     in
 
     (* Store flags if present *)
@@ -1512,7 +1524,7 @@ module Make(Dice : D) : T = struct
     let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
     log_trace ("print_sentences raw_s = \n" ^ raw_s);
     let sentences = fetch_children story in
-    let string_sentences = map sentences ~f:(fun s ->
+    let string_sentences = List.map (fun s ->
       log_trace "print_sentences: map";
       let sen = String.trim (fetch_content s) in
       try begin match s with
@@ -1664,7 +1676,7 @@ module Make(Dice : D) : T = struct
             log_trace (Printexc.get_backtrace ());
             (*raise (Sentence_problem (sen, string_of_exn ex))*)
             string_of_exn ex
-    ) in
+    ) sentences in
     let result = List.fold_left (^) "" string_sentences in
     log_trace (sprintf "print_sentences result = %s\n" result);
     String.trim result
@@ -1788,12 +1800,11 @@ module Make(Dice : D) : T = struct
     let open Ast in
     match ast with
     | Nameterm_list nameterms ->
-        let length = length nameterms in
-        let chosen_nameterm = nth nameterms (Dice.dice length) in
-        begin match chosen_nameterm with
-        | Some nameterm ->
+        let length = List.length nameterms in
+        begin match List.nth nameterms (Dice.dice length) with
+        | nameterm ->
             eval_nameterm nameterm state default_namespace
-        | None ->
+        | exception Not_found ->
             raise (Eval_ast_exception "Could not chose a nameterm")
         end
 
