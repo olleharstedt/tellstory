@@ -7,6 +7,8 @@ List all possible combinations of a > b stories.
     a b
     a > b
 
+    > Two artists go to Hollywood to "make it". They struggle togehter. `a` gets an opportunity and takes it. The chemistry between `a` and `b` changes. Is `b` bitter? He tries to be happy for his friend, and `a` tries to help him, but it's clear to both only on will "make it" in this town.
+
     a > b
     b > a
 
