@@ -248,15 +248,12 @@ module Make(Dice : D) : T = struct
     List.iter (fun alt ->
       if List.length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
       (* TODO: Throws exception *)
-      let attr = List.nth alt.attributes 0 in
-      log_trace (sprintf "<alt>%s</alt>" alt.content)
-      (*
-      match attr with
-      | None ->
+      log_trace (sprintf "<alt>%s</alt>" alt.content);
+      match List.nth alt.attributes 0 with
+      | exception Failure _ ->
           log_trace (sprintf "<alt>%s</alt>" alt.content)
-      | Some attr ->
+      | attr ->
           log_trace (sprintf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content)
-        *)
     )
     deck.alts 
 
