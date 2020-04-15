@@ -2,7 +2,8 @@
 <story namespace="gummyrabbit2">
 
   <include file="examples/gender.xml" />
-
+  <include file="examples/name.xml" />
+  <include file="examples/age.xml" />
 
   <variable name="name">
     <alt>{names\$name}</alt>
