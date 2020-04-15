@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="gender">
-
   <!-- Clear all the stuff if used more than once -->
   <clear type="flag" name="man" ignore-not-found="1" />
   <clear type="flag" name="woman" ignore-not-found="1" />
@@ -21,9 +20,4 @@
     <alt ifSet="man">he</alt>
     <alt ifSet="woman">she</alt>
   </variable>
-
-  <!--
-  <sentence>{he}</sentence>
-  -->
-
 </story>
