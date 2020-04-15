@@ -8,8 +8,8 @@
   <clear type="variable" name="he" ignore-not-found="1" />
 
   <macro name="gender">
-    <alt setFlag="man">male rabbit</alt>
-    <alt setFlag="woman">female rabbit</alt>
+    <alt setFlag="man">male</alt>
+    <alt setFlag="woman">female</alt>
   </macro>
 
   <variable name="def">
