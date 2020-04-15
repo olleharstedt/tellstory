@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="age_gender_class">
+    <dice name="age" sides="99" />
+
+    <macro name="eco">
+        <alt>homeless</alt>
+        <alt>under class</alt>
+        <alt>worker class</alt>
+        <alt>middle class</alt>
+        <alt>upper class</alt>
+        <alt>aristocrat</alt>
+    </macro>
+
+    <macro name="class">
+        <alt>actor</alt>
+        <alt>artist</alt>
+        <alt>assassin</alt>
+        <alt>barbarian</alt>
+        <alt>cleric</alt>
+        <alt>druid</alt>
+        <alt>farmer</alt>
+        <alt>fighter</alt>
+        <alt>knight</alt>
+        <alt>monk</alt>
+        <alt>musician</alt>
+        <alt>paladin</alt>
+        <alt>ranger</alt>
+        <alt>rogue</alt>
+        <alt>soldier</alt>
+        <alt>sorcerer</alt>
+        <alt>street artist</alt>
+        <alt>student</alt>
+        <alt>thief</alt>
+        <alt>trader</alt>
+        <alt>trickster</alt>
+        <alt>warlock</alt>
+        <alt>wizard</alt>
+    </macro>
+
+    <br/>
+    <include file="examples/gender.xml" />
+    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+    <br/>
+    <include file="examples/gender.xml" />
+    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+    <br/>
+    <include file="examples/gender.xml" />
+    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+    <br/>
+</story>
