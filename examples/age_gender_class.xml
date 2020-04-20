@@ -17,6 +17,7 @@
         <alt>assassin</alt>
         <alt>barbarian</alt>
         <alt>cleric</alt>
+        <alt>doctor</alt>
         <alt>druid</alt>
         <alt>farmer</alt>
         <alt>fighter</alt>
@@ -38,6 +39,81 @@
         <alt>wizard</alt>
     </macro>
 
+    <macro name="place">
+        <alt>light forest</alt>
+        <alt>dark forest</alt>
+        <alt>dead forest</alt>
+        <alt>ancient forest</alt>
+        <alt>grass land</alt>
+        <alt>farming land</alt>
+        <alt>small village</alt>
+        <alt>space ship</alt>
+        <alt>dungeon</alt>
+        <alt>basement</alt>
+        <alt>mountain</alt>
+        <alt>dragon's den</alt>
+        <alt>troll's den</alt>
+        <alt>bottom of a well</alt>
+        <alt>concrete bunker</alt>
+        <alt>luxury bunker</alt>
+        <alt>sky-scraper office</alt>
+        <alt>ghost house</alt>
+        <alt>shed in forest</alt>
+        <alt>tree hut</alt>
+        <alt>indian hut</alt>
+        <alt>empty church</alt>
+        <alt>castle ruin</alt>
+        <alt>village ruin</alt>
+        <alt>snow storm</alt>
+        <alt>desert</alt>
+        <alt>swamp</alt>
+        <alt>prison island</alt>
+        <alt>empty island</alt>
+        <alt>tower</alt>
+        <alt>light house</alt>
+    </macro>
+
+    <!--
+    <macro name="antagonist">
+        <alt>demon from hell</alt>
+        <alt>ancient dragon</alt>
+        <alt>stone troll</alt>
+        <alt>corrupt politician</alt>
+        <alt>coppurp military</alt>
+        <alt>revoluationary guerilla</alt>
+        <alt>drug cartell</alt>
+        <alt>alien race</alt>
+        <alt>anti-christ child</alt>
+        <alt>salesman</alt>
+        <alt>serial killer</alt>
+        <alt>assassin</alt>
+        <alt>secret cult</alt>
+        <alt>witch</alt>
+        <alt>evil sorcerer</alt>
+    </macro>
+    -->
+
+    <macro name="interacting">
+        <alt>ancient dragon</alt>
+        <alt>smiling cat</alt>
+        <alt>dog</alt>
+        <alt>sheep</alt>
+        <alt>cow</alt>
+        <alt>lion</alt>
+        <alt>chicken</alt>
+        <alt>mammoth</alt>
+        <alt>troll</alt>
+        <alt>orc</alt>
+        <alt>goblin</alt>
+        <alt>elf</alt>
+        <alt>bear</alt>
+        <alt>skeleton</alt>
+        <alt>demon</alt>
+        <alt>monkey</alt>
+        <alt>gorilla</alt>
+        <alt>neanderthale</alt>
+    </macro>
+
     <br/>
     <include file="examples/gender.xml" />
     <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
@@ -47,5 +123,9 @@
     <br/>
     <include file="examples/gender.xml" />
     <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+    <br/>
+    <sentence>{#place}</sentence>
+    <br/>
+    <sentence>{#interacting}</sentence>
     <br/>
 </story>
