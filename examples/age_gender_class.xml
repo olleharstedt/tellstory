@@ -17,17 +17,24 @@
         <alt>assassin</alt>
         <alt>barbarian</alt>
         <alt>cleric</alt>
+        <alt>clerk</alt>
         <alt>doctor</alt>
         <alt>druid</alt>
+        <alt>unemployed</alt>
         <alt>farmer</alt>
         <alt>fighter</alt>
+        <alt>hunter</alt>
         <alt>knight</alt>
-        <alt>monk</alt>
+        <alt>monk/nun</alt>
         <alt>musician</alt>
         <alt>ninja</alt>
         <alt>paladin</alt>
+        <alt>pilot</alt>
+        <alt>police</alt>
         <alt>ranger</alt>
         <alt>rogue</alt>
+        <alt>schaman</alt>
+        <alt>scientist</alt>
         <alt>soldier</alt>
         <alt>sorcerer</alt>
         <alt>street artist</alt>
@@ -48,6 +55,9 @@
         <alt>farming land</alt>
         <alt>small village</alt>
         <alt>space ship</alt>
+        <alt>the moon</alt>
+        <alt>mars</alt>
+        <alt>asteroid belt</alt>
         <alt>dungeon</alt>
         <alt>basement</alt>
         <alt>mountain</alt>
@@ -71,6 +81,8 @@
         <alt>empty island</alt>
         <alt>tower</alt>
         <alt>light house</alt>
+        <alt>helicopter</alt>
+        <alt>private jet</alt>
     </macro>
 
     <!--
@@ -105,13 +117,22 @@
         <alt>troll</alt>
         <alt>orc</alt>
         <alt>goblin</alt>
-        <alt>elf</alt>
         <alt>bear</alt>
         <alt>skeleton</alt>
         <alt>demon</alt>
         <alt>monkey</alt>
         <alt>gorilla</alt>
+        <alt>elephant</alt>
         <alt>neanderthale</alt>
+        <alt>robot</alt>
+        <alt>HAL from 2001</alt>
+        <alt>talking energy cloud</alt>
+        <alt>the pope</alt>
+        <alt>police</alt>
+        <alt>anarchist punk-rocker</alt>
+        <alt>ghost</alt>
+        <alt>Siri from iPhone</alt>
+        <alt>a voice without a body</alt>
     </macro>
 
     <br/>
