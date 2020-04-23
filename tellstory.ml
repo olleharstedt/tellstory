@@ -1546,13 +1546,25 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("br", _, _) ->
             "\n"
 
-        (* <loop from="0" to="10"> *)
+        (* <loop times="2"> *)
         | Xml.Element ("loop", [("times", times)], children) ->
             let str = ref "" in
             let fold_aux a b =
                 a ^ (print_tag b state namespace)
             in
             for i = 1 to int_of_string times do
+                str := !str ^ (List.fold_left fold_aux "" children)
+            done;
+            !str
+
+        (* <loop rand="10"> *)
+        | Xml.Element ("loop", [("rand", rand)], children) ->
+            let str = ref "" in
+            let fold_aux a b =
+                a ^ (print_tag b state namespace)
+            in
+            let random_nr = Dice.dice (int_of_string rand) + 1 in
+            for i = 1 to random_nr do
                 str := !str ^ (List.fold_left fold_aux "" children)
             done;
             !str
