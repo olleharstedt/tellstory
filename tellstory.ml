@@ -1508,23 +1508,13 @@ module Make(Dice : D) : T = struct
 
 
   (**
-   * Convert all sentences to strings
-   * And macros, variables, records, includes...
-   *
-   * @param story XML
-   * @param state
+   * @param xml_element
+   * @param state state
+   * @param namespace namespace
    * @return string
    *)
-  and print_sentences story (state : state) namespace =
-    log_trace "print_sentences";
-    let raw_backtrace = Printexc.get_callstack 20 in
-    let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
-    log_trace ("print_sentences raw_s = \n" ^ raw_s);
-    let sentences = fetch_children story in
-    let string_sentences = List.map (fun s ->
-      log_trace "print_sentences: map";
-      let sen = String.trim (fetch_content s) in
-      try begin match s with
+  and print_tag xml_element state namespace =
+      try begin match xml_element with
 
         (* <sentence attr="...">...</sentence> *)
         (* Never create namespace when using <sentence>, only get *)
@@ -1532,21 +1522,22 @@ module Make(Dice : D) : T = struct
             let namespace_name = find_attribute attrs "namespace" in
             begin match namespace_name with
             | None ->
-              print_sentence s state namespace ^ " "
+              print_sentence xml_element state namespace ^ " "
             | Some ("namespace", namespace_name) ->
                 let local_namespace = get_namespace state namespace_name in
                 begin match local_namespace with
                 | None ->
                     let local_namespace = create_namespace state namespace_name in
-                    print_sentence s state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " "
                 | Some local_namespace ->
-                    print_sentence s state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " "
                 end
             | Some (attr, _) ->
+                let sen = String.trim (fetch_content xml_element) in
                 raise (Sentence_problem (sen, sprintf "Unknown attritube: %s" attr))
             end
         | Xml.Element ("sentence", [], _) ->
-            print_sentence s state namespace ^ " "
+            print_sentence xml_element state namespace ^ " "
         (* Empty sentence *)
         | Xml.Element ("sentence", _, _) ->
             ""
@@ -1554,6 +1545,17 @@ module Make(Dice : D) : T = struct
         (* <br /> *)
         | Xml.Element ("br", _, _) ->
             "\n"
+
+        (* <loop from="0" to="10"> *)
+        | Xml.Element ("loop", [("times", times)], children) ->
+            let str = ref "" in
+            let fold_aux a b =
+                a ^ (print_tag b state namespace)
+            in
+            for i = 1 to int_of_string times do
+                str := !str ^ (List.fold_left fold_aux "" children)
+            done;
+            !str
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
@@ -1665,14 +1667,32 @@ module Make(Dice : D) : T = struct
         | Xml.Element (what, _, _) ->
             raise (Unknown_tag what)
         | _ ->
+            let sen = String.trim (fetch_content xml_element) in
             raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
             log_trace "exception in print_sentences";
             log_trace (Printexc.to_string ex);
             log_trace (Printexc.get_backtrace ());
-            (*raise (Sentence_problem (sen, string_of_exn ex))*)
             string_of_exn ex
+
+  (**
+   * Convert all sentences to strings
+   * And macros, variables, records, includes...
+   *
+   * @param story XML
+   * @param state
+   * @return string
+   *)
+  and print_sentences story (state : state) namespace =
+    log_trace "print_sentences";
+    let raw_backtrace = Printexc.get_callstack 20 in
+    let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in
+    log_trace ("print_sentences raw_s = \n" ^ raw_s);
+    let sentences = fetch_children story in
+    let string_sentences = List.map (fun s ->
+      log_trace "print_sentences: map";
+      print_tag s state namespace
     ) sentences in
     let result = List.fold_left (^) "" string_sentences in
     log_trace (sprintf "print_sentences result = %s\n" result);
