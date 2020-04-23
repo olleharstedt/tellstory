@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="loop">
+    <macro name="interacting">
+        <alt>ancient dragon</alt>
+        <alt>smiling cat</alt>
+        <alt>dog</alt>
+    </macro>
+
+    <loop rand="3">
+        <include file="examples/gender.xml" />
+        <sentence>{#interacting}</sentence>
+        <br/>
+    </loop>
+
+    <loop times="5">
+        <sentence>Print this five times</sentence>
+        <br/>
+    </loop>
+
+    <loop rand="3">
+        <sentence>Print this one, two or three times</sentence>
+        <br/>
+    </loop>
+</story>
