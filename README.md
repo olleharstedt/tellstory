@@ -351,6 +351,25 @@ You can also specify which namespace to use inline:
 
     <sentence>{my_namespace\var}?</sentence>
 
+#### Loops
+
+A loop lets you repeat a sentence or any number of sentences a number of times. The number can be random.
+
+Example:
+
+    <loop times="5">
+        <sentence>Print this five times</sentence>
+        <br/>
+    </loop>
+
+Example using a random number of times:
+
+    <loop rand="3">
+        <sentence>Print this one, two or three times</sentence>
+        <br/>
+    </loop>
+
+
 Possible future features
 ------------------------
 
@@ -364,7 +383,6 @@ Possible future features
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
-* Loops? for 1 to 10 pick card/include/blaha
 * Functions inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
 * Normal distribution (useful for age)
