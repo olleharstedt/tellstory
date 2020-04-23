@@ -78,6 +78,7 @@ module Make(Dice : D) : T = struct
   exception Include_exception of string * exn
   exception Namespace_exception of string
   exception Clear_exception of string
+  exception Loop_exception of string
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -100,6 +101,7 @@ module Make(Dice : D) : T = struct
   | Xml_exception str -> sprintf "Xml exception: '%s'" str
   | Namespace_exception str -> sprintf "Namespace exception: '%s'" str
   | Include_exception (str, ex) -> sprintf "Include exception: %s: '%s'" str (string_of_exn ex)
+  | Loop_exception str -> sprintf "Loop exception: %s" str
   | ex -> raise ex
 
   (** Data types for storing macros *)
@@ -1568,6 +1570,10 @@ module Make(Dice : D) : T = struct
                 str := !str ^ (List.fold_left fold_aux "" children)
             done;
             !str
+
+        (* <loop> with faulty attributes *)
+        | Xml.Element ("loop", _, _) ->
+            raise (Loop_exception "Faulty loop construct - no 'times' or 'rand' attribute found")
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
