@@ -135,16 +135,12 @@
         <alt>a voice without a body</alt>
     </macro>
 
-    <br/>
-    <include file="examples/gender.xml" />
-    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
-    <br/>
-    <include file="examples/gender.xml" />
-    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
-    <br/>
-    <include file="examples/gender.xml" />
-    <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
-    <br/>
+    <loop rand="3">
+        <include file="examples/gender.xml" />
+        <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+        <br/>
+    </loop>
+
     <sentence>{#place}</sentence>
     <br/>
     <sentence>{#interacting}</sentence>
