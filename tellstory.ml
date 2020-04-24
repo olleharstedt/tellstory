@@ -1502,9 +1502,16 @@ module Make(Dice : D) : T = struct
     else
       Hashtbl.add deck_tbl deck.name deck
 
+  (**
+   * Store graph in graph_tbl
+   *
+   * @param graph
+   * @param graph_tbl
+   * @return unit
+   *)
   and store_graph (graph : graph) graph_tbl =
     if Hashtbl.mem graph_tbl graph.name then
-      raise (Deck_exception (sprintf "Deck with name '%s' already exists" graph.name))
+      raise (Graph_exception (sprintf "Graph with name '%s' already exists" graph.name))
     else
       Hashtbl.add graph_tbl graph.name graph
 
