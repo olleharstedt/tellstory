@@ -205,36 +205,6 @@ Deck is a way to randomize alternatives without any single alternative being cho
 
 When all cards have been "picked", the deck can't be used again. (Possible TODO: Add support to re-shuffle deck.)
 
-#### Graphs
-
-In a graph, you have nodes that connect to other nodes. When picking a new node randomly, you only pick a node that's _connected_ to the present node.
-
-    <graph name="my_graph">
-      <node id="1" connections="2,3">Center node</node>
-      <node id="2" connections="1">Other content</node>
-      <node id="3" connections="1">Third node content</node>
-    </graph>
-
-    <loop times="10">
-        <sentence>{@my_graph}</sentence>
-        <br/>
-    </loop>
-
-You can assign which node to start on with the "start" attribute, like so:
-
-    <graph name="graph_with_start" start="99">
-        <node id="99" connections="1">Never printed</node>
-        <node id="1" connections="2">This is always printed first</node>
-        <node id="2" connections="1">Second, then back again</node>
-    </graph>
-
-A node can point to itself as a connection. You can also repeat the same number to manipulate probability:
-
-    <graph name="prob_test">
-      <node id="1" connections="1,1,1,1,2">Happens often</node>
-      <node id="2" connections="1">Happens rarely and only one at a time</node>
-    </graph>
-
 #### Dice
 
 To roll a dice, you need to first define its name and number of sides, like so:
@@ -382,6 +352,36 @@ Example using a random number of times:
         <sentence>Print this one, two or three times</sentence>
         <br/>
     </loop>
+
+#### Graphs
+
+In a graph, you have nodes that connect to other nodes. When picking a new node randomly, you only pick a node that's _connected_ to the present node.
+
+    <graph name="my_graph">
+      <node id="1" connections="2,3">Center node</node>
+      <node id="2" connections="1">Other content</node>
+      <node id="3" connections="1">Third node content</node>
+    </graph>
+
+    <loop times="10">
+        <sentence>{@my_graph}</sentence>
+        <br/>
+    </loop>
+
+You can assign which node to start on with the "start" attribute, like so:
+
+    <graph name="graph_with_start" start="99">
+        <node id="99" connections="1">Never printed</node>
+        <node id="1" connections="2">This is always printed first</node>
+        <node id="2" connections="1">Second, then back again</node>
+    </graph>
+
+A node can point to itself as a connection. You can also repeat the same number to manipulate probability:
+
+    <graph name="prob_test">
+      <node id="1" connections="1,1,1,1,2">Happens often</node>
+      <node id="2" connections="1">Happens rarely and only one at a time</node>
+    </graph>
 
 Possible future features
 ------------------------
