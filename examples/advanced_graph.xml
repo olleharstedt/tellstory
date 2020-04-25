@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <macro name="monster">
+    <alt>orcs</alt>
+    <alt>trolls</alt>
+    <alt>skeletons</alt>
+  </macro>
+
+  <dice name="d6" sides="6" />
+  <dice name="d3" sides="3" />
+
+  <graph name="dungeon" start="99">
+    <node id="99" connections="1">Entrence</node>
+    <node id="1" connections="2,3">Corridor</node>
+    <node id="2" connections="1">Small room with {%d3} {#monster}</node>
+    <node id="3" connections="1,4">Big room with {%d6} {#monster}</node>
+    <node id="4" connections="1">Fountain</node>
+  </graph>
+
+  <loop times="10">
+      <sentence>{@dungeon}</sentence>
+      <br/>
+  </loop>
+</story>
