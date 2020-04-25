@@ -14,8 +14,9 @@ open Printf
  * Run with BOLT_FILE=bolt.config ./tellstory
  *
  *)
-let log_trace msg =
-    ()
+let log_trace (msg : string) =
+  ()
+  (*print_endline msg*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -243,7 +244,11 @@ module Make(Dice : D) : T = struct
   | {content = content1; attributes = attrs1}, {content = content2; attributes = attrs2} ->
       content1 = content2 && (compare_alt_attributes attrs1 attrs2)
 
-
+  (**
+   * @param deck
+   * @return unit
+   * @todo Only for debug/trace?
+   *)
   let print_deck (deck : deck) =
     log_trace (sprintf "%s\n" deck.name);
     log_trace "alts:\n";
@@ -931,16 +936,25 @@ module Make(Dice : D) : T = struct
         Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
         (* Build Xml.xml <alt> out of record *)
         let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
-        let result = eval_alt alt state namespace in
+        let result : string = eval_alt alt state namespace in
         log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
         result
 
   (**
    * @param graph
-   * @return graph_node
+   * @return (graph_node, picked_nr)
    *)
-  and pick_new_node graph =
-    ()
+  and pick_next_node graph =
+    let current_node : graph_node = match List.find_opt (fun n -> n.id = graph.current_node) graph.nodes with
+        | Some node -> node
+        | None -> raise (Graph_exception (sprintf "Found no current node with id %d" graph.current_node))
+    in
+    let connections : int list  = current_node.connections in
+    let nr_of_connections : int = List.length connections in
+    let random_pick : int       = Dice.dice (nr_of_connections) in
+    let picked_nr : int         = List.nth connections random_pick in
+    let picked_node             = List.find (fun n -> n.id = picked_nr) graph.nodes in
+    (picked_node, picked_node.id)
 
   (**
    * @param graph_name string
@@ -954,8 +968,12 @@ module Make(Dice : D) : T = struct
       | Not_found -> raise (Graph_exception (sprintf "Found no graph with name '%s'" graph_name))
     in
 
-    let next_node = pick_new_node graph in
-    ""
+    (* Remove old graph and store new with new current node *)
+    let (next_node, next_node_id) : graph_node * int = pick_next_node graph in
+    let new_graph : graph = {graph with current_node = next_node_id} in
+    Hashtbl.remove namespace.graph_tbl graph.name;
+    Hashtbl.add namespace.graph_tbl new_graph.name new_graph;
+    eval_content next_node.content state namespace
 
   (**
    * @param content string

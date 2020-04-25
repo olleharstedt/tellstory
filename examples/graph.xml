@@ -6,5 +6,8 @@
     <node id="3" connections="1">Third node content</node>
   </graph>
 
-  <sentence>{@my_graph}</sentence>
+  <loop times="10">
+      <sentence>{@my_graph}</sentence>
+      <br/>
+  </loop>
 </story>

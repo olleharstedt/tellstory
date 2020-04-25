@@ -215,11 +215,10 @@ In a graph, you have nodes that connect to other nodes. When picking a new node 
       <node id="3" connections="1">Third node content</node>
     </graph>
 
-    <sentence>{@my_graph}</sentence>
-    <sentence>{@my_graph}</sentence>
-    <sentence>{@my_graph}</sentence>
-    <sentence>{@my_graph}</sentence>
-    <sentence>{@my_graph}</sentence>
+    <loop times="10">
+        <sentence>{@my_graph}</sentence>
+        <br/>
+    </loop>
 
 #### Dice
 
@@ -387,6 +386,7 @@ Possible future features
 * Normal distribution (useful for age)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
+* Graphs with different connection probability
 
 TODO
 ----
