@@ -220,6 +220,14 @@ In a graph, you have nodes that connect to other nodes. When picking a new node 
         <br/>
     </loop>
 
+You can assign which node to start on with the "start" attribute, like so:
+
+    <graph name="graph_with_start" start="99">
+        <node id="99" connections="1">Never printed</node>
+        <node id="1" connections="2">This is always printed first</node>
+        <node id="2" connections="1">Second, then back again</node>
+    </graph>
+
 #### Dice
 
 To roll a dice, you need to first define its name and number of sides, like so:
