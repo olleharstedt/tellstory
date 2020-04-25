@@ -1683,6 +1683,15 @@ module Make(Dice : D) : T = struct
             store_graph {name; nodes; current_node} namespace.graph_tbl;
             ""
 
+        | Xml.Element ("graph", [("name", name); ("start", start)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
+            let nodes : graph_node list = parse_nodes nodes in
+            let current_node : int      = int_of_string start in
+            store_graph {name; nodes; current_node} namespace.graph_tbl;
+            ""
+
+        | Xml.Element ("graph", _, _) ->
+            raise (Graph_exception "Not a valid graph declaration")
+
         (* <dice> *)
         | Xml.Element ("dice", attrs, []) ->
             let (dice, namespace_option) = parse_dice attrs state in
