@@ -228,6 +228,13 @@ You can assign which node to start on with the "start" attribute, like so:
         <node id="2" connections="1">Second, then back again</node>
     </graph>
 
+A node can point to itself as a connection. You can also repeat the same number to manipulate probability:
+
+    <graph name="prob_test">
+      <node id="1" connections="1,1,1,1,2">Happens often</node>
+      <node id="2" connections="1">Happens rarely and only one at a time</node>
+    </graph>
+
 #### Dice
 
 To roll a dice, you need to first define its name and number of sides, like so:
@@ -389,12 +396,13 @@ Possible future features
 * Possibility to use JSON format instead of XML.
 * GUI to open XML-file and see it printed, intead of command-line interface? Web page instead.
 * Markov chains...?
-* Functions inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
+* Functions (filters) inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
 * Normal distribution (useful for age)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
 * Graphs with different connection probability
+* Graphs which loop until an end-state
 
 TODO
 ----

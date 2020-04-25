@@ -10,4 +10,14 @@
       <sentence>{@my_graph}</sentence>
       <br/>
   </loop>
+
+  <graph name="prob_test">
+    <node id="1" connections="1,1,1,1,2">One</node>
+    <node id="2" connections="1">Two</node>
+  </graph>
+
+  <loop times="10">
+      <sentence>{@prob_test}</sentence>
+      <br/>
+  </loop>
 </story>
