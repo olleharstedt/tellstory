@@ -1541,7 +1541,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and print_tag xml_element state namespace =
-      try begin match xml_element with
+      let result : string = try begin match xml_element with
 
         (* <sentence attr="...">...</sentence> *)
         (* Never create namespace when using <sentence>, only get *)
@@ -1715,6 +1715,10 @@ module Make(Dice : D) : T = struct
             clear namespace attrs;
             ""
 
+        | Xml.Element ("sleep", [("time", time)], []) ->
+            Unix.sleep 1;
+            ""
+
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
             raise (Unknown_tag what)
@@ -1727,6 +1731,13 @@ module Make(Dice : D) : T = struct
             log_trace (Printexc.to_string ex);
             log_trace (Printexc.get_backtrace ());
             string_of_exn ex
+      in 
+      (*
+      if result <> "" then begin
+        print_endline result;
+      end;
+      *)
+      result
 
   (**
    * Convert all sentences to strings
