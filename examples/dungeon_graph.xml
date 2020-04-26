@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
-  <macro name="direction">
-    <alt>south</alt>
-    <alt>north</alt>
-    <alt>east</alt>
-    <alt>west</alt>
-  </macro>
+  <graph name="direction">
+    <node id="1" connections="1,3,4">south</node>
+    <node id="2" connections="2,3,4">north</node>
+    <node id="3" connections="1,2,3">east</node>
+    <node id="4" connections="1,2,4">west</node>
+  </graph>
 
   <macro name="furniture">
     <alt>chair</alt>
@@ -28,12 +28,12 @@
   <graph name="dungeon" start="1">
     <node id="1" connections="2">start</node>
     <node id="2" connections="2,3">Stairs go down...</node>
-    <node id="3" connections="4,6">Corridor leading {#direction}</node>
+    <node id="3" connections="4,6">Corridor leading {@direction}</node>
     <node id="4" connections="3,5">Guard room with {#furniture} and {#furniture}</node>
     <node id="5" connections="4,7">{#monster}</node>
-    <node id="6" connections="5,7">Throne room headed north</node>
-    <node id="7" connections="3,8">Corridor leading {#direction}</node>
-    <node id="8" connections="9,10">Underground river headed north</node>
+    <node id="6" connections="5,7">Throne room</node>
+    <node id="7" connections="3,8">Corridor leading {@direction}</node>
+    <node id="8" connections="9,10">Underground river {@direction}</node>
     <node id="9" connections="8">Monster: {#monster}</node>
     <node id="10" connections="8,11">NPC: {#npc}</node>
     <node id="11" connections="12">Small pathway leading to a forest</node>
