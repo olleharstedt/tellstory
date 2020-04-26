@@ -1773,14 +1773,17 @@ module Make(Dice : D) : T = struct
             clear namespace attrs;
             ""
 
+        (* <sleep time="10"/> *)
         | Xml.Element ("sleep", [("time", time)], []) ->
             Unix.sleep (int_of_string time);
             ""
 
+        (* <sleep/> *)
         | Xml.Element ("sleep", _, []) ->
             Unix.sleep 1;
             ""
 
+        (* <input name="variablename" label="some question"/> *)
         | Xml.Element ("input", [("name", name);("label", label)], []) ->
             print_endline label;
             flush_all ();
