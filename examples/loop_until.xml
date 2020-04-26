@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <loop until="endloop">
+    <sentence>
+      <alt>Some</alt>
+      <alt>alts</alt>
+      <alt>to</alt>
+      <alt>wait</alt>
+      <alt>for</alt>
+      <alt setFlag="endloop">flag</alt>
+    </sentence>
+  </loop>
+</story>

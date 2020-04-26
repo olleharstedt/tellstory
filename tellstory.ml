@@ -80,6 +80,7 @@ module Make(Dice : D) : T = struct
   exception Namespace_exception of string
   exception Clear_exception of string
   exception Loop_exception of string
+  exception End_loop
 
   let rec string_of_exn ex = match ex with
   | No_node_content str -> sprintf "No node content for node %s" str
@@ -432,6 +433,23 @@ module Make(Dice : D) : T = struct
     end
 
   (**
+   * @param string expr
+   * @return boolean
+   *)
+  let eval_flag_expr (expr : string) =
+    let lexing = Lexing.from_string expr in
+    let flags_ok = try ((Bparser.main Blexer.token) lexing) with
+      | Blexer.Error msg ->
+          raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
+      | Bparser.Error ->
+          raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
+      | Failure msg ->
+          let open Lexing in
+          raise (Internal_error (sprintf "line = %d; col = %d" lexing.lex_curr_p.pos_lnum lexing.lex_curr_p.pos_cnum))
+    in
+    flags_ok
+
+  (**
    * Parses ifSet="" and return the result
    * Boolean lang
    *
@@ -447,17 +465,7 @@ module Make(Dice : D) : T = struct
         true
     | Some ("ifSet", flags) ->
         log_trace (sprintf "ifSet Some, flags: %s" flags);
-        let lexing = Lexing.from_string flags in
-        let flags_ok = try ((Bparser.main Blexer.token) lexing) with
-          | Blexer.Error msg ->
-              raise (Parser_error (sprintf "ifSet: Lexer error %s" msg))
-          | Bparser.Error ->
-              raise (Parser_error (sprintf "ifSet: Syntax error at offset %d" (Lexing.lexeme_start lexing)))
-          | Failure msg ->
-              let open Lexing in
-              raise (Internal_error (sprintf "line = %d; col = %d" lexing.lex_curr_p.pos_lnum lexing.lex_curr_p.pos_cnum))
-        in
-        flags_ok
+        eval_flag_expr flags
     | _ ->
         raise (Internal_error "flags_is_ok: Weird result from find_attribute")
 
@@ -1594,6 +1602,30 @@ module Make(Dice : D) : T = struct
             for i = 1 to random_nr do
                 str := !str ^ (List.fold_left fold_aux "" children)
             done;
+            !str
+
+        | Xml.Element ("loop", [("until", condition)], children) ->
+            let str : string ref = ref "" in
+            (**
+             * @param string a
+             * @param string b
+             * @return string
+             * @raise End_loop
+             *)
+            let fold_aux (a : string) (b : string) =
+                if eval_flag_expr condition then
+                  raise End_loop
+                else
+                  a ^ (print_tag b state namespace);
+            in
+            begin
+              try 
+                for i = 1 to 999 do
+                    str := !str ^ (List.fold_left fold_aux "" children)
+                done;
+              with
+                | End_loop -> ()
+            end;
             !str
 
         (* <loop> with faulty attributes *)

@@ -353,6 +353,23 @@ Example using a random number of times:
         <br/>
     </loop>
 
+A loop can run until a flag is set. To do this, use the attribute "until" like this:
+
+    <loop until="endloop">
+        <sentence>
+            <alt>Some</alt>
+            <alt>alts</alt>
+            <alt>to</alt>
+            <alt>wait</alt>
+            <alt>for</alt>
+            <alt setFlag="endloop">flag</alt>
+        </sentence>
+    </loop>
+
+The word "flag" will always be the last word in the above loop.
+
+A loop which waits for a flag will loop maximum 999 times.
+
 #### Graphs
 
 In a graph, you have nodes that connect to other nodes. When picking a new node randomly, you only pick a node that's _connected_ to the present node.
@@ -401,8 +418,9 @@ Possible future features
 * Normal distribution (useful for age)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
-* Graphs with different connection probability
-* Graphs which loop until an end-state
+* Graphs with different connection probability (solved by repetition?)
+* Nest graphs inside decks? With inline.
+* Day-night cycle with graph ("move graph when card is picked")
 
 TODO
 ----
