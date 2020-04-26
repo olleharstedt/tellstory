@@ -129,6 +129,7 @@ module Make(Dice : D) : T = struct
     content : string;
     (** List of nodes this node is connected to *)
     connections : int list;
+    set_flag : string option;
   }
 
   (** Graph datatype *)
@@ -631,7 +632,7 @@ module Make(Dice : D) : T = struct
   let parse_nodes nodes =
     List.map (fun node -> match node with
     | Xml.Element ("node", attributes, [Xml.PCData content]) ->
-      let connections = begin match find_attribute attributes "connections" with
+      let connections : int list = begin match find_attribute attributes "connections" with
         | Some (_, value) -> begin
             let regexp = Str.regexp "," in
             let splits = Str.split regexp value in
@@ -639,15 +640,20 @@ module Make(Dice : D) : T = struct
           end
         | None -> raise (Graph_exception "Missing connections in graph node")
       end in
-      let id = begin match find_attribute attributes "id" with
+      let id : int = begin match find_attribute attributes "id" with
         | Some (_, id) -> int_of_string id
         | None -> raise (Graph_exception "Missing id of graph node")
+      end in
+      let set_flag : string option = begin match find_attribute attributes "setFlag" with
+        | Some (_, expr) -> Some expr
+        | None -> None
       end in
       (* graph_node *)
       {
         id;
         content;
         connections;
+        set_flag;
       }
     | _ ->
         raise (Graph_exception "Illegal node in graph")
@@ -981,6 +987,13 @@ module Make(Dice : D) : T = struct
     let new_graph : graph = {graph with current_node = next_node_id} in
     Hashtbl.remove namespace.graph_tbl graph.name;
     Hashtbl.add namespace.graph_tbl new_graph.name new_graph;
+    (* Set flag if any *)
+    begin match next_node.set_flag with
+      | Some flag_name ->
+          store_flags (Some [flag_name])
+      | None -> ()
+    end;
+    (* Eval content in node *)
     eval_content next_node.content state namespace
 
   (**
@@ -1548,7 +1561,7 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  and print_tag xml_element state namespace =
+  and print_tag (xml_element : Xml.xml) (state : state) (namespace : namespace) =
       let result : string = try begin match xml_element with
 
         (* <sentence attr="...">...</sentence> *)
@@ -1612,7 +1625,7 @@ module Make(Dice : D) : T = struct
              * @return string
              * @raise End_loop
              *)
-            let fold_aux (a : string) (b : string) =
+            let fold_aux (a : string) (b : Xml.xml) =
                 if eval_flag_expr condition then
                   raise End_loop
                 else
