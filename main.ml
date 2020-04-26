@@ -38,7 +38,8 @@ let _ =
   | ex ->
       Printexc.to_string ex
   in
-  printf "%s\n" string_story;
+  ()
+  (*printf "%s\n" string_story;*)
 
 (** tmp for template_lang *)
 (*

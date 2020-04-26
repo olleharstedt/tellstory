@@ -28,6 +28,7 @@
 %token <string> QUOTE
 %token BACKSLASH
 %token BARLINE
+%token INPUTSIGN
 
 (*
 %token BACKSLASH
@@ -63,6 +64,8 @@ term:
     { Graph w }
 | MACROSIGN w = WORD
     { Macro w }
+| INPUTSIGN w = WORD
+    { Input w }
 | DICESIGN w  = WORD RECORDDOT i = INT
     { Dice (w, i) }
 | DICESIGN w = WORD 

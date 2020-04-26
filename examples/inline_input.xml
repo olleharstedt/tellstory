@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <input name="name" label="What's your name, traveller?"/>
+  <graph name="input_graph">
+    <node id="1" connections="2">{:name}</node>
+    <node id="2" connections="1">Something with {name}</node>
+  </graph>
+
+  <loop times="10">
+    <sentence>{@input_graph}</sentence>
+    <br/>
+  </loop>
+</story>

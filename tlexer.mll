@@ -44,6 +44,8 @@ and token = parse
     { MACROSIGN }
 | '.'
     { RECORDDOT }
+| ':'
+    { INPUTSIGN }
     (*
 | '"'
     { QUOTE }

@@ -845,6 +845,18 @@ module Make(Dice : D) : T = struct
     done;
     string_of_int !value
 
+  (**
+   * Inline input
+   *
+   * @param string variable_name
+   * @param state state
+   * @param namespace namespace
+   * @return string
+   *)
+  let eval_input (variable_name : string) (state : state) (namespace : namespace) =
+    let buffer = input_line stdin in
+    Hashtbl.add namespace.var_tbl variable_name (String.trim buffer);
+    ""
 
   (**
    * @param namespace namespace
@@ -1229,7 +1241,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content con state namespace =
-    let matches = try Pcre.exec_all ~pat:"{[\"$#%@\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
         let s_with_braces = substrings.(0) in
@@ -1244,7 +1256,7 @@ module Make(Dice : D) : T = struct
       let match_with_brackets_quote = Pcre.quote match_with_braces in
       new_con := Pcre.replace_first ~pat:match_with_brackets_quote ~templ:replacement !new_con;
       (* Check if eval was evaled to another pattern. *)
-      let matches = try Pcre.exec_all ~pat:"{[\"$#%\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
+      let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
       if Array.length matches > 0 then begin
         let final_replacement = eval_content replacement state namespace in
         let replacement_quote = Pcre.quote replacement in
@@ -1607,7 +1619,9 @@ module Make(Dice : D) : T = struct
             for i = 1 to int_of_string times do
                 str := !str ^ (List.fold_left fold_aux "" children)
             done;
-            !str
+            (* TODO: Already output in print_tag above, but won't work with CGI *)
+            (*!str*)
+            ""
 
         (* <loop rand="10"> *)
         | Xml.Element ("loop", [("rand", rand)], children) ->
@@ -1619,8 +1633,11 @@ module Make(Dice : D) : T = struct
             for i = 1 to random_nr do
                 str := !str ^ (List.fold_left fold_aux "" children)
             done;
-            !str
+            (* TODO: Already output in print_tag above, but won't work with CGI *)
+            (*!str*)
+            ""
 
+        (* <loop until="flagisset"> ... </loop> *)
         | Xml.Element ("loop", [("until", condition)], children) ->
             let str : string ref = ref "" in
             (**
@@ -1643,7 +1660,9 @@ module Make(Dice : D) : T = struct
               with
                 | End_loop -> ()
             end;
-            !str
+            (* TODO: Already output in print_tag above, but won't work with CGI *)
+            (*!str*)
+            ""
 
         (* <loop> with faulty attributes *)
         | Xml.Element ("loop", _, _) ->
@@ -1817,12 +1836,10 @@ module Make(Dice : D) : T = struct
             log_trace (Printexc.get_backtrace ());
             string_of_exn ex
       in 
-      (*
       if result <> "" then begin
         printf "%s" result;
         flush_all ();
       end;
-      *)
       result
 
   (**
@@ -1926,6 +1943,8 @@ module Make(Dice : D) : T = struct
         eval_graph graph_name state namespace
     | Dice (dice_name, number_of_dice) ->
         eval_dice dice_name number_of_dice namespace
+    | Input (variable_name) ->
+        eval_input variable_name state namespace
 
   (**
    * Eval nameterm

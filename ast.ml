@@ -42,6 +42,7 @@ and term =
   | Deck of string
   | Graph of string
   | Dice of string * int
+  | Input of string
 [@@deriving show]
 
 (*
