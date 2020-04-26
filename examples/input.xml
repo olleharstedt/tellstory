@@ -2,4 +2,8 @@
 <story>
   <input name="name" label="What's your name, traveller?"/>
   <sentence>Oh, so your name is {name}?</sentence>
+  <br/>
+  <if variable="name" equals="asd">
+    <sentence>What a silly name!</sentence>
+  </if>
 </story>
