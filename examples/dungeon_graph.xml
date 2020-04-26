@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <macro name="direction">
+    <alt>south</alt>
+    <alt>north</alt>
+    <alt>east</alt>
+    <alt>west</alt>
+  </macro>
+
+  <macro name="furniture">
+    <alt>chair</alt>
+    <alt>table</alt>
+    <alt>shelf</alt>
+  </macro>
+
+  <macro name="monster">
+    <alt>orc</alt>
+    <alt>troll</alt>
+    <alt>dragon</alt>
+  </macro>
+
+  <macro name="npc">
+    <alt>elf</alt>
+    <alt>trader</alt>
+    <alt>dwarf</alt>
+  </macro>
+
+  <graph name="dungeon" start="1">
+    <node id="1" connections="2">start</node>
+    <node id="2" connections="2,3">Stairs go down...</node>
+    <node id="3" connections="4,6">Corridor leading {#direction}</node>
+    <node id="4" connections="3,5">Guard room with {#furniture} and {#furniture}</node>
+    <node id="5" connections="4,7">{#monster}</node>
+    <node id="6" connections="5,7">Throne room headed north</node>
+    <node id="7" connections="3,8">Corridor leading {#direction}</node>
+    <node id="8" connections="9,10">Underground river headed north</node>
+    <node id="9" connections="8">Monster: {#monster}</node>
+    <node id="10" connections="8,11">NPC: {#npc}</node>
+    <node id="11" connections="12">Small pathway leading to a forest</node>
+    <node id="12" connections="12" setFlag="endloop">end</node>
+  </graph>
+
+  <loop until="endloop">
+      <sentence>{@dungeon}</sentence>
+      <br/>
+  </loop>
+</story>
