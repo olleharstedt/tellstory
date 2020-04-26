@@ -418,6 +418,7 @@ Currently work-in-progress.
     <sleep/>
     <sleep time="1"/>
     <input name="name" label="What's your name, traveller?"/>
+    <if variable="name" equals="asd">
 
 Possible future features
 ------------------------
