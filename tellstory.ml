@@ -1774,7 +1774,18 @@ module Make(Dice : D) : T = struct
             ""
 
         | Xml.Element ("sleep", [("time", time)], []) ->
+            Unix.sleep (int_of_string time);
+            ""
+
+        | Xml.Element ("sleep", _, []) ->
             Unix.sleep 1;
+            ""
+
+        | Xml.Element ("input", [("name", name);("label", label)], []) ->
+            print_endline label;
+            flush_all ();
+            let buffer = input_line stdin in
+            Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
             ""
 
         (* Unknown tag or error *)
@@ -1792,7 +1803,8 @@ module Make(Dice : D) : T = struct
       in 
       (*
       if result <> "" then begin
-        print_endline result;
+        printf "%s" result;
+        flush_all ();
       end;
       *)
       result

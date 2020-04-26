@@ -411,6 +411,14 @@ A node can point to itself as a connection. You can also repeat the same number 
       <node id="2" connections="1">Happens rarely and only one at a time</node>
     </graph>
 
+#### WIP
+
+Currently work-in-progress.
+
+    <sleep/>
+    <sleep time="1"/>
+    <input name="name" label="What's your name, traveller?"/>
+
 Possible future features
 ------------------------
 
@@ -429,10 +437,9 @@ Possible future features
 * Normal distribution (useful for age)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
-* Graphs with different connection probability (solved by repetition?)
-* Nest graphs inside decks? With inline.
-* Day-night cycle with graph ("move graph when card is picked")
 * All flags are global?
+* Graphs with random start number
+
 
 TODO
 ----

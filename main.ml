@@ -19,10 +19,14 @@ let _ =
   (** Create module with dice function module *)
   let module Tellstory = Tellstory.Make(
     struct
-      let dice n =
-        Random.int n
+      let dice n = Random.int n
     end
   ) in
+
+  (*
+  let inter = Unix.getenv "INTERACTIVE" in
+  print_endline inter;
+  *)
 
   let filename = if Array.length Sys.argv == 2 then Sys.argv.(1) else raise No_filename in
 

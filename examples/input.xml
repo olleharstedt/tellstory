@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <input name="name" label="What's your name, traveller?"/>
+  <sentence>Oh, so your name is {name}?</sentence>
+</story>
