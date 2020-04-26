@@ -120,7 +120,9 @@ module Make(Dice : D) : T = struct
   (** Data types for storing decks *)
   type deck = {
     name : string;
-    alts : alt list;  (* When an alt is chosen it's removed from list (card is picked). Remove and replace in deck hashtable? *)
+    alts : alt list;  (* When an alt is chosen it's removed from alts and put in trash. *)
+    trash : alt list;
+    shuffle_on_empty : bool;
   }
 
   (** Graph node datatype *)
@@ -916,8 +918,12 @@ module Make(Dice : D) : T = struct
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
     in
 
-    (* Abort if no cards are left in deck *)
-    if List.length deck.alts = 0 then raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+    (* Abort or shuffle if no cards are left in deck *)
+    let deck = begin match List.length deck.alts, deck.shuffle_on_empty with
+      | 0, true -> {deck with alts = deck.trash; trash = []}
+      | 0, false -> raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
+      | _, _ -> deck
+    end in
     let cards = get_possible_alts deck.alts in
     let pick_nr = Dice.dice (List.length cards) in
     let card = List.nth cards pick_nr in
@@ -939,10 +945,7 @@ module Make(Dice : D) : T = struct
           i := !i + 1;
           !i != pick_nr
         ) deck.alts in
-        let new_deck = {
-          name = deck.name;
-          alts = new_alts;
-        } in
+        let new_deck = {deck with alts = new_alts; trash = card :: deck.trash} in
         log_trace "old_deck: ";
         log_trace "new deck: ";
         print_deck new_deck;
@@ -1719,8 +1722,18 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
             let alts = parse_alts alts in
-            store_deck {name; alts} namespace.deck_tbl;
+            store_deck {name; alts; shuffle_on_empty = false; trash = [];} namespace.deck_tbl;
             ""
+
+        (* <deck name="name" shuffle="true"> *)
+        | Xml.Element ("deck", [("name", name); ("shuffle", _)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
+            log_trace "print_sentences: store deck";
+            let alts = parse_alts alts in
+            store_deck {name; alts; shuffle_on_empty = true; trash = [];} namespace.deck_tbl;
+            ""
+
+        | Xml.Element ("deck", _, _) ->
+            raise (Deck_exception "Invalid deck definition")
 
         | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
             let nodes = parse_nodes nodes in

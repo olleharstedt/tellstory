@@ -203,7 +203,18 @@ Deck is a way to randomize alternatives without any single alternative being cho
         <alt useDeck="names">
     </sentence>
 
-When all cards have been "picked", the deck can't be used again. (Possible TODO: Add support to re-shuffle deck.)
+When all cards have been "picked", the deck can't be used again unless you set attribute shuffle="true" to automatically shuffle it.
+
+    <deck name="adeck" shuffle="true">
+      <alt>One</alt>
+      <alt>Two</alt>
+      <alt>Three</alt>
+    </deck>
+    <!-- Pick all cards from deck three times -->
+    <loop times="9">
+      <sentence>{$adeck}</sentence>
+      <br/>
+    </loop>
 
 #### Dice
 
@@ -421,6 +432,7 @@ Possible future features
 * Graphs with different connection probability (solved by repetition?)
 * Nest graphs inside decks? With inline.
 * Day-night cycle with graph ("move graph when card is picked")
+* All flags are global?
 
 TODO
 ----

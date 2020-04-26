@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <deck name="adeck" shuffle="true">
+    <alt>One</alt>
+    <alt>Two</alt>
+    <alt>Three</alt>
+  </deck>
+
+  <loop times="9">
+    <sentence>{$adeck}</sentence>
+    <br/>
+  </loop>
+</story>
