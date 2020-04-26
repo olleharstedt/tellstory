@@ -80,6 +80,7 @@ module Make(Dice : D) : T = struct
   exception Namespace_exception of string
   exception Clear_exception of string
   exception Loop_exception of string
+  exception If_exception of string
   exception End_loop
 
   let rec string_of_exn ex = match ex with
@@ -1790,6 +1791,18 @@ module Make(Dice : D) : T = struct
             let buffer = input_line stdin in
             Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
             ""
+
+        (* <if variable="variablename" equals="value"> ... </if> *)
+        | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
+            let variable = Hashtbl.find namespace.var_tbl variable_name in
+            if variable = value then
+              print_sentences (Xml.Element ("", [], children)) state namespace
+            else
+              ""
+
+        (* <if ...> *)
+        | Xml.Element ("if", _, _) ->
+            raise (If_exception ("Invalid if definition"))
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
