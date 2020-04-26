@@ -7,17 +7,32 @@
     <node id="4" connections="1,2,4">west</node>
   </graph>
 
-  <macro name="furniture">
+  <deck name="furniture" shuffle="true">
     <alt>chair</alt>
     <alt>table</alt>
     <alt>shelf</alt>
-  </macro>
+  </deck>
+
+  <graph name="timeofday">
+    <node id="1" connections="2">sunrise</node>
+    <node id="2" connections="3">morning</node>
+    <node id="3" connections="4">midday</node>
+    <node id="4" connections="5">evening</node>
+    <node id="5" connections="6">sunset</node>
+    <node id="6" connections="7">night</node>
+    <node id="7" connections="1">night</node>
+  </graph>
 
   <macro name="monster">
     <alt>orc</alt>
     <alt>troll</alt>
     <alt>dragon</alt>
   </macro>
+
+  <deck name="actiondeck" shuffle="true">
+    <alt>Monster: {#monster}</alt>
+    <alt>New time of day: {@timeofday}</alt>
+  </deck>
 
   <macro name="npc">
     <alt>elf</alt>
@@ -29,8 +44,8 @@
     <node id="1" connections="2">start</node>
     <node id="2" connections="2,3">Stairs go down...</node>
     <node id="3" connections="4,6">Corridor leading {@direction}</node>
-    <node id="4" connections="3,5">Guard room with {#furniture} and {#furniture}</node>
-    <node id="5" connections="4,7">{#monster}</node>
+    <node id="4" connections="3,5">Guard room with {$furniture} and {$furniture}</node>
+    <node id="5" connections="4,7">{$actiondeck}</node>
     <node id="6" connections="5,7">Throne room</node>
     <node id="7" connections="3,8">Corridor leading {@direction}</node>
     <node id="8" connections="9,10">Underground river {@direction}</node>
@@ -39,6 +54,9 @@
     <node id="11" connections="12">Small pathway leading to a forest</node>
     <node id="12" connections="12" setFlag="endloop">end</node>
   </graph>
+
+  <sentence>Time of day: {@timeofday}</sentence>
+  <br/>
 
   <loop until="endloop">
       <sentence>{@dungeon}</sentence>
