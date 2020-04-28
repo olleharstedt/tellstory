@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story namespace="if_example">
+  <input name="name" label="What's your name? "/>
+  <if variable="name" equals="Blubb">
+    <then>Your name is {name}.</then>
+    <else>The hell is that name?</else>
+  </if>
+  <br/>
+</story>
