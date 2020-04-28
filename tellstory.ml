@@ -16,7 +16,7 @@ open Printf
  *)
 let log_trace (msg : string) : unit =
   ()
-  (*print_endline msg*)
+  (*print_endline ("\ttrace: " ^ msg)*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -330,19 +330,8 @@ module Make(Dice : D) : T = struct
   let fetch_content xml = match xml with
       Xml.PCData s -> s
     | Xml.Element (_, _, Xml.PCData text :: _) -> text
-    | Xml.Element (tag, _, _) -> "" (* TODO: Abort here or not? *)
+    | Xml.Element (tag, _, _) -> "" (*raise (Xml_exception "fetch_content: unknown tag")*)
     (*| Xml.Element (tag, _, _) -> raise (No_node_content tag)*)
-
-  (**
-   * Fetch the content of an Xml node
-   *
-   * @param xml Xml.xml
-   * @param node string
-   * @return string
-   *)
-  let fetch_node_content xml node =
-    let node = fetch_node xml node in
-    fetch_content node
 
   (**
    * Aux function to find attribute
@@ -1828,10 +1817,22 @@ module Make(Dice : D) : T = struct
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
             let variable = Hashtbl.find namespace.var_tbl variable_name in
-            if variable = value then
-              print_sentences (Xml.Element ("", [], children)) state namespace
-            else
-              ""
+
+            begin match children with
+              | [
+                  Xml.Element ("then", [], then_children);
+                  Xml.Element ("else", [], else_children)
+                ] ->
+                    if variable = value then
+                      print_sentences (Xml.Element ("", [], then_children)) state namespace
+                    else
+                      print_sentences (Xml.Element ("", [], else_children)) state namespace
+              | children ->
+                    if variable = value then
+                      print_sentences (Xml.Element ("", [], children)) state namespace
+                    else
+                      ""
+            end
 
         (* <if ...> *)
         | Xml.Element ("if", _, _) ->
@@ -1840,6 +1841,10 @@ module Make(Dice : D) : T = struct
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
             raise (Unknown_tag what)
+
+        (* Only string in tag, no XML *)
+        | Xml.PCData content ->
+            eval_content content state namespace
         | _ ->
             let sen = String.trim (fetch_content xml_element) in
             raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
@@ -1851,10 +1856,11 @@ module Make(Dice : D) : T = struct
             string_of_exn ex
       in 
       if result <> "" then begin
+        log_trace "print_tags: printing result";
         printf "%s" result;
         flush_all ();
       end;
-      result
+      ""
 
   (**
    * Convert all sentences to strings
@@ -1864,7 +1870,7 @@ module Make(Dice : D) : T = struct
    * @param state
    * @return string
    *)
-  and print_sentences story (state : state) namespace =
+  and print_sentences (story : Xml.xml) (state : state) namespace =
     log_trace "print_sentences";
     let raw_backtrace = Printexc.get_callstack 20 in
     let raw_s = Printexc.raw_backtrace_to_string raw_backtrace in

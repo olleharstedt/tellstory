@@ -423,6 +423,7 @@ Currently work-in-progress.
     <sleep time="1"/>
     <input name="name" label="What's your name, traveller?"/>
     <if variable="name" equals="asd">
+    <if ...><then></then><else></else></if>
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
 
