@@ -411,6 +411,10 @@ A node can point to itself as a connection. You can also repeat the same number 
       <node id="2" connections="1">Happens rarely and only one at a time</node>
     </graph>
 
+TODO: Graph nodes can set flags.
+
+TODO: Nodes with <input> in node
+
 #### WIP
 
 Currently work-in-progress.
@@ -420,6 +424,7 @@ Currently work-in-progress.
     <input name="name" label="What's your name, traveller?"/>
     <if variable="name" equals="asd">
     <sentence>{:inlineinput}</sentence>
+    <node><input name="name" input="What's your name? "/></node>
 
 Possible future features
 ------------------------

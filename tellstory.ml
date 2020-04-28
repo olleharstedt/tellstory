@@ -14,7 +14,7 @@ open Printf
  * Run with BOLT_FILE=bolt.config ./tellstory
  *
  *)
-let log_trace (msg : string) =
+let log_trace (msg : string) : unit =
   ()
   (*print_endline msg*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
@@ -129,10 +129,11 @@ module Make(Dice : D) : T = struct
   (** Graph node datatype *)
   type graph_node = {
     id : int;
-    content : string;
+    content : string option;
     (** List of nodes this node is connected to *)
     connections : int list;
     set_flag : string option;
+    children : Xml.xml list;
   }
 
   (** Graph datatype *)
@@ -634,7 +635,13 @@ module Make(Dice : D) : T = struct
    *)
   let parse_nodes nodes =
     List.map (fun node -> match node with
-    | Xml.Element ("node", attributes, [Xml.PCData content]) ->
+    | Xml.Element ("node", attributes, children) ->
+      (* Get content OR children *)
+      let (content, children) : string option * Xml.xml list = begin match children with
+        | [Xml.PCData c] -> Some c, []
+        | _ -> None, children
+      end in
+      (* Get connections *)
       let connections : int list = begin match find_attribute attributes "connections" with
         | Some (_, value) -> begin
             let regexp = Str.regexp "," in
@@ -643,10 +650,12 @@ module Make(Dice : D) : T = struct
           end
         | None -> raise (Graph_exception "Missing connections in graph node")
       end in
+      (* Get id *)
       let id : int = begin match find_attribute attributes "id" with
         | Some (_, id) -> int_of_string id
         | None -> raise (Graph_exception "Missing id of graph node")
       end in
+      (* Get setFlag *)
       let set_flag : string option = begin match find_attribute attributes "setFlag" with
         | Some (_, expr) -> Some expr
         | None -> None
@@ -657,6 +666,7 @@ module Make(Dice : D) : T = struct
         content;
         connections;
         set_flag;
+        children;
       }
     | _ ->
         raise (Graph_exception "Illegal node in graph")
@@ -992,8 +1002,8 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  and eval_graph graph_name state namespace =
-    log_trace "eval_graph\n";
+  and eval_graph (graph_name : string) (state : state) (namespace : namespace) : string =
+    log_trace "eval_graph";
     let graph = try Hashtbl.find namespace.graph_tbl graph_name with
       | Not_found -> raise (Graph_exception (sprintf "Found no graph with name '%s'" graph_name))
     in
@@ -1005,12 +1015,16 @@ module Make(Dice : D) : T = struct
     Hashtbl.add namespace.graph_tbl new_graph.name new_graph;
     (* Set flag if any *)
     begin match next_node.set_flag with
-      | Some flag_name ->
-          store_flags (Some [flag_name])
+      | Some flag_name -> store_flags (Some [flag_name])
       | None -> ()
     end;
     (* Eval content in node *)
-    eval_content next_node.content state namespace
+    begin match next_node.content, next_node.children with
+      | Some s, [] -> eval_content s state namespace
+      | None, [] -> raise (Graph_exception "Invalid graph node: Empty node content, and no XML children")
+      | None, [child] -> print_tag child state namespace
+      | _, _ -> raise (Graph_exception "Unsupported combination of string and XML children in graph node")
+    end
 
   (**
    * @param content string
@@ -1240,7 +1254,7 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  and eval_content con state namespace =
+  and eval_content (con : string) (state : state) (namespace : namespace) =
     let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
@@ -1263,7 +1277,7 @@ module Make(Dice : D) : T = struct
         new_con := Pcre.replace_first ~pat:replacement_quote ~templ:final_replacement !new_con;
       end
     ) matches_and_replacements;
-
+    log_trace (sprintf "new_con = %s" !new_con);
     !new_con
 
   (**
@@ -1273,7 +1287,7 @@ module Make(Dice : D) : T = struct
    * @param state state
    * @return string
    *)
-  and eval_alt alt (state : state) (namespace : namespace) =
+  and eval_alt (alt : Xml.xml) (state : state) (namespace : namespace) =
     log_trace (Xml.to_string alt);
     let attributes = Xml.attribs alt in
 
@@ -1805,7 +1819,7 @@ module Make(Dice : D) : T = struct
 
         (* <input name="variablename" label="some question"/> *)
         | Xml.Element ("input", [("name", name);("label", label)], []) ->
-            print_endline label;
+            printf "%s" label;
             flush_all ();
             let buffer = input_line stdin in
             Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
@@ -1929,6 +1943,7 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_term term state namespace =
+    log_trace "eval_term";
     let open Ast in
     match term with
     | Variable var_name ->
