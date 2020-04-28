@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <!-- Example with inline expression from input in graph node connections attribute -->
+  <variable name="path"><alt>1</alt></variable>
+
+  <graph name="conn_test" start="1">
+    <node id="1" connections="{path}">
+      <input name="path" label="Choose your path (1, 2 or 3): "/>
+    </node>
+    <node id="2" connections="1">You chose 2</node>
+    <node id="3" connections="1">You chose 3</node>
+  </graph>
+
+  <loop times="10">
+    <sentence>{@conn_test}</sentence>
+    <br/>
+  </loop>
+</story>

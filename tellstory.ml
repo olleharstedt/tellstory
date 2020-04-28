@@ -131,7 +131,8 @@ module Make(Dice : D) : T = struct
     id : int;
     content : string option;
     (** List of nodes this node is connected to *)
-    connections : int list;
+    (*connections : int list;*)
+    connections : string;
     set_flag : string option;
     children : Xml.xml list;
   }
@@ -622,7 +623,7 @@ module Make(Dice : D) : T = struct
     connections : int list;
     * @return graph_node list
    *)
-  let parse_nodes nodes =
+  let parse_nodes (nodes : Xml.xml list) : graph_node list =
     List.map (fun node -> match node with
     | Xml.Element ("node", attributes, children) ->
       (* Get content OR children *)
@@ -630,13 +631,9 @@ module Make(Dice : D) : T = struct
         | [Xml.PCData c] -> Some c, []
         | _ -> None, children
       end in
-      (* Get connections *)
-      let connections : int list = begin match find_attribute attributes "connections" with
-        | Some (_, value) -> begin
-            let regexp = Str.regexp "," in
-            let splits = Str.split regexp value in
-            List.map (fun number -> int_of_string number) splits 
-          end
+      (* Get connections. Right now just a string, evaluation delayed for eval_content. *)
+      let connections : string = begin match find_attribute attributes "connections" with
+        | Some (_, value) -> value
         | None -> raise (Graph_exception "Missing connections in graph node")
       end in
       (* Get id *)
@@ -973,12 +970,15 @@ module Make(Dice : D) : T = struct
    * @param graph
    * @return (graph_node, picked_nr)
    *)
-  and pick_next_node graph =
+  and pick_next_node (graph : graph) (state : state) (namespace : namespace) =
     let current_node : graph_node = match List.find_opt (fun n -> n.id = graph.current_node) graph.nodes with
         | Some node -> node
         | None -> raise (Graph_exception (sprintf "Found no current node with id %d" graph.current_node))
     in
-    let connections : int list  = current_node.connections in
+    let connections : string    = eval_content current_node.connections state namespace in
+    let regexp : Str.regexp     = Str.regexp "," in
+    let splits : string list    = Str.split regexp connections in
+    let connections : int list  = List.map (fun number -> int_of_string number) splits in
     let nr_of_connections : int = List.length connections in
     let random_pick : int       = Dice.dice (nr_of_connections) in
     let picked_nr : int         = List.nth connections random_pick in
@@ -998,7 +998,7 @@ module Make(Dice : D) : T = struct
     in
 
     (* Remove old graph and store new with new current node *)
-    let (next_node, next_node_id) : graph_node * int = pick_next_node graph in
+    let (next_node, next_node_id) : graph_node * int = pick_next_node graph state namespace in
     let new_graph : graph = {graph with current_node = next_node_id} in
     Hashtbl.remove namespace.graph_tbl graph.name;
     Hashtbl.add namespace.graph_tbl new_graph.name new_graph;

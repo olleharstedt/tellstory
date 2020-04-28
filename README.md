@@ -415,6 +415,8 @@ TODO: Graph nodes can set flags.
 
 TODO: Nodes with <input> in node
 
+TODO: connections can be inline expression
+
 #### WIP
 
 Currently work-in-progress.
@@ -447,7 +449,6 @@ Possible future features
 * Simplify declaration of sing/plur records. How?
 * All flags are global?
 * Graphs with random start number
-
 
 TODO
 ----
