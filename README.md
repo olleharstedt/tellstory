@@ -39,7 +39,7 @@ Then run, from the shell, `$./tellstory filename.xml`, and the program will prin
 
 > A simple sentence.
 
-TODO: Rename <sentence> to <print>
+You can also use the tag `<print>` - it works exactly the same as `<sentence>`.
 
 #### Alt
 
@@ -153,6 +153,10 @@ Example:
     <sentence>
       This person here is called {name}.
     </sentence>
+
+If you don't want to randomize the variable value, you can set it directly with the "value" attribute:
+
+    <variable name="name" value="John" />
 
 #### Records
 

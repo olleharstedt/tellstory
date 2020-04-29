@@ -1585,7 +1585,8 @@ module Make(Dice : D) : T = struct
 
         (* <sentence attr="...">...</sentence> *)
         (* Never create namespace when using <sentence>, only get *)
-        | Xml.Element ("sentence", attrs, _) when (flags_is_ok attrs) ->
+        | Xml.Element ("sentence", attrs, _)
+        | Xml.Element ("print", attrs, _) when (flags_is_ok attrs) ->
             let namespace_name = find_attribute attrs "namespace" in
             begin match namespace_name with
             | None ->
@@ -1603,10 +1604,12 @@ module Make(Dice : D) : T = struct
                 let sen = String.trim (fetch_content xml_element) in
                 raise (Sentence_problem (sen, sprintf "Unknown attritube: %s" attr))
             end
-        | Xml.Element ("sentence", [], _) ->
+        | Xml.Element ("sentence", [], _)
+        | Xml.Element ("print", [], _) ->
             print_sentence xml_element state namespace ^ " "
         (* Empty sentence *)
-        | Xml.Element ("sentence", _, _) ->
+        | Xml.Element ("sentence", _, _)
+        | Xml.Element ("print", _, _) ->
             ""
 
         (* <br /> *)
@@ -1695,6 +1698,16 @@ module Make(Dice : D) : T = struct
                 store_macro macro namespace;
             end;
             "" (* Return empty string *)
+
+        (* TODO: namespace *)
+        | Xml.Element ("variable", [("name", name); ("value", value)], []) ->
+            if not (variable_name_free name namespace.var_tbl) then
+              raise (Variable_exception (sprintf "Variable name already in use: %s" name))
+            else begin
+              (* TODO: eval_content value *)
+              Hashtbl.add namespace.var_tbl name value;
+              ""
+            end
 
         (* <variable> *)
         | Xml.Element ("variable", attrs, alts) ->
