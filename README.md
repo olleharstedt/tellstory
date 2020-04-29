@@ -39,6 +39,8 @@ Then run, from the shell, `$./tellstory filename.xml`, and the program will prin
 
 > A simple sentence.
 
+TODO: Rename <sentence> to <print>
+
 #### Alt
 
 Within a sentence you can have `<alt>` tags (short for _alternative_). One alt tag will be chosen randomly:
@@ -215,6 +217,8 @@ When all cards have been "picked", the deck can't be used again unless you set a
       <sentence>{$adeck}</sentence>
       <br/>
     </loop>
+
+TODO: Rename alt to card.
 
 #### Dice
 
@@ -423,7 +427,8 @@ Currently work-in-progress.
 
     <sleep/>
     <sleep time="1"/>
-    <input name="name" label="What's your name, traveller?"/>
+    <input name="name" label="What's your name, traveller? "/>
+    <input name="path" label="Choose your path (1-4): " validation="[1-4]" />
     <if variable="name" equals="asd">
     <if ...><then></then><else></else></if>
     <sentence>{:inlineinput}</sentence>
@@ -449,6 +454,9 @@ Possible future features
 * Simplify declaration of sing/plur records. How?
 * All flags are global?
 * Graphs with random start number
+* Multiplayer
+* Graph combat example
+* Monopoly example
 
 TODO
 ----

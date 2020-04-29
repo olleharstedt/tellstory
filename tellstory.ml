@@ -1814,6 +1814,24 @@ module Make(Dice : D) : T = struct
             Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
             ""
 
+        (* <input name="path" label="Choose your path: " regexp="[1-4]"/> *)
+        | Xml.Element ("input", [("name", name);("label", label); ("validation", validation)], []) ->
+            let regexp : Str.regexp = Str.regexp validation in
+            printf "%s" label;
+            flush_all ();
+            let matches : bool ref  = ref false in
+            while not !matches do
+              let buffer : string     = input_line stdin in
+              matches := Str.string_match regexp buffer 0;
+              if !matches then
+                Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer))
+              else begin
+                printf "%s" label;
+                flush_all ();
+              end
+            done;
+            ""
+
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
             let variable = Hashtbl.find namespace.var_tbl variable_name in
