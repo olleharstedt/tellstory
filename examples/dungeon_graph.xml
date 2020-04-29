@@ -52,7 +52,7 @@
     <node id="9" connections="8">Monster: {#monster}</node>
     <node id="10" connections="8,11">NPC: {#npc}</node>
     <node id="11" connections="12">Small pathway leading to a forest</node>
-    <node id="12" connections="12" setFlag="endloop">end</node>
+    <node id="12" connections="12" setFlag="endloop"> </node>
   </graph>
 
   <sentence>Time of day: {@timeofday}</sentence>
