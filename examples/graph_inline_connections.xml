@@ -7,8 +7,8 @@
     <node id="1" connections="{path}">
       <input name="path" label="Choose your path (1, 2 or 3): "/>
     </node>
-    <node id="2" connections="1">You chose 2</node>
-    <node id="3" connections="1">You chose 3</node>
+    <node id="2" connections="1">You chose two</node>
+    <node id="3" connections="1">You chose three</node>
   </graph>
 
   <loop times="10">
