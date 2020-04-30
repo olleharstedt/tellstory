@@ -1,0 +1,2 @@
+type state
+type namespace
