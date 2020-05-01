@@ -1847,6 +1847,9 @@ module Make(Dice : D) : T = struct
             done;
             ""
 
+        | Xml.Element ("input", _, _) ->
+            raise (Tag_exception "Invalid input definition")
+
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
             let variable = try Hashtbl.find namespace.var_tbl variable_name with
@@ -1925,10 +1928,11 @@ module Make(Dice : D) : T = struct
             eval_content content state namespace
       end with
         | ex ->
-            log_trace "exception in print_sentences";
-            log_trace (Printexc.to_string ex);
-            log_trace (Printexc.get_backtrace ());
-            string_of_exn ex
+            print_endline (Printexc.to_string ex);
+            print_endline (Printexc.get_backtrace ());
+            flush_all ();
+            (*string_of_exn ex*)
+            ""
       in 
       if result <> "" then begin
         log_trace "print_tags: printing result";
