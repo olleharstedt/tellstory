@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <!--
+       How many players?
+       If ... define record for player
+       Roll dice
+       Move
+       Check position
+       Buy?
+       Next player
+       -->
+
+  <dice name="d6" sides="6" />
+
+  <input name="nr_of_players" label="Choose players (1-4): " validation="[1-4]"/>
+
+  <if variable="nr_of_players" equals="1">
+    <input name="player1_name" label="Enter player 1 name: " validation="[a-z0-9]+" />
+    <variable name="player1_pos" value="0" />
+    <print>Player 1 name is {player1_name}</print>
+    <br/>
+  </if>
+
+  <variable name="dice" value="0" />
+
+  <loop until="endloop">
+    <input name="clickenter" label="Type enter to roll dice" alidation="^$" />
+
+    <set variable="dice" value="{%d6 + %d6}" />
+    <print>You rolled {dice}.</print><br/>
+    <set variable="player1_pos" value="{player1_pos + dice}" />
+    <print>Your new position is {player1_pos}.</print><br/>
+  </loop>
+</story>
