@@ -1849,7 +1849,9 @@ module Make(Dice : D) : T = struct
 
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
-            let variable = Hashtbl.find namespace.var_tbl variable_name in
+            let variable = try Hashtbl.find namespace.var_tbl variable_name with
+              | Not_found -> raise (Tag_exception "variable not found in <if> tag")
+            in
 
             begin match children with
               | [
@@ -1867,15 +1869,46 @@ module Make(Dice : D) : T = struct
                       ""
             end
 
+        | Xml.Element ("if", [("variable", variable_name);("higherThan", value)], children) ->
+            let variable : string = try Hashtbl.find namespace.var_tbl variable_name with
+              | Not_found -> raise (Tag_exception "variable not found in <if> tag")
+            in
+
+            let variable : int option = int_of_string_opt variable in
+            let value : int option    = int_of_string_opt value in
+
+            (* Abort if we can't parse integer *)
+            begin match variable, value with
+              | None, _ | _, None -> raise (Tag_exception "cannot parse integer in <if higherThan> tag")
+              | _, _ -> ()
+            end;
+
+            begin match children with
+              | [
+                  Xml.Element ("then", [], then_children);
+                  Xml.Element ("else", [], else_children)
+                ] ->
+                    if variable > value then
+                      print_sentences (Xml.Element ("", [], then_children)) state namespace
+                    else
+                      print_sentences (Xml.Element ("", [], else_children)) state namespace
+              | children ->
+                    if variable > value then
+                      print_sentences (Xml.Element ("", [], children)) state namespace
+                    else
+                      ""
+            end
+
         (* <if ...> *)
         | Xml.Element ("if", _, _) ->
             raise (If_exception ("Invalid if definition"))
 
         (* <set variable="var" value="foo" /> *)
         | Xml.Element ("set", [("variable", var_name); ("value", value)], []) ->
-            let variable = try Hashtbl.find namespace.var_tbl var_name with
-              | Not_found -> raise (Tag_exception "variable not found in <set> tag")
-            in
+            (* Abort if variable is not defined before *)
+            if not (Hashtbl.mem namespace.var_tbl var_name) then
+              raise (Tag_exception "variable not found in <set> tag");
+
             let value = eval_content value state namespace in
             Hashtbl.replace namespace.var_tbl var_name value;
             ""

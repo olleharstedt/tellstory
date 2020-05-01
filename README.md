@@ -433,8 +433,9 @@ Currently work-in-progress.
     <sleep time="1"/>
     <input name="name" label="What's your name, traveller? "/>
     <input name="path" label="Choose your path (1-4): " validation="[1-4]" />
-    <if variable="name" equals="asd">
+    <if variable="name" equals="asd">...</if>
     <if ...><then></then><else></else></if>
+    <if variable="var" higherThan="12">...</if> (* Only for integers *)
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
     <set variable="var1" value="foo" />
