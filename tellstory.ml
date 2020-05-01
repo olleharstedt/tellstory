@@ -1876,9 +1876,6 @@ module Make(Dice : D) : T = struct
         (* Only string in tag, no XML *)
         | Xml.PCData content ->
             eval_content content state namespace
-        | _ ->
-            let sen = String.trim (fetch_content xml_element) in
-            raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
             log_trace "exception in print_sentences";
