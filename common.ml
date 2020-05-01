@@ -11,21 +11,25 @@ module type TAG =
 module type S =
   sig
     type state
-    type tag_tbl
+    type t
+    type tbl
     type namespace = {
       name : string;
-      deck_tbl : tag_tbl
+      deck_tbl : tbl;
     }
+
+    val hashtbl_find : tbl -> string -> t
     val log_trace : string -> unit
   end
 
-module Make (Tag : TAG) : S =
+module Make (Tag : TAG) =
   struct 
-    type tag_tbl
+    type t = Tag.t
+    type tbl = Tag.tbl
 
     type namespace = {
       name : string;
-      deck_tbl : tag_tbl;
+      deck_tbl : tbl;
     }
 
     type namespace_tbl = (string, namespace) Hashtbl.t
@@ -33,6 +37,9 @@ module Make (Tag : TAG) : S =
     type state = {
       namespace_tbl : namespace_tbl;
     }
+
+    let hashtbl_find (tbl : Tag.tbl) (name : string) =
+      Hashtbl.find tbl name
 
     (**
      * Debug with Bolt
