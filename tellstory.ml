@@ -8,17 +8,6 @@
 open Printf
 (*open Core.List*)
 
-(**
- * Debug with Bolt
- *
- * Run with BOLT_FILE=bolt.config ./tellstory
- *
- *)
-let log_trace (msg : string) : unit =
-  ()
-  (*print_endline ("\ttrace: " ^ msg)*)
-  (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
-
 let log_debug msg =
     ()
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.DEBUG msg*)
@@ -103,23 +92,9 @@ module Make(Dice : D) : T = struct
   | Loop_exception str -> sprintf "Loop exception: %s" str
   | ex -> raise ex
 
-  (** Data types for storing macros *)
-  type alt = {
-    content : string;
-    attributes : (string * string) list
-  }
-
   type macro = {
     name : string;
     alts : alt list
-  }
-
-  (** Data types for storing decks *)
-  type deck = {
-    name : string;
-    alts : alt list;  (* When an alt is chosen it's removed from alts and put in trash. *)
-    trash : alt list;
-    shuffle_on_empty : bool;
   }
 
   (** Graph node datatype *)
