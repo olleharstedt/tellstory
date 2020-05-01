@@ -437,6 +437,9 @@ Currently work-in-progress.
     <if ...><then></then><else></else></if>
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
+    <set variable="var1" value="foo" />
+    +
+    TODO: -, *, /, numbers, floats?
 
 Possible future features
 ------------------------

@@ -81,6 +81,7 @@ module Make(Dice : D) : T = struct
   exception Clear_exception of string
   exception Loop_exception of string
   exception If_exception of string
+  exception Tag_exception of string
   exception End_loop
 
   let rec string_of_exn ex = match ex with
@@ -1869,6 +1870,18 @@ module Make(Dice : D) : T = struct
         (* <if ...> *)
         | Xml.Element ("if", _, _) ->
             raise (If_exception ("Invalid if definition"))
+
+        (* <set variable="var" value="foo" /> *)
+        | Xml.Element ("set", [("variable", var_name); ("value", value)], []) ->
+            let variable = try Hashtbl.find namespace.var_tbl var_name with
+              | Not_found -> raise (Tag_exception "variable not found in <set> tag")
+            in
+            let value = eval_content value state namespace in
+            Hashtbl.replace namespace.var_tbl var_name value;
+            ""
+
+        | Xml.Element ("set", _, _) ->
+            raise (Tag_exception "Invalid set definition");
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
