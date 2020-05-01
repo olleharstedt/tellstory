@@ -29,6 +29,7 @@
 %token BACKSLASH
 %token BARLINE
 %token INPUTSIGN
+%token PLUS
 
 (*
 %token BACKSLASH
@@ -72,6 +73,8 @@ term:
     { Dice (w, 1) }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
+| w = term PLUS u = term
+    { Plus (w, u) }
 
     (*
 | e = term

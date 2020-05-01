@@ -46,6 +46,8 @@ and token = parse
     { RECORDDOT }
 | ':'
     { INPUTSIGN }
+| '+'
+    { PLUS }
     (*
 | '"'
     { QUOTE }
