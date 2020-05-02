@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
 
+    <!-- Gender record for randomized gender with pronouns. -->
     <record name="gender">
       <alt>
         <he>he</he>
@@ -12,8 +13,16 @@
       </alt>
     </record>
 
-    <sentence>
-      {gender.he} took {gender.his} things and left.
-    </sentence>
+    <print>{gender.he} took {gender.his} things and left.</print>
+    <br/>
+
+    <!-- Record to keep e.g. player or monster data. No <alt> = no randomization. -->
+    <record name="player1">
+      <name>Olle</name>
+      <strength>10</strength>
+      <hitpoints>5</hitpoints>
+    </record>
+    <print>Player one has name {player1.name}, strength {player1.strength} and hitpoints {player1.hitpoints}.</print>
+    <br/>
 
 </story>

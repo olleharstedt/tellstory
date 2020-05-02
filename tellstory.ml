@@ -15,7 +15,8 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  print_endline ("\ttrace: " ^ msg)
+  ()
+  (*print_endline ("\ttrace: " ^ msg)*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -1406,13 +1407,14 @@ module Make(Dice : D) : T = struct
       ()
 
   (**
-   * Check if record definition is valid
+   * Return true if record definition is valid, both for records with and without <alt> children.
    *
-   * @param name string
-   * @param alts Xml.Element list
+   * @param string name
+   * @param Xml.Element list children
+   * @param record_tbl record_tbl
    * @return bool
    *)
-  and record_is_ok name alts record_tbl =
+  and record_is_ok (name : string) (children : Xml.xml list) (record_tbl : record_tbl) : bool =
     (* Check so record name is free *)
     if Hashtbl.mem record_tbl name then begin
       log_trace "record_is_ok";
@@ -1420,33 +1422,39 @@ module Make(Dice : D) : T = struct
       raise (Record_exception (sprintf "Record name '%s' is already in use" name))
     end;
 
-    (* Check so alts are not empty *)
-    if List.length alts = 0 then begin
+    (* Check so children are not empty *)
+    if List.length children = 0 then begin
       raise (Record_exception (sprintf "Record '%s' has no <alt>" name))
     end;
 
+    (* Assume that if first child is <alt>, it's an <alt>-record *)
+    let use_alt : bool = match List.hd children with
+      | Xml.Element ("alt", _, _) -> true
+      | _ -> false
+    in
+
     (* Each alt must have equal number of children with same structure *)
-    let compare alts = match alts with
-    | [] -> true
-    | x::xs -> List.for_all (fun alt -> match x, alt with
-        | Xml.Element ("alt", _, subtags), Xml.Element ("alt", _, subtags2) -> begin
-            try
-              (* Check so each var has same tag name *)
-              List.for_all2 (fun var1 var2 -> match var1, var2 with
-                | Xml.Element (name1, _, [Xml.PCData _]), Xml.Element (name2, _, [Xml.PCData _]) ->
-                    name1 = name2
-                | _ -> false
-              ) subtags subtags2
-            with
-              Invalid_argument _ ->
-                raise (Record_exception (sprintf "Not equal number of <alt> in <record> '%s'" name))
-            end
-        | _, _ -> false
-    ) xs
+    let compare children = match children with
+      | [] -> true
+      | x::xs -> List.for_all (fun alt -> match x, alt with
+          | Xml.Element ("alt", _, subtags), Xml.Element ("alt", _, subtags2) -> begin
+              try
+                (* Check so each var has same tag name *)
+                List.for_all2 (fun var1 var2 -> match var1, var2 with
+                  | Xml.Element (name1, _, [Xml.PCData _]), Xml.Element (name2, _, [Xml.PCData _]) ->
+                      name1 = name2
+                  | _ -> false
+                ) subtags subtags2
+              with
+                Invalid_argument _ ->
+                  raise (Record_exception (sprintf "Not equal number of <alt> in <record> '%s'" name))
+              end
+          | _, _ -> false
+      ) xs
     in
 
     (* Raise exception if alts are not equal *)
-    if not (compare alts) then begin
+    if use_alt && not (compare children) then begin
       raise (Record_exception (sprintf "Wrong structure in <record> '%s')" name))
     end;
 
@@ -1502,11 +1510,19 @@ module Make(Dice : D) : T = struct
    * @param Xml.xml list alts
    * @return record
    *)
-  and parse_record (name : string) (alts : Xml.xml list) : record =
-    (* Choose alt randomly *)
-    let alt : Xml.xml = match List.nth alts (Dice.dice (List.length alts)) with
-      | alt -> alt
-      | exception Not_found -> raise (Record_exception "No alt?")
+  and parse_record (name : string) (children : Xml.xml list) : record =
+    (* Assume that if first child is <alt>, it's an <alt>-record *)
+    let use_alt : bool = match List.hd children with
+      | Xml.Element ("alt", _, _) -> true
+      | _ -> false
+    in
+    (* Choose alt randomly OR, if no <alt> are used, pick all children. *)
+    let alt : Xml.xml = if use_alt then
+      match List.nth children (Dice.dice (List.length children)) with
+        | alt -> alt
+        | exception Not_found -> raise (Record_exception "No alt?")
+    else
+      Xml.Element ("alt", [], children)
     in
 
     (* Store flags if present *)
@@ -1760,21 +1776,21 @@ module Make(Dice : D) : T = struct
             ""
 
         (* <record> *)
-        | Xml.Element ("record", attrs, alts) ->
+        | Xml.Element ("record", attrs, children) ->
             let record_name = find_attribute attrs "name" in
             let namespace_name = find_attribute attrs "namespace" in
             begin match record_name, namespace_name with
             | Some ("name", record_name), None ->
-                if record_is_ok record_name alts namespace.record_tbl then begin
-                  store_record record_name alts namespace.record_tbl;
+                if record_is_ok record_name children namespace.record_tbl then begin
+                  store_record record_name children namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
                   ""
             | Some ("name", record_name), Some ("namespace", namespace_name) ->
                 let namespace = get_namespace_or_create state namespace_name in
-                if record_is_ok record_name alts namespace.record_tbl then begin
-                  store_record record_name alts namespace.record_tbl;
+                if record_is_ok record_name children namespace.record_tbl then begin
+                  store_record record_name children namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)

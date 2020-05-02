@@ -189,6 +189,8 @@ or
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
 
+TODO: Use record without any `<alt>`, e.g. for player and monster data (together with `<list>` etc).
+
 #### Decks
 
 Deck is a way to randomize alternatives without any single alternative being chosen twice, just like a deck of cards. Overly romantic example:
