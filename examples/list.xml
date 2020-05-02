@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
+  <!-- Define a list with two players. -->
   <list name="players">
     <record name="player1">
       <name>Olle</name>
@@ -11,8 +12,12 @@
     </record>
   </list>
 
-  <loop list="players" variable="player">
-    <print>Looping player {player.name}...</print>
-    <br/>
+  <!-- Loop both players and decrease hitpoints by one per loop. -->
+  <loop times="3">
+    <loop list="players" variable="player">
+      <print>Looping player {player.name} with hitpoints {player.hitpoints}</print>
+      <set record="player" field="hitpoints" value="{player.hitpoints - 1}" />
+      <br/>
+    </loop>
   </loop>
 </story>

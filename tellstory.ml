@@ -1991,6 +1991,14 @@ module Make(Dice : D) : T = struct
             Hashtbl.replace namespace.var_tbl var_name value;
             ""
 
+        | Xml.Element ("set", [("record", record_name); ("field", field_name); ("value", new_value)], []) ->
+            let record : record = try Hashtbl.find namespace.record_tbl record_name with
+              | Not_found -> raise (Tag_exception (sprintf "Found no record with name %s in <set> tag" record_name))
+            in
+            let value : string = eval_content new_value state namespace in
+            Hashtbl.replace record.values field_name value;
+            ""
+
         | Xml.Element ("set", _, _) ->
             raise (Tag_exception "Invalid set definition");
 
