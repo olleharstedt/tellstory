@@ -15,8 +15,7 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  ()
-  (*print_endline ("\ttrace: " ^ msg)*)
+  print_endline ("\ttrace: " ^ msg)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -146,7 +145,10 @@ module Make(Dice : D) : T = struct
   }
 
   (** Types for storing records *)
-  type record = (string, string) Hashtbl.t
+  type record = {
+    name   : string;
+    values : (string, string) Hashtbl.t
+  }
 
   (** Type for storing <dice> tags *)
   type dice = {
@@ -178,14 +180,14 @@ module Make(Dice : D) : T = struct
 
   (** Namespace of macros, variables, ... *)
   type namespace = {
-    name : string;
-    macro_tbl : macro_tbl;
-    var_tbl : var_tbl;
+    name       : string;
+    macro_tbl  : macro_tbl;
+    var_tbl    : var_tbl;
     record_tbl : record_tbl;
-    deck_tbl : deck_tbl;
-    graph_tbl : graph_tbl;
-    dice_tbl : dice_tbl;
-    list_tbl : list_tbl;
+    deck_tbl   : deck_tbl;
+    graph_tbl  : graph_tbl;
+    dice_tbl   : dice_tbl;
+    list_tbl   : list_tbl;
   }
 
   type namespace_tbl = (string, namespace) Hashtbl.t
@@ -800,7 +802,7 @@ module Make(Dice : D) : T = struct
     let record = try Hashtbl.find namespace.record_tbl record_name with
       Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
     in
-    let var = try Hashtbl.find record var_name with
+    let var = try Hashtbl.find record.values var_name with
       Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
     in
     var
@@ -1530,11 +1532,15 @@ module Make(Dice : D) : T = struct
     store_flags flags_list;
 
     (* Store vars from alt in record hash table *)
-    let record = Hashtbl.create 20 in
+    let record = {
+      name;
+      values = Hashtbl.create 20;
+    }
+    in
     List.iter (fun var ->
       match var with
       | Xml.Element (name, [], [Xml.PCData content]) ->
-          Hashtbl.add record name content
+          Hashtbl.add record.values name content
       | Xml.Element (var_name, _, []) ->
           raise (Record_exception (sprintf "No empty content allowed in '%s' for record '%s'" var_name name))
       | Xml.Element (var_name, _, _) ->
@@ -1586,13 +1592,23 @@ module Make(Dice : D) : T = struct
 
   (**
    * Store list in list table.
+   *
+   * @param string name List name
+   * @param list_ list_
+   * @param list_
    *)
-  and store_list (name : string) (list_ : list_) (list_tbl : list_tbl) : unit =
+  and store_list (name : string) (list_ : list_) (namespace : namespace) : unit =
     log_trace "store_list";
-    if Hashtbl.mem list_tbl name then
+    if Hashtbl.mem namespace.list_tbl name then
       raise (Tag_exception (sprintf "List with name '%s' already exists" name))
-    else
-      Hashtbl.add list_tbl name list_
+    else begin
+      (* Store all list items. *)
+      List.iter (fun item -> match item with
+        | Record record -> Hashtbl.add namespace.record_tbl record.name record
+        | _ -> raise (Tag_exception "Unsupprted item type in store_list")
+      ) list_.items;
+      Hashtbl.add namespace.list_tbl name list_
+    end
 
   (**
    * @param xml_element
@@ -1713,7 +1729,8 @@ module Make(Dice : D) : T = struct
             let list_ : list_ = {
               items;
             } in
-            store_list list_name list_ namespace.list_tbl;
+            (* NB: Have to pass entire namespace, since store_list stores all its items. *)
+            store_list list_name list_ namespace;
             ""
 
         | Xml.Element ("list", _, _) ->
