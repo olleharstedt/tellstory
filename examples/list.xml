@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <list name="example_list">
+    <record name="gender">
+      <alt>
+        <he>he</he>
+        <his>his</his>
+      </alt>
+    </record>
+  </list>
+</story>

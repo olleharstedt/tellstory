@@ -15,8 +15,7 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  ()
-  (*print_endline ("\ttrace: " ^ msg)*)
+  print_endline ("\ttrace: " ^ msg)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -154,27 +153,19 @@ module Make(Dice : D) : T = struct
     sides : int;
   }
 
-  (** Hash table to store macros. Macros are randomized each use. *)
-  (*
-  let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
+  (* Item for <list> *)
+  type list_item =
+    | Alt of alt
+    | Macro of macro
+    | Deck of deck
+    | Graph of graph
+    | Record of record
+    | Dice of dice
 
-  (** Hash table to store variables. Variables are only randomized once. *)
-  let var_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
-
-  (** Hash table to store records. Randomized once. *)
-  let record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
-
-  (** Hash table for decks *)
-  let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
-  *)
-
-  (*
-  type namespace_element =
-  | Macro_tbl of (string, macro) Hashtbl.t
-  | Var_tbl of (string, string) Hashtbl.t
-  | Record_tbl of (string, record) Hashtbl.t
-  | Deck_tbl of (string, deck) Hashtbl.t
-  *)
+  (* <list> tag *)
+  type list_ = {
+    items : list_item list;
+  }
 
   type macro_tbl = (string, macro) Hashtbl.t
   type var_tbl = (string, string) Hashtbl.t
@@ -182,6 +173,7 @@ module Make(Dice : D) : T = struct
   type graph_tbl = (string, graph) Hashtbl.t
   type record_tbl = (string, record) Hashtbl.t
   type dice_tbl = (string, dice) Hashtbl.t
+  type list_tbl = (string, list_) Hashtbl.t
 
   (** Namespace of macros, variables, ... *)
   type namespace = {
@@ -192,6 +184,7 @@ module Make(Dice : D) : T = struct
     deck_tbl : deck_tbl;
     graph_tbl : graph_tbl;
     dice_tbl : dice_tbl;
+    list_tbl : list_tbl;
   }
 
   type namespace_tbl = (string, namespace) Hashtbl.t
@@ -384,12 +377,13 @@ module Make(Dice : D) : T = struct
   let new_namespace name =
     {
       name;
-      var_tbl = ((Hashtbl.create 20) : var_tbl);
-      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
+      var_tbl    = ((Hashtbl.create 20) : var_tbl);
+      macro_tbl  = ((Hashtbl.create 20) : macro_tbl);
       record_tbl = ((Hashtbl.create 20) : record_tbl);
-      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
-      graph_tbl = ((Hashtbl.create 20) : graph_tbl);
-      dice_tbl = ((Hashtbl.create 20) : dice_tbl);
+      deck_tbl   = ((Hashtbl.create 20) : deck_tbl);
+      graph_tbl  = ((Hashtbl.create 20) : graph_tbl);
+      dice_tbl   = ((Hashtbl.create 20) : dice_tbl);
+      list_tbl   = ((Hashtbl.create 20) : list_tbl);
     }
 
   (**
@@ -562,7 +556,7 @@ module Make(Dice : D) : T = struct
    * @param alt XML
    * @return string list option
    *)
-  let get_flags alt =
+  let get_flags (alt : Xml.xml) : string list option =
     let flags = match alt with
       | Xml.Element (_, ["setFlag", str], _) ->  Some str
       (*| Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)*)
@@ -1502,23 +1496,21 @@ module Make(Dice : D) : T = struct
       Hashtbl.add namespace.var_tbl name content
 
   (**
-   * Adds record to record hash table
+   * Parse name and XML and return a record
    *
-   * @param name string
-   * @param alts Xml.Element list
-   * @param record_tbl record_tbl
-   * @return void
+   * @param string name
+   * @param Xml.xml list alts
+   * @return record
    *)
-  and save_record name alts record_tbl =
-
-    (* Choose alt *)
-    let alt = match List.nth alts (Dice.dice (List.length alts)) with
+  and parse_record (name : string) (alts : Xml.xml list) : record =
+    (* Choose alt randomly *)
+    let alt : Xml.xml = match List.nth alts (Dice.dice (List.length alts)) with
       | alt -> alt
       | exception Not_found -> raise (Record_exception "No alt?")
     in
 
     (* Store flags if present *)
-    let flags_list = get_flags alt in
+    let flags_list : string list option = get_flags alt in
     store_flags flags_list;
 
     (* Store vars from alt in record hash table *)
@@ -1534,20 +1526,21 @@ module Make(Dice : D) : T = struct
       | _ ->
           raise (Record_exception (sprintf "Unknown error in record '%s'" name))
     ) (Xml.children alt);
+    record
+
+  (**
+   * Adds record to record hash table
+   *
+   * @param name string
+   * @param alts Xml.Element list
+   * @param record_tbl record_tbl
+   * @return unit
+   *)
+  and store_record (name : string) (alts : Xml.xml list) (record_tbl : record_tbl) : unit =
+    let record : record = parse_record name alts in
 
     (* Add record to records hash table *)
     Hashtbl.add record_tbl name record
-
-  (**
-   * Parse an xml structure as deck
-   *
-   * @param xml Xml.xml
-   * @return deck
-   *)
-  (*
-  let parse_deck xml : deck = match xml with
-    | _ -> ()
-  *)
 
   (**
    * Store deck in deck_tbl
@@ -1575,6 +1568,15 @@ module Make(Dice : D) : T = struct
     else
       Hashtbl.add graph_tbl graph.name graph
 
+  (**
+   * Store list in list table.
+   *)
+  and store_list (name : string) (list_ : list_) (list_tbl : list_tbl) : unit =
+    log_trace "store_list";
+    if Hashtbl.mem list_tbl name then
+      raise (Tag_exception (sprintf "List with name '%s' already exists" name))
+    else
+      Hashtbl.add list_tbl name list_
 
   (**
    * @param xml_element
@@ -1672,9 +1674,34 @@ module Make(Dice : D) : T = struct
             (*!str*)
             ""
 
+        | Xml.Element ("loop", [("list", list_name)], children) ->
+            ""
+
         (* <loop> with faulty attributes *)
         | Xml.Element ("loop", _, _) ->
             raise (Loop_exception "Faulty loop construct - no 'times' or 'rand' attribute found")
+
+        | Xml.Element ("list", [("name", list_name)], children) ->
+            let list_type : string = match List.hd children with
+              | Xml.Element ("record", _, _) -> "record"
+              | _ -> raise (Tag_exception "Unsupported list type")
+            in
+            let items : list_item list = match list_type with
+              | "record" ->
+                  List.map (fun xml -> match xml with
+                    | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts)
+                    | _ -> raise (Tag_exception "Unsupported record list element")
+                  ) children
+              | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
+            in
+            let list_ : list_ = {
+              items;
+            } in
+            store_list list_name list_ namespace.list_tbl;
+            ""
+
+        | Xml.Element ("list", _, _) ->
+            raise (Tag_exception "Invalid list definition")
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
@@ -1739,7 +1766,7 @@ module Make(Dice : D) : T = struct
             begin match record_name, namespace_name with
             | Some ("name", record_name), None ->
                 if record_is_ok record_name alts namespace.record_tbl then begin
-                  save_record record_name alts namespace.record_tbl;
+                  store_record record_name alts namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -1747,7 +1774,7 @@ module Make(Dice : D) : T = struct
             | Some ("name", record_name), Some ("namespace", namespace_name) ->
                 let namespace = get_namespace_or_create state namespace_name in
                 if record_is_ok record_name alts namespace.record_tbl then begin
-                  save_record record_name alts namespace.record_tbl;
+                  store_record record_name alts namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)

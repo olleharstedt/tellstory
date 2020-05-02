@@ -439,13 +439,12 @@ Currently work-in-progress.
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
     <set variable="var1" value="foo" />
-    +
-    TODO: -, *, /, numbers, floats?
+    +, -
+    TODO: *, /, floats
 
 Possible future features
 ------------------------
 
-* Shuffle deck when cards are empty? `<deck name="deck1" shuffle="true">`.
 * Unset flag?
 * Many stories in one file, choose one randomly.
 * Export to PDF or markdown.
@@ -457,14 +456,22 @@ Possible future features
 * Markov chains...?
 * Functions (filters) inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
-* Normal distribution (useful for age)
+* Normal distribution (useful for age, weight, etc)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
 * All flags are global?
 * Graphs with random start number
 * Multiplayer
 * Graph combat example
-* Monopoly example
+* Monopoly example - requires state? Move card from deck to player's bag or slot, card needs id etc; slot? brick? Move card from deck to hand? Might as well use Tones of Tales.
+  `<player>`, `<nextPlayer variable="currentplayer"/>`, `<slot>`, `<brick>` that can be moved to slots; cards that can apply to active player. Player's turn is like a graph?
+* Need to loop a list? players, monsters, npc, decks?
+* `<monster>` tag for combat?
+* `<npc>` tag for trade, dialog?
+* `<dialog>` tag for easy dialog graphs?
+* `<lobby>` for remote play
+* Non-turn based play?
+* No clear separation between tags that declare something and tags to do something?
 
 TODO
 ----
