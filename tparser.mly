@@ -71,10 +71,14 @@ term:
     { Dice (w, i) }
 | DICESIGN w = WORD 
     { Dice (w, 1) }
+| i = INT
+    { Int i }
 | w = WORD RECORDDOT u = WORD
     { Record (w, u) }
 | w = term PLUS u = term
     { Plus (w, u) }
+
+
 
     (*
 | e = term

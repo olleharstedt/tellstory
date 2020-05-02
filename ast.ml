@@ -44,6 +44,7 @@ and term =
   | Dice of string * int
   | Input of string
   | Plus of term * term
+  | Int of int
 [@@deriving show]
 
 (*

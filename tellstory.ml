@@ -15,8 +15,7 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  ()
-  (*print_endline ("\ttrace: " ^ msg)*)
+  print_endline ("\ttrace: " ^ msg)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -2045,10 +2044,14 @@ module Make(Dice : D) : T = struct
         eval_dice dice_name number_of_dice namespace
     | Input (variable_name) ->
         eval_input variable_name state namespace
+    | Int i ->
+        string_of_int i
     | Plus (left, right) ->
         log_trace "eval_term: plus";
         let left = eval_term left state namespace in
+        log_trace (sprintf "left = %s" left);
         let right = eval_term right state namespace in
+        log_trace (sprintf "right = %s" right);
         string_of_int ((int_of_string left) + (int_of_string right))
 
   (**
@@ -2115,8 +2118,8 @@ module Make(Dice : D) : T = struct
           (*
           let tok = Lexing.lexeme linebuf in
           *)
-          (* raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf)))) *)
-          raise (Parser_error (sprintf "Could not parse '%s'" match_ ))
+          raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf))))
+          (*raise (Parser_error (sprintf "Could not parse '%s'" match_ ))*)
       | Failure msg ->
           let open Lexing in
           raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))
