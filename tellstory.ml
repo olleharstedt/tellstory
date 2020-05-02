@@ -15,7 +15,8 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  print_endline ("\ttrace: " ^ msg)
+  ()
+  (*print_endline ("\ttrace: " ^ msg)*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -1245,7 +1246,7 @@ module Make(Dice : D) : T = struct
    *)
   and eval_content (con : string) (state : state) (namespace : namespace) =
     log_trace "eval_content";
-    let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\-\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
         let s_with_braces = substrings.(0) in
@@ -1260,7 +1261,7 @@ module Make(Dice : D) : T = struct
       let match_with_brackets_quote = Pcre.quote match_with_braces in
       new_con := Pcre.replace_first ~pat:match_with_brackets_quote ~templ:replacement !new_con;
       (* Check if eval was evaled to another pattern. *)
-      let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
+      let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\-\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
       if Array.length matches > 0 then begin
         let final_replacement = eval_content replacement state namespace in
         let replacement_quote = Pcre.quote replacement in
@@ -2053,6 +2054,10 @@ module Make(Dice : D) : T = struct
         let right = eval_term right state namespace in
         log_trace (sprintf "right = %s" right);
         string_of_int ((int_of_string left) + (int_of_string right))
+    | Minus (left, right) ->
+        let left = eval_term left state namespace in
+        let right = eval_term right state namespace in
+        string_of_int ((int_of_string left) - (int_of_string right))
 
   (**
    * Eval nameterm

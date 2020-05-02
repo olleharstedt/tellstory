@@ -30,6 +30,7 @@
 %token BARLINE
 %token INPUTSIGN
 %token PLUS
+%token MINUS
 
 (*
 %token BACKSLASH
@@ -77,6 +78,8 @@ term:
     { Record (w, u) }
 | w = term PLUS u = term
     { Plus (w, u) }
+| w = term MINUS u = term
+    { Minus (w, u) }
 
 
 

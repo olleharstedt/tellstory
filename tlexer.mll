@@ -48,6 +48,8 @@ and token = parse
     { INPUTSIGN }
 | '+'
     { PLUS }
+| '-'
+    { MINUS }
     (*
 | '"'
     { QUOTE }
