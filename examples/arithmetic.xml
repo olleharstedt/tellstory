@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <print>1 + 2 = {1 + 2}</print>
+  <br/>
+  <print>1 - 2 = {1 - 2}</print>
+  <br/>
+
+  <variable name="num1" value="1" />
+  <variable name="num2" value="2" />
+  <variable name="sum" value="0" />
+  <set variable="sum" value="{num1 + num2}" />
+  <print>num1 + num2 = {sum}</print>
+  <br/>
+</story>
