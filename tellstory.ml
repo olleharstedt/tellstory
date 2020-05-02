@@ -15,7 +15,8 @@ open Printf
  *
  *)
 let log_trace (msg : string) : unit =
-  print_endline ("\ttrace: " ^ msg)
+  ()
+  (*print_endline ("\ttrace: " ^ msg)*)
   (*Bolt.Logger.log "tellstory_debug_logger" Bolt.Level.TRACE msg*)
 
 let log_debug msg =
@@ -1696,7 +1697,7 @@ module Make(Dice : D) : T = struct
             in
             begin
               try 
-                for i = 1 to 999 do
+                for i = 1 to 9999 do
                     str := !str ^ (List.fold_left fold_aux "" children)
                 done;
               with
@@ -1706,7 +1707,21 @@ module Make(Dice : D) : T = struct
             (*!str*)
             ""
 
-        | Xml.Element ("loop", [("list", list_name)], children) ->
+        | Xml.Element ("loop", [("list", list_name); ("variable", variable)], children) ->
+            let list_ = try Hashtbl.find namespace.list_tbl list_name with
+              | Not_found -> raise (Tag_exception (sprintf "Could not find list with name %s" list_name))
+            in
+            (* Loop through all items with all XMl children of the loop. *)
+            List.iter (fun list_item ->
+              List.iter (fun child ->
+                begin match list_item with
+                  | Record record -> Hashtbl.replace namespace.record_tbl variable record
+                  | _ -> raise (Tag_exception "Unsupported list item type in print_tags (loop)")
+                end;
+                (* TODO: Don't return string, but use a factored out output buffer instead *)
+                ignore (print_tag child state namespace);
+              ) children;
+            ) list_.items;
             ""
 
         (* <loop> with faulty attributes *)

@@ -441,6 +441,8 @@ Currently work-in-progress.
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
     <set variable="var1" value="foo" />
+    <list><record ...></list>
+    <addToList name="listName">...</addToList>
     +, -
     TODO: *, /, floats
 

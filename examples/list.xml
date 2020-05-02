@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
-  <list name="example_list">
-    <record name="gender">
-      <alt>
-        <he>he</he>
-        <his>his</his>
-      </alt>
+  <list name="players">
+    <record name="player1">
+      <name>Olle</name>
+      <hitpoints>10</hitpoints>
+    </record>
+    <record name="player2">
+      <name>Birte</name>
+      <hitpoints>10</hitpoints>
     </record>
   </list>
+
+  <loop list="players" variable="player">
+    <print>Looping player {player.name}...</print>
+    <br/>
+  </loop>
 </story>
