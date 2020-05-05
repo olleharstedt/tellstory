@@ -1030,8 +1030,10 @@ module Make(Dice : D) : T = struct
     begin match next_node.content, next_node.children with
       | Some s, [] -> eval_content s state namespace
       | None, [] -> raise (Graph_exception "Invalid graph node: Empty node content, and no XML children")
-      | None, [child] -> print_tag child state namespace
-      | _, _ -> raise (Graph_exception "Unsupported combination of string and XML children in graph node")
+      | None, children ->
+          List.iter (fun c -> ignore (print_tag c state namespace)) children;
+          ""
+      | _, _ -> raise (Graph_exception ("Unsupported combination of string and XML children in graph node"))
     end
 
   (**
@@ -1653,7 +1655,7 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  and print_tag (xml_element : Xml.xml) (state : state) (namespace : namespace) =
+  and print_tag (xml_element : Xml.xml) (state : state) (namespace : namespace) : string =
       let result : string = try begin match xml_element with
 
         (* <sentence attr="...">...</sentence> *)
