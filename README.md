@@ -29,6 +29,11 @@ Outermost tag. Mandatory.
       <!-- Content here -->
     </story>
 
+Some configuration goes into the `<story>` tag. Right now, this is supported:
+
+* namespace - name of namespace for this story (used when including files)
+* newline="print" - when set, adds a newline to every print or sentence tag to avoid writing `<br/>`
+
 #### Sentence
 
 The sentence is the fundamental building block. A simple sentence will be printed as is.
@@ -421,9 +426,9 @@ A node can point to itself as a connection. You can also repeat the same number 
       <node id="2" connections="1">Happens rarely and only one at a time</node>
     </graph>
 
-TODO: Graph nodes can set flags.
+TODO: Graph nodes can set flags, e.g. to exit a loop.
 
-TODO: Nodes with <input> in node
+TODO: Nodes with `<input>` in node to choose connection in graph.
 
 TODO: connections can be inline expression
 
@@ -438,11 +443,15 @@ Currently work-in-progress.
     <if variable="name" equals="asd">...</if>
     <if ...><then></then><else></else></if>
     <if variable="var" higherThan="12">...</if> (* Only for integers *)
+    <if content="{eval this}" equals="12">...</if>
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
     <set variable="var1" value="foo" />
+    <set record="player" field="hitpoints" value="{player.hitpoints - 1}" />
     <list><record ...></list>
-    <addToList name="listName">...</addToList>
+    <add to="list" name="listName">...</add>
+    TODO: <remove from="list" name="asd" item="id"...
+    TODO: add to deck, macro, graph
     +, -
     TODO: *, /, floats
 

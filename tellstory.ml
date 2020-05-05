@@ -59,6 +59,7 @@ module Make(Dice : D) : T = struct
   exception No_node_content of string
   exception Not_implemented
   exception Internal_error of string
+  exception State_exception of string
   exception No_such_lang of string
   exception No_such_direct_node of string
   exception Too_many_attributes of string
@@ -168,7 +169,9 @@ module Make(Dice : D) : T = struct
 
   (* <list> tag *)
   type list_ = {
-    items : list_item list;
+    name      : string;
+    list_type : string;
+    items     : list_item list;
   }
 
   type macro_tbl = (string, macro) Hashtbl.t
@@ -193,9 +196,10 @@ module Make(Dice : D) : T = struct
 
   type namespace_tbl = (string, namespace) Hashtbl.t
 
-  (** Explicit state, pass around every where... *)
+  (** Explicit state, pass around everywhere... *)
   (** TODO: Include default namespace? *)
   type state = {
+    config        : (string * string) list;
     namespace_tbl : namespace_tbl;
   }
 
@@ -425,6 +429,22 @@ module Make(Dice : D) : T = struct
       Hashtbl.add state.namespace_tbl name new_namespace;
       new_namespace
     end
+
+  (**
+   * Returns true if config with $name is on in $state.
+   *
+   * @param state state
+   * @param name string
+   * @return bool
+   *)
+  let config_is_on (state : state) (name : string) : bool =
+    let conf : (string * string) option = List.find_opt
+      (fun i -> match i with | n, v -> name = n)
+      state.config
+    in
+    match conf with
+      | Some (n, v) -> true
+      | None -> false
 
   (**
    * @param string expr
@@ -1592,6 +1612,22 @@ module Make(Dice : D) : T = struct
       Hashtbl.add graph_tbl graph.name graph
 
   (**
+   * Parse children in <list> tag to list items.
+   *
+   * @param string list_type
+   * @param Xml.Element list children
+   * @return list_item list
+   *)
+  and parse_list_items (list_type : string) (children : Xml.xml list) : list_item list =
+    match list_type with
+      | "record" ->
+          List.map (fun xml -> match xml with
+            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts)
+            | _ -> raise (Tag_exception "Unsupported record list element")
+          ) children
+      | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
+
+  (**
    * Store list in list table.
    *
    * @param string name List name
@@ -1624,18 +1660,19 @@ module Make(Dice : D) : T = struct
         (* Never create namespace when using <sentence>, only get *)
         | Xml.Element ("sentence", attrs, _)
         | Xml.Element ("print", attrs, _) when (flags_is_ok attrs) ->
+            let newline : string = if config_is_on state "newline" then "\n" else "" in
             let namespace_name = find_attribute attrs "namespace" in
             begin match namespace_name with
             | None ->
-              print_sentence xml_element state namespace ^ " "
+              print_sentence xml_element state namespace ^ " " ^ newline
             | Some ("namespace", namespace_name) ->
                 let local_namespace = get_namespace state namespace_name in
                 begin match local_namespace with
                 | None ->
                     let local_namespace = create_namespace state namespace_name in
-                    print_sentence xml_element state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " " ^ newline
                 | Some local_namespace ->
-                    print_sentence xml_element state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " " ^ newline
                 end
             | Some (attr, _) ->
                 let sen = String.trim (fetch_content xml_element) in
@@ -1643,8 +1680,11 @@ module Make(Dice : D) : T = struct
             end
         | Xml.Element ("sentence", [], _)
         | Xml.Element ("print", [], _) ->
-            print_sentence xml_element state namespace ^ " "
+            let newline : string = if config_is_on state "newline" then "\n" else "" in
+            print_sentence xml_element state namespace ^ " " ^ newline
+
         (* Empty sentence *)
+        (* TODO: Why would anyone do this? *)
         | Xml.Element ("sentence", _, _)
         | Xml.Element ("print", _, _) ->
             ""
@@ -1733,15 +1773,10 @@ module Make(Dice : D) : T = struct
               | Xml.Element ("record", _, _) -> "record"
               | _ -> raise (Tag_exception "Unsupported list type")
             in
-            let items : list_item list = match list_type with
-              | "record" ->
-                  List.map (fun xml -> match xml with
-                    | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts)
-                    | _ -> raise (Tag_exception "Unsupported record list element")
-                  ) children
-              | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
-            in
+            let items : list_item list = parse_list_items list_type children in
             let list_ : list_ = {
+              name = list_name;
+              list_type;
               items;
             } in
             (* NB: Have to pass entire namespace, since store_list stores all its items. *)
@@ -1925,6 +1960,29 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("input", _, _) ->
             raise (Tag_exception "Invalid input definition")
 
+        | Xml.Element ("if", [("content", content);("equals", value)], children) ->
+            (* Strip {} from string *)
+            let regexp  : Str.regexp = Str.regexp "\\{\\}" in
+            let content : string = Str.global_replace regexp "" content in
+            let content : string = eval_content content state namespace in
+
+            (* TODO: Code duplication *)
+            begin match children with
+              | [
+                  Xml.Element ("then", [], then_children);
+                  Xml.Element ("else", [], else_children)
+                ] ->
+                    if content = value then
+                      print_sentences (Xml.Element ("", [], then_children)) state namespace
+                    else
+                      print_sentences (Xml.Element ("", [], else_children)) state namespace
+              | children ->
+                    if content = value then
+                      print_sentences (Xml.Element ("", [], children)) state namespace
+                    else
+                      ""
+            end
+
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
             let variable = try Hashtbl.find namespace.var_tbl variable_name with
@@ -2002,6 +2060,23 @@ module Make(Dice : D) : T = struct
         | Xml.Element ("set", _, _) ->
             raise (Tag_exception "Invalid set definition");
 
+        (* <add to="<type>" name="<name>">...</add> *)
+        | Xml.Element ("add", [("to", target_type); ("name", target_name)], children) ->
+            begin match target_type with
+              | "list" ->
+                  let target_list : list_ = try Hashtbl.find namespace.list_tbl target_name with
+                    | Not_found -> raise (Tag_exception (sprintf "Found no list to add to with name %s" target_name))
+                  in
+                  let new_items : list_item list = parse_list_items target_list.list_type children in
+                  if List.length new_items > 0 then begin
+                    let new_list : list_ = {target_list with items = target_list.items @ new_items} in
+                    Hashtbl.replace namespace.list_tbl new_list.name new_list;
+                  end;
+                  ()
+              | _ -> raise (Tag_exception ("Invalid target type for <add> tag"))
+            end;
+            ""
+
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
             raise (Unknown_tag what)
@@ -2053,11 +2128,14 @@ module Make(Dice : D) : T = struct
    * @return state
    *)
   and init_state () =
-    let global_namespace = new_namespace "global" in
-    let namespace_tbl = (Hashtbl.create 10 : namespace_tbl) in
+    let global_namespace : namespace = new_namespace "global" in
+    let namespace_tbl : (string, namespace) Hashtbl.t = (Hashtbl.create 10 : namespace_tbl) in
     Hashtbl.add namespace_tbl "global" global_namespace;
     (* Return state *)
-    {namespace_tbl}
+    {
+      config = [];
+      namespace_tbl;
+    }
 
   (**
    * Return string of XML-file with story etc.
@@ -2069,15 +2147,14 @@ module Make(Dice : D) : T = struct
    * @TODO: Factor out so this can be used both from command line and web page.
    *)
   and file_to_string filename (state : state) =
-
-    let xml = try Xml.parse_file filename with
+    let xml : Xml.xml = try Xml.parse_file filename with
       | Xml.Error (msg, pos) ->
           print_endline (sprintf "Error while parsing XML file '%s'" filename);
           print_int (Xml.line pos);
           print_endline (": " ^ Xml.error_msg msg);
           exit 0;
     in
-    let story = fetch_node xml "story" in
+    let story : Xml.xml = fetch_node xml "story" in
     story_to_string story state
 
   (**
@@ -2089,17 +2166,26 @@ module Make(Dice : D) : T = struct
    *)
   and story_to_string story state =
     (* Get possible namespace attribute for <story> *)
-    let attrs = Xml.attribs story in
-    let namespace_attr = find_attribute attrs "namespace" in
+    let attrs : (string * string) list            = Xml.attribs story in
+    let namespace_attr : (string * string) option = find_attribute attrs "namespace" in
+    let newline_attr : (string * string) option   = find_attribute attrs "newline" in
+    (* Check for newline config *)
+    let state : state = match newline_attr with
+      | Some ("newline", "print") -> {state with config = ("newline", "") :: state.config}
+      | Some ("newline", s) -> raise (State_exception ("Invalid value for newline attribute: " ^ s))
+      | Some (_, _) -> raise (Internal_error "Messed up newline setting")
+      | None -> state
+    in
+    (* Check for top-level namespace *)
     begin match namespace_attr with
-    | Some ("namespace", namespace_name) ->
-        let namespace = get_namespace_or_create state namespace_name in
-        print_sentences story state namespace
-    | None ->
-        let global_namespace = Hashtbl.find state.namespace_tbl "global" in
-        print_sentences story state global_namespace
-    | _ ->
-        raise (Internal_error "Couldn't find namespace attribute for story tag")
+      | Some ("namespace", namespace_name) ->
+          let namespace = get_namespace_or_create state namespace_name in
+          print_sentences story state namespace
+      | None ->
+          let global_namespace = Hashtbl.find state.namespace_tbl "global" in
+          print_sentences story state global_namespace
+      | _ ->
+          raise (Internal_error "Couldn't find namespace attribute for story tag")
     end
 
   (** Evaluate AST, part of template lang. TODO: Factor out in own module? How? Interdependencies. *)
