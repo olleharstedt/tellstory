@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story newline="print">
+  <print>Monster battle!</print>
+
+  <dice name="d6" sides="6" />
+
+  <!--
+  <input name="nr" label="Choose players (1-2): " validation="[1-2]"/>
+  -->
+
+  <input name="name" label="Name of player: " />
+
+  <list name="players">
+    <record name="player1">
+      <name>{name}</name>
+      <attack>{%d6 + %d6}</attack>
+      <hitpoints>{%d6 + %d6}</hitpoints>
+    </record>
+  </list>
+
+  <print>--- Player stats ---</print>
+  <print>Name: {player1.name}</print>
+  <print>Attack: {player1.attack}</print>
+  <print>Hit-points: {player1.hitpoints}</print>
+  <br/>
+
+  <!-- Battle actions -->
+  <list name="battle_actions">
+    <record name="choose_monster">
+      <nr>1</nr>
+      <text>Choose monster to attack</text>
+    </record>
+    <record name="random_monster">
+      <nr>2</nr>
+      <text>Attack random monster</text>
+    </record>
+    <record name="flee">
+      <nr>3</nr>
+      <text>Flee</text>
+    </record>
+  </list>
+
+  <!-- Battle flow -->
+  <graph name="battle" start="0">
+    <node id="0" connections="1">/start/</node>
+    <node id="1" connections="2">
+      <print>Players attack</print>
+      <loop list="players" variable="player">
+        <print>Looping player {player.name}</print>
+      </loop>
+    </node>
+    <node id="2" connections="1">
+      <print>Monsters attack</print>
+    </node>
+  </graph>
+
+  <!-- Dungone flow -->
+  <graph name="dungeon" start="1">
+    <node id="1" connections="2">/start/</node>
+    <node id="2" connections="2">
+      <print>Welcome to the dungeon! Please respect the rules.</print>
+    </node>
+    <node id="3" connections="3">
+      <print>Room</print>
+      <loop until="endbattle">
+      </loop>
+    </node>
+  </graph>
+
+  <print>{@battle}</print>
+  <print>{@battle}</print>
+</story>
