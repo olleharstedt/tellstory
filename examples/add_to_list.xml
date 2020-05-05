@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <!-- Delcare list with one item -->
+  <list name="players">
+    <record name="player1">
+      <name>Foo</name>
+      <happy>Yes</happy>
+    </record>
+  </list>
+
+  <!-- Loop list -->
+  <loop list="players" variable="player">
+    <if content="{player.happy}" equals="Yes">
+      <then>
+        <print>Player {player.name} is happy.</print><br/>
+      </then>
+      <else>
+        <print>Player {player.name} is NOT happy.</print><br/>
+      </else>
+    </if>
+  </loop>
+
+  <!-- Add new player -->
+  <print>Adding a new player...</print><br/>
+  <add to="list" name="players">
+    <record name="player2">
+      <name>Bar</name>
+      <happy>No</happy>
+    </record>
+  </add>
+
+  <!-- Loop list the same way -->
+  <loop list="players" variable="player">
+    <if content="{player.happy}" equals="Yes">
+      <then>
+        <print>Player {player.name} is happy.</print><br/>
+      </then>
+      <else>
+        <print>Player {player.name} is NOT happy.</print><br/>
+      </else>
+    </if>
+  </loop>
+</story>
