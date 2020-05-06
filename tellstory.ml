@@ -1650,6 +1650,35 @@ module Make(Dice : D) : T = struct
     end
 
   (**
+   * Run an if statement if content op value
+   *
+   * @param op Operation to apply (=, >, <)
+   * @param content Left-hand value
+   * @param value Right-hand value
+   * @param children
+   * @param state
+   * @param namespace
+   * @return string
+   *)
+  (*and run_if_operation (op : 'a -> 'a -> bool) (content : 'a) (value : 'a) (children : Xml.xml list) (state : state) (namespace : namespace) : string =*)
+  and run_if_operation: 'a. ('a -> 'a -> bool) -> 'a -> 'a -> Xml.xml list -> state -> namespace -> string = fun op content value children state namespace ->
+    begin match children with
+      | [
+          Xml.Element ("then", [], then_children);
+          Xml.Element ("else", [], else_children)
+        ] ->
+            if content = value then
+              print_sentences (Xml.Element ("", [], then_children)) state namespace
+            else
+              print_sentences (Xml.Element ("", [], else_children)) state namespace
+      | children ->
+            if content = value then
+              print_sentences (Xml.Element ("", [], children)) state namespace
+            else
+              ""
+    end
+
+  (**
    * @param xml_element
    * @param state state
    * @param namespace namespace
@@ -1935,6 +1964,7 @@ module Make(Dice : D) : T = struct
 
         (* <input name="variablename" label="some question"/> *)
         | Xml.Element ("input", [("name", name);("label", label)], []) ->
+            let label : string = eval_content label state namespace in
             printf "%s" label;
             flush_all ();
             let buffer = input_line stdin in
@@ -1944,6 +1974,7 @@ module Make(Dice : D) : T = struct
         (* <input name="path" label="Choose your path: " regexp="[1-4]"/> *)
         | Xml.Element ("input", [("name", name);("label", label); ("validation", validation)], []) ->
             let regexp : Str.regexp = Str.regexp validation in
+            let label  : string = eval_content label state namespace in
             printf "%s" label;
             flush_all ();
             let matches : bool ref  = ref false in
@@ -1968,22 +1999,7 @@ module Make(Dice : D) : T = struct
             let content : string = Str.global_replace regexp "" content in
             let content : string = eval_content content state namespace in
 
-            (* TODO: Code duplication *)
-            begin match children with
-              | [
-                  Xml.Element ("then", [], then_children);
-                  Xml.Element ("else", [], else_children)
-                ] ->
-                    if content = value then
-                      print_sentences (Xml.Element ("", [], then_children)) state namespace
-                    else
-                      print_sentences (Xml.Element ("", [], else_children)) state namespace
-              | children ->
-                    if content = value then
-                      print_sentences (Xml.Element ("", [], children)) state namespace
-                    else
-                      ""
-            end
+            run_if_operation (=) content value children state namespace;
 
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
@@ -1991,29 +2007,21 @@ module Make(Dice : D) : T = struct
               | Not_found -> raise (Tag_exception "variable not found in <if> tag")
             in
 
-            begin match children with
-              | [
-                  Xml.Element ("then", [], then_children);
-                  Xml.Element ("else", [], else_children)
-                ] ->
-                    if variable = value then
-                      print_sentences (Xml.Element ("", [], then_children)) state namespace
-                    else
-                      print_sentences (Xml.Element ("", [], else_children)) state namespace
-              | children ->
-                    if variable = value then
-                      print_sentences (Xml.Element ("", [], children)) state namespace
-                    else
-                      ""
-            end
+            run_if_operation (=) variable value children state namespace;
 
-        | Xml.Element ("if", [("variable", variable_name);("higherThan", value)], children) ->
+        | Xml.Element ("if", [("variable", variable_name);(operation, value)], children) ->
             let variable : string = try Hashtbl.find namespace.var_tbl variable_name with
               | Not_found -> raise (Tag_exception "variable not found in <if> tag")
             in
 
             let variable : int option = int_of_string_opt variable in
-            let value : int option    = int_of_string_opt value in
+            let value    : int option = int_of_string_opt value in
+
+            let operation = match operation with
+              | "higherThan" -> (>)
+              | "lessThan"   -> (<)
+              | _ -> raise (Tag_exception ("Invalid operation in <if> tag: " ^ operation))
+            in
 
             (* Abort if we can't parse integer *)
             begin match variable, value with
@@ -2021,21 +2029,7 @@ module Make(Dice : D) : T = struct
               | _, _ -> ()
             end;
 
-            begin match children with
-              | [
-                  Xml.Element ("then", [], then_children);
-                  Xml.Element ("else", [], else_children)
-                ] ->
-                    if variable > value then
-                      print_sentences (Xml.Element ("", [], then_children)) state namespace
-                    else
-                      print_sentences (Xml.Element ("", [], else_children)) state namespace
-              | children ->
-                    if variable > value then
-                      print_sentences (Xml.Element ("", [], children)) state namespace
-                    else
-                      ""
-            end
+            run_if_operation operation variable value children state namespace;
 
         (* <if ...> *)
         | Xml.Element ("if", _, _) ->
