@@ -49,11 +49,15 @@
     <node id="0" connections="{path}">
       <print>1. Attack</print>
       <print>2. Flee</print>
-      <input name="action" label="Choose your action, player {player.name}: " validation="[1-2]"/>
+      <input name="path" label="Choose your action, player {player.name} (1-2): " validation="[1-2]"/>
     </node>
     <node id="1" connections="0">
       <!-- Player attacks the monster -->
-      <print>Player attacks!</print>
+      <print>{player.name} attacks! {player.attack} damage to {monster.name}.</print>
+      <set record="monster" field="hitpoints" value="{monster.hitpoints - player.attack}" />
+      <if content="{monster.hitpoints}" lessThan="0">
+        <print>DEAD</print>
+      </if>
     </node>
     <node id="2" connections="0">
       <print>Player flees!</print>
@@ -64,11 +68,11 @@
   <graph name="battle" start="0">
     <node id="0" connections="1">/start/</node>
     <node id="1" connections="2">
-      <print>Players attack</print>
+      <set variable="path" value="0" />
       <loop list="players" variable="player">
+        <print>Player {player.name} attacks</print>
         <!-- Always reset path to 0 before starting player attack graph. -->
-        <set variable="path" value="0" />
-        <print>{@player_attack}{@player_attack}</print>
+        <print>{@player_attack}{@player_attack}{@player_attack}</print>
       </loop>
     </node>
     <node id="2" connections="1">
