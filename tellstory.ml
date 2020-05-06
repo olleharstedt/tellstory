@@ -83,6 +83,7 @@ module Make(Dice : D) : T = struct
   exception Loop_exception of string
   exception If_exception of string
   exception Tag_exception of string
+  exception Ast_exception of string
   exception End_loop
 
   let rec string_of_exn ex = match ex with
@@ -2001,6 +2002,22 @@ module Make(Dice : D) : T = struct
 
             run_if_operation (=) content value children state namespace;
 
+        | Xml.Element ("if", [("content", content);(operation, value)], children) ->
+            let regexp  : Str.regexp = Str.regexp "\\{\\}" in
+            let content : string = Str.global_replace regexp "" content in
+            let content : string = eval_content content state namespace in
+
+            let variable : int option = int_of_string_opt content in
+            let value    : int option = int_of_string_opt value in
+
+            let operation = match operation with
+              | "higherThan" -> (>)
+              | "lessThan"   -> (<)
+              | _ -> raise (Tag_exception ("Invalid operation in <if> tag: " ^ operation))
+            in
+
+            run_if_operation operation variable value children state namespace;
+
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
             let variable = try Hashtbl.find namespace.var_tbl variable_name with
@@ -2214,15 +2231,27 @@ module Make(Dice : D) : T = struct
         string_of_int i
     | Plus (left, right) ->
         log_trace "eval_term: plus";
-        let left = eval_term left state namespace in
+        let left : string = eval_term left state namespace in
         log_trace (sprintf "left = %s" left);
-        let right = eval_term right state namespace in
+        let right : string = eval_term right state namespace in
         log_trace (sprintf "right = %s" right);
-        string_of_int ((int_of_string left) + (int_of_string right))
+        let left : int = try int_of_string left with 
+          | Failure _ -> raise (Ast_exception ("Plus: Could not get int of string from left value: " ^ left))
+        in
+        let right : int = try int_of_string right with
+          | Failure _ -> raise (Ast_exception ("Plus: Could not get int of string from right value: " ^ right))
+        in
+        string_of_int (left + right)
     | Minus (left, right) ->
         let left = eval_term left state namespace in
         let right = eval_term right state namespace in
-        string_of_int ((int_of_string left) - (int_of_string right))
+        let left : int = try int_of_string left with 
+          | Failure _ -> raise (Ast_exception ("Minus: Could not get int of string from left value: " ^ left))
+        in
+        let right : int = try int_of_string right with
+          | Failure _ -> raise (Ast_exception ("Minus: Could not get int of string from right value: " ^ right))
+        in
+        string_of_int (left - right)
 
   (**
    * Eval nameterm
