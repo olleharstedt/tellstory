@@ -34,9 +34,8 @@ let _ =
 
   let state = Tellstory.init_state () in
 
-  let string_story = try Tellstory.file_to_string filename state with
-  | ex ->
-      Printexc.to_string ex
+  let _ = try Tellstory.file_to_string filename state with
+    | ex -> Printexc.to_string ex
   in
   ()
   (*printf "%s\n" string_story;*)

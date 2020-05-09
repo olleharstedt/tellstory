@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
   <!-- Example with inline expression from input in graph node connections attribute -->
-  <variable name="path"><alt>1</alt></variable>
+  <variable name="path" value="1" />
 
   <graph name="conn_test" start="1">
     <node id="1" connections="{path}">

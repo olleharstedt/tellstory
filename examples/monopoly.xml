@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <!--
+       How many players?
+       If ... define record for player
+       Roll dice
+       Move
+       Check position
+       Buy? Move card to player? List, bag, stack? <bag name=""></bag> <addto bag=""></addto>
+        Move card between decks? Cards need id.
+       Next player
+       -->
+
+  <dice name="d6" sides="6" />
+
+  <input name="nr_of_players" label="Choose players (1-4): " validation="[1-4]"/>
+
+  <player>
+    <name>Bla</name>
+    <money>10000</money>
+  </player>
+
+  <!-- Define the chance deck -->
+  <deck name="chance" shuffle="true">
+    <card>
+      <print>Player x gets $100</print>
+      <set player="{current_player.name}" field="money" value="{current_player.money + 100}" />
+    </card>
+  </deck>
+
+  <if variable="nr_of_players" higherThan="0">
+    <input name="player1_name" label="Enter player one name (alphanumerical value): " validation="[a-zA-Z0-9]+" />
+    <variable name="player1_pos" value="0" />
+    <print>Player 1 name is {player1_name}</print>
+    <br/>
+  </if>
+
+  <nextPlayer variable="currentplayer"/>
+
+  <variable name="dice" value="0" />
+
+  <list name="players">
+    <player>
+      <name>Olle</name>
+    </player>
+  </list>
+  <loop list="players" variable="currentplayer">
+    <print>currentplayer name = {currentplayer.name}</print>
+    <br/>
+  </loop>
+
+  <loop until="endloop">
+    <input name="clickenter" label="Type enter to roll dice" validation="^$" />
+
+    <set variable="dice" value="{%d6 + %d6}" />
+    <print>You rolled {dice}.</print><br/>
+    <set variable="player1_pos" value="{player1_pos + dice}" />
+    <print>Your new position is {player1_pos}.</print><br/>
+
+    <!-- Calculate if this player has at least one complete street set -->
+    <if hasCompleteStreetSet="true">
+      <input name="yesno" label="Do you want to build house or hotel (y/n)? " validation="[yn]" />
+      <if variable="yesno" equals="y">
+        <!-- List all complete street sets for this player -->
+        <loop times="{nr_of_complete_sets}">
+          <print>Complete set: {nth_complete_set}</print>
+        </loop>
+        <input name="pickstreetset" label="For which street set do you want to build? " validation="[0-9]+" />
+      </if>
+    </if>
+
+    <!-- Delete player if money = 0 -->
+
+  </loop>
+</story>

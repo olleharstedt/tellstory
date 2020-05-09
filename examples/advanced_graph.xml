@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<story>
-  <deck name="monster">
+<story newline="print">
+  <deck name="monster" shuffle="true">
     <alt>orcs</alt>
     <alt>trolls</alt>
     <alt>skeletons</alt>
@@ -26,8 +26,7 @@
     <node id="4" connections="1" setFlag="endloop">Fountain</node>
   </graph>
 
-  <loop times="10">
-      <sentence>{@dungeon}</sentence>
-      <br/>
+  <loop until="endloop">
+      <print>{@dungeon}</print>
   </loop>
 </story>

@@ -45,6 +45,7 @@ module Make(Dice : D) : T = struct
   exception No_node_content of string
   exception Not_implemented
   exception Internal_error of string
+  exception State_exception of string
   exception No_such_lang of string
   exception No_such_direct_node of string
   exception Too_many_attributes of string
@@ -66,6 +67,8 @@ module Make(Dice : D) : T = struct
   exception Clear_exception of string
   exception Loop_exception of string
   exception If_exception of string
+  exception Tag_exception of string
+  exception Ast_exception of string
   exception End_loop
 
   let rec string_of_exn ex = match ex with
@@ -116,7 +119,10 @@ module Make(Dice : D) : T = struct
   }
 
   (** Types for storing records *)
-  type record = (string, string) Hashtbl.t
+  type record = {
+    name   : string;
+    values : (string, string) Hashtbl.t
+  }
 
   (** Type for storing <dice> tags *)
   type dice = {
@@ -124,27 +130,21 @@ module Make(Dice : D) : T = struct
     sides : int;
   }
 
-  (** Hash table to store macros. Macros are randomized each use. *)
-  (*
-  let macro_tbl = ((Hashtbl.create 20) : ((string, macro) Hashtbl.t))
+  (* Item for <list> *)
+  type list_item =
+    | Alt of alt
+    | Macro of macro
+    | Deck of deck
+    | Graph of graph
+    | Record of record
+    | Dice of dice
 
-  (** Hash table to store variables. Variables are only randomized once. *)
-  let var_tbl = ((Hashtbl.create 20) : ((string, string) Hashtbl.t))
-
-  (** Hash table to store records. Randomized once. *)
-  let record_tbl = ((Hashtbl.create 20) : ((string, record) Hashtbl.t))
-
-  (** Hash table for decks *)
-  let deck_tbl = ((Hashtbl.create 20) : ((string, deck) Hashtbl.t))
-  *)
-
-  (*
-  type namespace_element =
-  | Macro_tbl of (string, macro) Hashtbl.t
-  | Var_tbl of (string, string) Hashtbl.t
-  | Record_tbl of (string, record) Hashtbl.t
-  | Deck_tbl of (string, deck) Hashtbl.t
-  *)
+  (* <list> tag *)
+  type list_ = {
+    name      : string;
+    list_type : string;
+    items     : list_item list;
+  }
 
   type macro_tbl = (string, macro) Hashtbl.t
   type var_tbl = (string, string) Hashtbl.t
@@ -152,23 +152,26 @@ module Make(Dice : D) : T = struct
   type graph_tbl = (string, graph) Hashtbl.t
   type record_tbl = (string, record) Hashtbl.t
   type dice_tbl = (string, dice) Hashtbl.t
+  type list_tbl = (string, list_) Hashtbl.t
 
   (** Namespace of macros, variables, ... *)
   type namespace = {
-    name : string;
-    macro_tbl : macro_tbl;
-    var_tbl : var_tbl;
+    name       : string;
+    macro_tbl  : macro_tbl;
+    var_tbl    : var_tbl;
     record_tbl : record_tbl;
-    deck_tbl : deck_tbl;
-    graph_tbl : graph_tbl;
-    dice_tbl : dice_tbl;
+    deck_tbl   : deck_tbl;
+    graph_tbl  : graph_tbl;
+    dice_tbl   : dice_tbl;
+    list_tbl   : list_tbl;
   }
 
   type namespace_tbl = (string, namespace) Hashtbl.t
 
-  (** Explicit state, pass around every where... *)
+  (** Explicit state, pass around everywhere... *)
   (** TODO: Include default namespace? *)
   type state = {
+    config        : (string * string) list;
     namespace_tbl : namespace_tbl;
   }
 
@@ -354,12 +357,13 @@ module Make(Dice : D) : T = struct
   let new_namespace name =
     {
       name;
-      var_tbl = ((Hashtbl.create 20) : var_tbl);
-      macro_tbl = ((Hashtbl.create 20) : macro_tbl);
+      var_tbl    = ((Hashtbl.create 20) : var_tbl);
+      macro_tbl  = ((Hashtbl.create 20) : macro_tbl);
       record_tbl = ((Hashtbl.create 20) : record_tbl);
-      deck_tbl = ((Hashtbl.create 20) : deck_tbl);
-      graph_tbl = ((Hashtbl.create 20) : graph_tbl);
-      dice_tbl = ((Hashtbl.create 20) : dice_tbl);
+      deck_tbl   = ((Hashtbl.create 20) : deck_tbl);
+      graph_tbl  = ((Hashtbl.create 20) : graph_tbl);
+      dice_tbl   = ((Hashtbl.create 20) : dice_tbl);
+      list_tbl   = ((Hashtbl.create 20) : list_tbl);
     }
 
   (**
@@ -397,6 +401,22 @@ module Make(Dice : D) : T = struct
       Hashtbl.add state.namespace_tbl name new_namespace;
       new_namespace
     end
+
+  (**
+   * Returns true if config with $name is on in $state.
+   *
+   * @param state state
+   * @param name string
+   * @return bool
+   *)
+  let config_is_on (state : state) (name : string) : bool =
+    let conf : (string * string) option = List.find_opt
+      (fun i -> match i with | n, v -> name = n)
+      state.config
+    in
+    match conf with
+      | Some (n, v) -> true
+      | None -> false
 
   (**
    * @param string expr
@@ -532,7 +552,7 @@ module Make(Dice : D) : T = struct
    * @param alt XML
    * @return string list option
    *)
-  let get_flags alt =
+  let get_flags (alt : Xml.xml) : string list option =
     let flags = match alt with
       | Xml.Element (_, ["setFlag", str], _) ->  Some str
       (*| Xml.Element (_, [attr, str], _) ->  raise (Illegal_attribute_name attr)*)
@@ -775,7 +795,7 @@ module Make(Dice : D) : T = struct
     let record = try Hashtbl.find namespace.record_tbl record_name with
       Not_found -> raise (Record_exception (sprintf "No such record: '%s'" record_name))
     in
-    let var = try Hashtbl.find record var_name with
+    let var = try Hashtbl.find record.values var_name with
       Not_found -> raise (Record_exception (sprintf "No such tag '%s' in record '%s'" var_name record_name))
     in
     var
@@ -929,8 +949,10 @@ module Make(Dice : D) : T = struct
     begin match next_node.content, next_node.children with
       | Some s, [] -> eval_content s state namespace
       | None, [] -> raise (Graph_exception "Invalid graph node: Empty node content, and no XML children")
-      | None, [child] -> print_tag child state namespace
-      | _, _ -> raise (Graph_exception "Unsupported combination of string and XML children in graph node")
+      | None, children ->
+          List.iter (fun c -> ignore (print_tag c state namespace)) children;
+          ""
+      | _, _ -> raise (Graph_exception ("Unsupported combination of string and XML children in graph node"))
     end
 
   (**
@@ -1162,7 +1184,8 @@ module Make(Dice : D) : T = struct
    * @return string
    *)
   and eval_content (con : string) (state : state) (namespace : namespace) =
-    let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
+    log_trace "eval_content";
+    let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\-\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" con with not_found -> [||] in
     let matches_and_replacements = Array.map (fun m ->
         let substrings = Pcre.get_substrings m in
         let s_with_braces = substrings.(0) in
@@ -1177,7 +1200,7 @@ module Make(Dice : D) : T = struct
       let match_with_brackets_quote = Pcre.quote match_with_braces in
       new_con := Pcre.replace_first ~pat:match_with_brackets_quote ~templ:replacement !new_con;
       (* Check if eval was evaled to another pattern. *)
-      let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
+      let matches = try Pcre.exec_all ~pat:"{[\"$#%@:\\+\\-\\.\\\\\\|\\(\\)!?èÈòÒùÙàÀìÌỳỲéÉóÓúÚíÍáÁýÝẼẽõÕÃãŨũĩĨêâîûÊÂÛÎëËüÜïöåäöÅÄÖa-zA-Z0-9_\\s]+}" replacement with not_found -> [||] in
       if Array.length matches > 0 then begin
         let final_replacement = eval_content replacement state namespace in
         let replacement_quote = Pcre.quote replacement in
@@ -1328,13 +1351,14 @@ module Make(Dice : D) : T = struct
       ()
 
   (**
-   * Check if record definition is valid
+   * Return true if record definition is valid, both for records with and without <alt> children.
    *
-   * @param name string
-   * @param alts Xml.Element list
+   * @param string name
+   * @param Xml.Element list children
+   * @param record_tbl record_tbl
    * @return bool
    *)
-  and record_is_ok name alts record_tbl =
+  and record_is_ok (name : string) (children : Xml.xml list) (record_tbl : record_tbl) : bool =
     (* Check so record name is free *)
     if Hashtbl.mem record_tbl name then begin
       log_trace "record_is_ok";
@@ -1342,33 +1366,39 @@ module Make(Dice : D) : T = struct
       raise (Record_exception (sprintf "Record name '%s' is already in use" name))
     end;
 
-    (* Check so alts are not empty *)
-    if List.length alts = 0 then begin
+    (* Check so children are not empty *)
+    if List.length children = 0 then begin
       raise (Record_exception (sprintf "Record '%s' has no <alt>" name))
     end;
 
+    (* Assume that if first child is <alt>, it's an <alt>-record *)
+    let use_alt : bool = match List.hd children with
+      | Xml.Element ("alt", _, _) -> true
+      | _ -> false
+    in
+
     (* Each alt must have equal number of children with same structure *)
-    let compare alts = match alts with
-    | [] -> true
-    | x::xs -> List.for_all (fun alt -> match x, alt with
-        | Xml.Element ("alt", _, subtags), Xml.Element ("alt", _, subtags2) -> begin
-            try
-              (* Check so each var has same tag name *)
-              List.for_all2 (fun var1 var2 -> match var1, var2 with
-                | Xml.Element (name1, _, [Xml.PCData _]), Xml.Element (name2, _, [Xml.PCData _]) ->
-                    name1 = name2
-                | _ -> false
-              ) subtags subtags2
-            with
-              Invalid_argument _ ->
-                raise (Record_exception (sprintf "Not equal number of <alt> in <record> '%s'" name))
-            end
-        | _, _ -> false
-    ) xs
+    let compare children = match children with
+      | [] -> true
+      | x::xs -> List.for_all (fun alt -> match x, alt with
+          | Xml.Element ("alt", _, subtags), Xml.Element ("alt", _, subtags2) -> begin
+              try
+                (* Check so each var has same tag name *)
+                List.for_all2 (fun var1 var2 -> match var1, var2 with
+                  | Xml.Element (name1, _, [Xml.PCData _]), Xml.Element (name2, _, [Xml.PCData _]) ->
+                      name1 = name2
+                  | _ -> false
+                ) subtags subtags2
+              with
+                Invalid_argument _ ->
+                  raise (Record_exception (sprintf "Not equal number of <alt> in <record> '%s'" name))
+              end
+          | _, _ -> false
+      ) xs
     in
 
     (* Raise exception if alts are not equal *)
-    if not (compare alts) then begin
+    if use_alt && not (compare children) then begin
       raise (Record_exception (sprintf "Wrong structure in <record> '%s')" name))
     end;
 
@@ -1418,31 +1448,41 @@ module Make(Dice : D) : T = struct
       Hashtbl.add namespace.var_tbl name content
 
   (**
-   * Adds record to record hash table
+   * Parse name and XML and return a record
    *
-   * @param name string
-   * @param alts Xml.Element list
-   * @param record_tbl record_tbl
-   * @return void
+   * @param string name
+   * @param Xml.xml list alts
+   * @return record
    *)
-  and save_record name alts record_tbl =
-
-    (* Choose alt *)
-    let alt = match List.nth alts (Dice.dice (List.length alts)) with
-      | alt -> alt
-      | exception Not_found -> raise (Record_exception "No alt?")
+  and parse_record (name : string) (children : Xml.xml list) : record =
+    (* Assume that if first child is <alt>, it's an <alt>-record *)
+    let use_alt : bool = match List.hd children with
+      | Xml.Element ("alt", _, _) -> true
+      | _ -> false
+    in
+    (* Choose alt randomly OR, if no <alt> are used, pick all children. *)
+    let alt : Xml.xml = if use_alt then
+      match List.nth children (Dice.dice (List.length children)) with
+        | alt -> alt
+        | exception Not_found -> raise (Record_exception "No alt?")
+    else
+      Xml.Element ("alt", [], children)
     in
 
     (* Store flags if present *)
-    let flags_list = get_flags alt in
+    let flags_list : string list option = get_flags alt in
     store_flags flags_list;
 
     (* Store vars from alt in record hash table *)
-    let record = Hashtbl.create 20 in
+    let record = {
+      name;
+      values = Hashtbl.create 20;
+    }
+    in
     List.iter (fun var ->
       match var with
       | Xml.Element (name, [], [Xml.PCData content]) ->
-          Hashtbl.add record name content
+          Hashtbl.add record.values name content
       | Xml.Element (var_name, _, []) ->
           raise (Record_exception (sprintf "No empty content allowed in '%s' for record '%s'" var_name name))
       | Xml.Element (var_name, _, _) ->
@@ -1450,20 +1490,21 @@ module Make(Dice : D) : T = struct
       | _ ->
           raise (Record_exception (sprintf "Unknown error in record '%s'" name))
     ) (Xml.children alt);
+    record
+
+  (**
+   * Adds record to record hash table
+   *
+   * @param name string
+   * @param alts Xml.Element list
+   * @param record_tbl record_tbl
+   * @return unit
+   *)
+  and store_record (name : string) (alts : Xml.xml list) (record_tbl : record_tbl) : unit =
+    let record : record = parse_record name alts in
 
     (* Add record to records hash table *)
     Hashtbl.add record_tbl name record
-
-  (**
-   * Parse an xml structure as deck
-   *
-   * @param xml Xml.xml
-   * @return deck
-   *)
-  (*
-  let parse_deck xml : deck = match xml with
-    | _ -> ()
-  *)
 
   (**
    * Store deck in deck_tbl
@@ -1491,6 +1532,70 @@ module Make(Dice : D) : T = struct
     else
       Hashtbl.add graph_tbl graph.name graph
 
+  (**
+   * Parse children in <list> tag to list items.
+   *
+   * @param string list_type
+   * @param Xml.Element list children
+   * @return list_item list
+   *)
+  and parse_list_items (list_type : string) (children : Xml.xml list) : list_item list =
+    match list_type with
+      | "record" ->
+          List.map (fun xml -> match xml with
+            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts)
+            | _ -> raise (Tag_exception "Unsupported record list element")
+          ) children
+      | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
+
+  (**
+   * Store list in list table.
+   *
+   * @param string name List name
+   * @param list_ list_
+   * @param list_
+   *)
+  and store_list (name : string) (list_ : list_) (namespace : namespace) : unit =
+    log_trace "store_list";
+    if Hashtbl.mem namespace.list_tbl name then
+      raise (Tag_exception (sprintf "List with name '%s' already exists" name))
+    else begin
+      (* Store all list items. *)
+      List.iter (fun item -> match item with
+        | Record record -> Hashtbl.add namespace.record_tbl record.name record
+        | _ -> raise (Tag_exception "Unsupprted item type in store_list")
+      ) list_.items;
+      Hashtbl.add namespace.list_tbl name list_
+    end
+
+  (**
+   * Run an if statement if content op value
+   *
+   * @param op Operation to apply (=, >, <)
+   * @param content Left-hand value
+   * @param value Right-hand value
+   * @param children
+   * @param state
+   * @param namespace
+   * @return string
+   *)
+  (*and run_if_operation (op : 'a -> 'a -> bool) (content : 'a) (value : 'a) (children : Xml.xml list) (state : state) (namespace : namespace) : string =*)
+  and run_if_operation: 'a. ('a -> 'a -> bool) -> 'a -> 'a -> Xml.xml list -> state -> namespace -> string = fun op content value children state namespace ->
+    begin match children with
+      | [
+          Xml.Element ("then", [], then_children);
+          Xml.Element ("else", [], else_children)
+        ] ->
+            if content = value then
+              print_sentences (Xml.Element ("", [], then_children)) state namespace
+            else
+              print_sentences (Xml.Element ("", [], else_children)) state namespace
+      | children ->
+            if content = value then
+              print_sentences (Xml.Element ("", [], children)) state namespace
+            else
+              ""
+    end
 
   (**
    * @param xml_element
@@ -1498,25 +1603,26 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  and print_tag (xml_element : Xml.xml) (state : state) (namespace : namespace) =
+  and print_tag (xml_element : Xml.xml) (state : state) (namespace : namespace) : string =
       let result : string = try begin match xml_element with
 
         (* <sentence attr="...">...</sentence> *)
         (* Never create namespace when using <sentence>, only get *)
         | Xml.Element ("sentence", attrs, _)
         | Xml.Element ("print", attrs, _) when (flags_is_ok attrs) ->
+            let newline : string = if config_is_on state "newline" then "\n" else "" in
             let namespace_name = find_attribute attrs "namespace" in
             begin match namespace_name with
             | None ->
-              print_sentence xml_element state namespace ^ " "
+              print_sentence xml_element state namespace ^ " " ^ newline
             | Some ("namespace", namespace_name) ->
                 let local_namespace = get_namespace state namespace_name in
                 begin match local_namespace with
                 | None ->
                     let local_namespace = create_namespace state namespace_name in
-                    print_sentence xml_element state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " " ^ newline
                 | Some local_namespace ->
-                    print_sentence xml_element state local_namespace ^ " "
+                    print_sentence xml_element state local_namespace ^ " " ^ newline
                 end
             | Some (attr, _) ->
                 let sen = String.trim (fetch_content xml_element) in
@@ -1524,8 +1630,11 @@ module Make(Dice : D) : T = struct
             end
         | Xml.Element ("sentence", [], _)
         | Xml.Element ("print", [], _) ->
-            print_sentence xml_element state namespace ^ " "
+            let newline : string = if config_is_on state "newline" then "\n" else "" in
+            print_sentence xml_element state namespace ^ " " ^ newline
+
         (* Empty sentence *)
+        (* TODO: Why would anyone do this? *)
         | Xml.Element ("sentence", _, _)
         | Xml.Element ("print", _, _) ->
             ""
@@ -1578,7 +1687,7 @@ module Make(Dice : D) : T = struct
             in
             begin
               try 
-                for i = 1 to 999 do
+                for i = 1 to 9999 do
                     str := !str ^ (List.fold_left fold_aux "" children)
                 done;
               with
@@ -1588,9 +1697,44 @@ module Make(Dice : D) : T = struct
             (*!str*)
             ""
 
+        | Xml.Element ("loop", [("list", list_name); ("variable", variable)], children) ->
+            let list_ = try Hashtbl.find namespace.list_tbl list_name with
+              | Not_found -> raise (Tag_exception (sprintf "Could not find list with name %s" list_name))
+            in
+            (* Loop through all items with all XMl children of the loop. *)
+            List.iter (fun list_item ->
+              List.iter (fun child ->
+                begin match list_item with
+                  | Record record -> Hashtbl.replace namespace.record_tbl variable record
+                  | _ -> raise (Tag_exception "Unsupported list item type in print_tags (loop)")
+                end;
+                (* TODO: Don't return string, but use a factored out output buffer instead *)
+                ignore (print_tag child state namespace);
+              ) children;
+            ) list_.items;
+            ""
+
         (* <loop> with faulty attributes *)
         | Xml.Element ("loop", _, _) ->
             raise (Loop_exception "Faulty loop construct - no 'times' or 'rand' attribute found")
+
+        | Xml.Element ("list", [("name", list_name)], children) ->
+            let list_type : string = match List.hd children with
+              | Xml.Element ("record", _, _) -> "record"
+              | _ -> raise (Tag_exception "Unsupported list type")
+            in
+            let items : list_item list = parse_list_items list_type children in
+            let list_ : list_ = {
+              name = list_name;
+              list_type;
+              items;
+            } in
+            (* NB: Have to pass entire namespace, since store_list stores all its items. *)
+            store_list list_name list_ namespace;
+            ""
+
+        | Xml.Element ("list", _, _) ->
+            raise (Tag_exception "Invalid list definition")
 
         (* <setFlag name="flagname" /> *)
         | Xml.Element ("setFlag", [("name", flagnames)], _) ->
@@ -1649,21 +1793,21 @@ module Make(Dice : D) : T = struct
             ""
 
         (* <record> *)
-        | Xml.Element ("record", attrs, alts) ->
+        | Xml.Element ("record", attrs, children) ->
             let record_name = find_attribute attrs "name" in
             let namespace_name = find_attribute attrs "namespace" in
             begin match record_name, namespace_name with
             | Some ("name", record_name), None ->
-                if record_is_ok record_name alts namespace.record_tbl then begin
-                  save_record record_name alts namespace.record_tbl;
+                if record_is_ok record_name children namespace.record_tbl then begin
+                  store_record record_name children namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
                   ""
             | Some ("name", record_name), Some ("namespace", namespace_name) ->
                 let namespace = get_namespace_or_create state namespace_name in
-                if record_is_ok record_name alts namespace.record_tbl then begin
-                  save_record record_name alts namespace.record_tbl;
+                if record_is_ok record_name children namespace.record_tbl then begin
+                  store_record record_name children namespace.record_tbl;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -1739,6 +1883,7 @@ module Make(Dice : D) : T = struct
 
         (* <input name="variablename" label="some question"/> *)
         | Xml.Element ("input", [("name", name);("label", label)], []) ->
+            let label : string = eval_content label state namespace in
             printf "%s" label;
             flush_all ();
             let buffer = input_line stdin in
@@ -1748,6 +1893,7 @@ module Make(Dice : D) : T = struct
         (* <input name="path" label="Choose your path: " regexp="[1-4]"/> *)
         | Xml.Element ("input", [("name", name);("label", label); ("validation", validation)], []) ->
             let regexp : Str.regexp = Str.regexp validation in
+            let label  : string = eval_content label state namespace in
             printf "%s" label;
             flush_all ();
             let matches : bool ref  = ref false in
@@ -1763,29 +1909,104 @@ module Make(Dice : D) : T = struct
             done;
             ""
 
+        | Xml.Element ("input", _, _) ->
+            raise (Tag_exception "Invalid input definition")
+
+        | Xml.Element ("if", [("content", content);("equals", value)], children) ->
+            (* Strip {} from string *)
+            let regexp  : Str.regexp = Str.regexp "\\{\\}" in
+            let content : string = Str.global_replace regexp "" content in
+            let content : string = eval_content content state namespace in
+
+            run_if_operation (=) content value children state namespace;
+
+        | Xml.Element ("if", [("content", content);(operation, value)], children) ->
+            let regexp  : Str.regexp = Str.regexp "\\{\\}" in
+            let content : string = Str.global_replace regexp "" content in
+            let content : string = eval_content content state namespace in
+
+            let variable : int option = int_of_string_opt content in
+            let value    : int option = int_of_string_opt value in
+
+            let operation = match operation with
+              | "higherThan" -> (>)
+              | "lessThan"   -> (<)
+              | _ -> raise (Tag_exception ("Invalid operation in <if> tag: " ^ operation))
+            in
+
+            run_if_operation operation variable value children state namespace;
+
         (* <if variable="variablename" equals="value"> ... </if> *)
         | Xml.Element ("if", [("variable", variable_name);("equals", value)], children) ->
-            let variable = Hashtbl.find namespace.var_tbl variable_name in
+            let variable = try Hashtbl.find namespace.var_tbl variable_name with
+              | Not_found -> raise (Tag_exception "variable not found in <if> tag")
+            in
 
-            begin match children with
-              | [
-                  Xml.Element ("then", [], then_children);
-                  Xml.Element ("else", [], else_children)
-                ] ->
-                    if variable = value then
-                      print_sentences (Xml.Element ("", [], then_children)) state namespace
-                    else
-                      print_sentences (Xml.Element ("", [], else_children)) state namespace
-              | children ->
-                    if variable = value then
-                      print_sentences (Xml.Element ("", [], children)) state namespace
-                    else
-                      ""
-            end
+            run_if_operation (=) variable value children state namespace;
+
+        | Xml.Element ("if", [("variable", variable_name);(operation, value)], children) ->
+            let variable : string = try Hashtbl.find namespace.var_tbl variable_name with
+              | Not_found -> raise (Tag_exception "variable not found in <if> tag")
+            in
+
+            let variable : int option = int_of_string_opt variable in
+            let value    : int option = int_of_string_opt value in
+
+            let operation = match operation with
+              | "higherThan" -> (>)
+              | "lessThan"   -> (<)
+              | _ -> raise (Tag_exception ("Invalid operation in <if> tag: " ^ operation))
+            in
+
+            (* Abort if we can't parse integer *)
+            begin match variable, value with
+              | None, _ | _, None -> raise (Tag_exception "cannot parse integer in <if higherThan> tag")
+              | _, _ -> ()
+            end;
+
+            run_if_operation operation variable value children state namespace;
 
         (* <if ...> *)
         | Xml.Element ("if", _, _) ->
             raise (If_exception ("Invalid if definition"))
+
+        (* <set variable="var" value="foo" /> *)
+        | Xml.Element ("set", [("variable", var_name); ("value", value)], []) ->
+            (* Abort if variable is not defined before *)
+            if not (Hashtbl.mem namespace.var_tbl var_name) then
+              raise (Tag_exception "variable not found in <set> tag");
+
+            let value = eval_content value state namespace in
+            Hashtbl.replace namespace.var_tbl var_name value;
+            ""
+
+        | Xml.Element ("set", [("record", record_name); ("field", field_name); ("value", new_value)], []) ->
+            let record : record = try Hashtbl.find namespace.record_tbl record_name with
+              | Not_found -> raise (Tag_exception (sprintf "Found no record with name %s in <set> tag" record_name))
+            in
+            let value : string = eval_content new_value state namespace in
+            Hashtbl.replace record.values field_name value;
+            ""
+
+        | Xml.Element ("set", _, _) ->
+            raise (Tag_exception "Invalid set definition");
+
+        (* <add to="<type>" name="<name>">...</add> *)
+        | Xml.Element ("add", [("to", target_type); ("name", target_name)], children) ->
+            begin match target_type with
+              | "list" ->
+                  let target_list : list_ = try Hashtbl.find namespace.list_tbl target_name with
+                    | Not_found -> raise (Tag_exception (sprintf "Found no list to add to with name %s" target_name))
+                  in
+                  let new_items : list_item list = parse_list_items target_list.list_type children in
+                  if List.length new_items > 0 then begin
+                    let new_list : list_ = {target_list with items = target_list.items @ new_items} in
+                    Hashtbl.replace namespace.list_tbl new_list.name new_list;
+                  end;
+                  ()
+              | _ -> raise (Tag_exception ("Invalid target type for <add> tag"))
+            end;
+            ""
 
         (* Unknown tag or error *)
         | Xml.Element (what, _, _) ->
@@ -1794,15 +2015,13 @@ module Make(Dice : D) : T = struct
         (* Only string in tag, no XML *)
         | Xml.PCData content ->
             eval_content content state namespace
-        | _ ->
-            let sen = String.trim (fetch_content xml_element) in
-            raise (Sentence_problem (sen, string_of_exn Error_parsing_xml))
       end with
         | ex ->
-            log_trace "exception in print_sentences";
-            log_trace (Printexc.to_string ex);
-            log_trace (Printexc.get_backtrace ());
-            string_of_exn ex
+            print_endline (Printexc.to_string ex);
+            print_endline (Printexc.get_backtrace ());
+            flush_all ();
+            (*string_of_exn ex*)
+            ""
       in 
       if result <> "" then begin
         log_trace "print_tags: printing result";
@@ -1840,11 +2059,14 @@ module Make(Dice : D) : T = struct
    * @return state
    *)
   and init_state () =
-    let global_namespace = new_namespace "global" in
-    let namespace_tbl = (Hashtbl.create 10 : namespace_tbl) in
+    let global_namespace : namespace = new_namespace "global" in
+    let namespace_tbl : (string, namespace) Hashtbl.t = (Hashtbl.create 10 : namespace_tbl) in
     Hashtbl.add namespace_tbl "global" global_namespace;
     (* Return state *)
-    {namespace_tbl}
+    {
+      config = [];
+      namespace_tbl;
+    }
 
   (**
    * Return string of XML-file with story etc.
@@ -1856,15 +2078,14 @@ module Make(Dice : D) : T = struct
    * @TODO: Factor out so this can be used both from command line and web page.
    *)
   and file_to_string filename (state : state) =
-
-    let xml = try Xml.parse_file filename with
+    let xml : Xml.xml = try Xml.parse_file filename with
       | Xml.Error (msg, pos) ->
           print_endline (sprintf "Error while parsing XML file '%s'" filename);
           print_int (Xml.line pos);
           print_endline (": " ^ Xml.error_msg msg);
           exit 0;
     in
-    let story = fetch_node xml "story" in
+    let story : Xml.xml = fetch_node xml "story" in
     story_to_string story state
 
   (**
@@ -1876,17 +2097,26 @@ module Make(Dice : D) : T = struct
    *)
   and story_to_string story state =
     (* Get possible namespace attribute for <story> *)
-    let attrs = Xml.attribs story in
-    let namespace_attr = find_attribute attrs "namespace" in
+    let attrs : (string * string) list            = Xml.attribs story in
+    let namespace_attr : (string * string) option = find_attribute attrs "namespace" in
+    let newline_attr : (string * string) option   = find_attribute attrs "newline" in
+    (* Check for newline config *)
+    let state : state = match newline_attr with
+      | Some ("newline", "print") -> {state with config = ("newline", "") :: state.config}
+      | Some ("newline", s) -> raise (State_exception ("Invalid value for newline attribute: " ^ s))
+      | Some (_, _) -> raise (Internal_error "Messed up newline setting")
+      | None -> state
+    in
+    (* Check for top-level namespace *)
     begin match namespace_attr with
-    | Some ("namespace", namespace_name) ->
-        let namespace = get_namespace_or_create state namespace_name in
-        print_sentences story state namespace
-    | None ->
-        let global_namespace = Hashtbl.find state.namespace_tbl "global" in
-        print_sentences story state global_namespace
-    | _ ->
-        raise (Internal_error "Couldn't find namespace attribute for story tag")
+      | Some ("namespace", namespace_name) ->
+          let namespace = get_namespace_or_create state namespace_name in
+          print_sentences story state namespace
+      | None ->
+          let global_namespace = Hashtbl.find state.namespace_tbl "global" in
+          print_sentences story state global_namespace
+      | _ ->
+          raise (Internal_error "Couldn't find namespace attribute for story tag")
     end
 
   (** Evaluate AST, part of template lang. TODO: Factor out in own module? How? Interdependencies. *)
@@ -1915,6 +2145,31 @@ module Make(Dice : D) : T = struct
         eval_dice dice_name number_of_dice namespace
     | Input (variable_name) ->
         eval_input variable_name state namespace
+    | Int i ->
+        string_of_int i
+    | Plus (left, right) ->
+        log_trace "eval_term: plus";
+        let left : string = eval_term left state namespace in
+        log_trace (sprintf "left = %s" left);
+        let right : string = eval_term right state namespace in
+        log_trace (sprintf "right = %s" right);
+        let left : int = try int_of_string left with 
+          | Failure _ -> raise (Ast_exception ("Plus: Could not get int of string from left value: " ^ left))
+        in
+        let right : int = try int_of_string right with
+          | Failure _ -> raise (Ast_exception ("Plus: Could not get int of string from right value: " ^ right))
+        in
+        string_of_int (left + right)
+    | Minus (left, right) ->
+        let left = eval_term left state namespace in
+        let right = eval_term right state namespace in
+        let left : int = try int_of_string left with 
+          | Failure _ -> raise (Ast_exception ("Minus: Could not get int of string from left value: " ^ left))
+        in
+        let right : int = try int_of_string right with
+          | Failure _ -> raise (Ast_exception ("Minus: Could not get int of string from right value: " ^ right))
+        in
+        string_of_int (left - right)
 
   (**
    * Eval nameterm
@@ -1980,8 +2235,8 @@ module Make(Dice : D) : T = struct
           (*
           let tok = Lexing.lexeme linebuf in
           *)
-          (* raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf)))) *)
-          raise (Parser_error (sprintf "Could not parse '%s'" match_ ))
+          raise (Parser_error (sprintf "Could not parse '%s': error at %c" match_ (String.get match_ (Lexing.lexeme_start linebuf))))
+          (*raise (Parser_error (sprintf "Could not parse '%s'" match_ ))*)
       | Failure msg ->
           let open Lexing in
           raise (Internal_error (sprintf "line = %d; col = %d" linebuf.lex_curr_p.pos_lnum linebuf.lex_curr_p.pos_cnum))

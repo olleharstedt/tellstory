@@ -29,6 +29,11 @@ Outermost tag. Mandatory.
       <!-- Content here -->
     </story>
 
+Some configuration goes into the `<story>` tag. Right now, this is supported:
+
+* namespace - name of namespace for this story (used when including files)
+* newline="print" - when set, adds a newline to every print or sentence tag to avoid writing `<br/>`
+
 #### Sentence
 
 The sentence is the fundamental building block. A simple sentence will be printed as is.
@@ -188,6 +193,8 @@ or
 > she took her things and left.
 
 The `<alt>`:s in the record must have exactly the same inner structure, in this case `<he>` and `<his>`. Then you use the inline dot-notation `{like.this}` to access the records fields.
+
+TODO: Use record without any `<alt>`, e.g. for player and monster data (together with `<list>` etc).
 
 #### Decks
 
@@ -419,9 +426,9 @@ A node can point to itself as a connection. You can also repeat the same number 
       <node id="2" connections="1">Happens rarely and only one at a time</node>
     </graph>
 
-TODO: Graph nodes can set flags.
+TODO: Graph nodes can set flags, e.g. to exit a loop.
 
-TODO: Nodes with <input> in node
+TODO: Nodes with `<input>` in node to choose connection in graph.
 
 TODO: connections can be inline expression
 
@@ -433,15 +440,24 @@ Currently work-in-progress.
     <sleep time="1"/>
     <input name="name" label="What's your name, traveller? "/>
     <input name="path" label="Choose your path (1-4): " validation="[1-4]" />
-    <if variable="name" equals="asd">
+    <if variable="name" equals="asd">...</if>
     <if ...><then></then><else></else></if>
+    <if variable="var" higherThan="12">...</if> (* Only for integers *)
+    <if content="{eval this}" equals="12">...</if>
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
+    <set variable="var1" value="foo" />
+    <set record="player" field="hitpoints" value="{player.hitpoints - 1}" />
+    <list><record ...></list>
+    <add to="list" name="listName">...</add>
+    TODO: <remove from="list" name="asd" item="id"...
+    TODO: add to deck, macro, graph
+    +, -
+    TODO: *, /, floats
 
 Possible future features
 ------------------------
 
-* Shuffle deck when cards are empty? `<deck name="deck1" shuffle="true">`.
 * Unset flag?
 * Many stories in one file, choose one randomly.
 * Export to PDF or markdown.
@@ -453,14 +469,22 @@ Possible future features
 * Markov chains...?
 * Functions (filters) inline to change e.g. upper/lower case {uppercase(variable)}. Or bold/cursive? But can just as well do *{somethinginbold}*?
 * Random numbers... Int, float? Char? "Pick random number of cards."
-* Normal distribution (useful for age)
+* Normal distribution (useful for age, weight, etc)
 * Nesting namespaces
 * Simplify declaration of sing/plur records. How?
 * All flags are global?
 * Graphs with random start number
 * Multiplayer
 * Graph combat example
-* Monopoly example
+* Monopoly example - requires state? Move card from deck to player's bag or slot, card needs id etc; slot? brick? Move card from deck to hand? Might as well use Tones of Tales.
+  `<player>`, `<nextPlayer variable="currentplayer"/>`, `<slot>`, `<brick>` that can be moved to slots; cards that can apply to active player. Player's turn is like a graph?
+* Need to loop a list? players, monsters, npc, decks?
+* `<monster>` tag for combat?
+* `<npc>` tag for trade, dialog?
+* `<dialog>` tag for easy dialog graphs?
+* `<lobby>` for remote play
+* Non-turn based play?
+* No clear separation between tags that declare something and tags to do something?
 
 TODO
 ----
