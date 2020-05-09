@@ -458,6 +458,8 @@ Currently work-in-progress.
     TODO: <print list="name" field="fieldname"/>
     TODO: <assert variable="" /> ? list_item?
     TODO: <loop graph="asd" until="" /> untilNode? untilFlag? untilnode, untilflag
+    TODO: <pick from="list" name="players" record="player" />
+    TODO: Equipment
 
 Possible future features
 ------------------------
