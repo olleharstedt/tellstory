@@ -1781,7 +1781,7 @@ module Make(Dice : D) : T = struct
             (*!str*)
             ""
 
-        | Xml.Element ("loop", [("list", list_name); ("variable", variable)], children) ->
+        | Xml.Element ("loop", [("list", list_name); ("record", variable)], children) ->
             let list_ = try Hashtbl.find namespace.list_tbl list_name with
               | Not_found -> raise (Tag_exception (sprintf "Could not find list with name %s" list_name))
             in
