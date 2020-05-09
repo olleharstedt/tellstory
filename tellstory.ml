@@ -1536,7 +1536,7 @@ module Make(Dice : D) : T = struct
    * @param Xml.xml list alts
    * @return record
    *)
-  and parse_record (name : string) (children : Xml.xml list) : record =
+  and parse_record (name : string) (children : Xml.xml list) (state : state) (namespace : namespace) : record =
     (* Assume that if first child is <alt>, it's an <alt>-record *)
     let use_alt : bool = match List.hd children with
       | Xml.Element ("alt", _, _) -> true
@@ -1564,6 +1564,7 @@ module Make(Dice : D) : T = struct
     List.iter (fun var ->
       match var with
       | Xml.Element (name, [], [Xml.PCData content]) ->
+          let content : string = eval_content content state namespace in
           Hashtbl.add record.values name content
       | Xml.Element (var_name, _, []) ->
           raise (Record_exception (sprintf "No empty content allowed in '%s' for record '%s'" var_name name))
@@ -1582,8 +1583,8 @@ module Make(Dice : D) : T = struct
    * @param record_tbl record_tbl
    * @return unit
    *)
-  and store_record (name : string) (alts : Xml.xml list) (record_tbl : record_tbl) : unit =
-    let record : record = parse_record name alts in
+  and store_record (name : string) (alts : Xml.xml list) (record_tbl : record_tbl) (state : state) (namespace : namespace) : unit =
+    let record : record = parse_record name alts state namespace in
 
     (* Add record to records hash table *)
     Hashtbl.add record_tbl name record
@@ -1621,11 +1622,11 @@ module Make(Dice : D) : T = struct
    * @param Xml.Element list children
    * @return list_item list
    *)
-  and parse_list_items (list_type : string) (children : Xml.xml list) : list_item list =
+  and parse_list_items (list_type : string) (children : Xml.xml list) (state : state) (namespace : namespace) : list_item list =
     match list_type with
       | "record" ->
           List.map (fun xml -> match xml with
-            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts)
+            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts state namespace)
             | _ -> raise (Tag_exception "Unsupported record list element")
           ) children
       | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
@@ -1805,7 +1806,7 @@ module Make(Dice : D) : T = struct
               | Xml.Element ("record", _, _) -> "record"
               | _ -> raise (Tag_exception "Unsupported list type")
             in
-            let items : list_item list = parse_list_items list_type children in
+            let items : list_item list = parse_list_items list_type children state namespace in
             let list_ : list_ = {
               name = list_name;
               list_type;
@@ -1881,7 +1882,7 @@ module Make(Dice : D) : T = struct
             begin match record_name, namespace_name with
             | Some ("name", record_name), None ->
                 if record_is_ok record_name children namespace.record_tbl then begin
-                  store_record record_name children namespace.record_tbl;
+                  store_record record_name children namespace.record_tbl state namespace;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -1889,7 +1890,7 @@ module Make(Dice : D) : T = struct
             | Some ("name", record_name), Some ("namespace", namespace_name) ->
                 let namespace = get_namespace_or_create state namespace_name in
                 if record_is_ok record_name children namespace.record_tbl then begin
-                  store_record record_name children namespace.record_tbl;
+                  store_record record_name children namespace.record_tbl state namespace;
                   ""
                 end else
                   (* record_is_ok will throw exception if record is fail *)
@@ -2080,7 +2081,7 @@ module Make(Dice : D) : T = struct
                   let target_list : list_ = try Hashtbl.find namespace.list_tbl target_name with
                     | Not_found -> raise (Tag_exception (sprintf "Found no list to add to with name %s" target_name))
                   in
-                  let new_items : list_item list = parse_list_items target_list.list_type children in
+                  let new_items : list_item list = parse_list_items target_list.list_type children state namespace in
                   if List.length new_items > 0 then begin
                     let new_list : list_ = {target_list with items = target_list.items @ new_items} in
                     Hashtbl.replace namespace.list_tbl new_list.name new_list;

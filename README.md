@@ -443,7 +443,8 @@ Currently work-in-progress.
     <if variable="name" equals="asd">...</if>
     <if ...><then></then><else></else></if>
     <if variable="var" higherThan="12">...</if> (* Only for integers *)
-    <if content="{eval this}" equals="12">...</if>
+    <if variable="var" lessThan="12">...</if> (* Only for integers *)
+    <if content="{eval this}" equals="12">...</if>, also for higherThan and lessThan
     <sentence>{:inlineinput}</sentence>
     <node><input name="name" input="What's your name? "/></node>
     <set variable="var1" value="foo" />
@@ -451,9 +452,12 @@ Currently work-in-progress.
     <list><record ...></list>
     <add to="list" name="listName">...</add>
     TODO: <remove from="list" name="asd" item="id"...
-    TODO: add to deck, macro, graph
+    TODO: add/remove to deck, macro, graph
     +, -
     TODO: *, /, floats
+    TODO: <print list="name" field="fieldname"/>
+    TODO: <assert variable="" /> ? list_item?
+    TODO: <loop graph="asd" until="" /> untilNode? untilFlag? untilnode, untilflag
 
 Possible future features
 ------------------------
