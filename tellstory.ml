@@ -1664,17 +1664,18 @@ module Make(Dice : D) : T = struct
    *)
   (*and run_if_operation (op : 'a -> 'a -> bool) (content : 'a) (value : 'a) (children : Xml.xml list) (state : state) (namespace : namespace) : string =*)
   and run_if_operation: 'a. ('a -> 'a -> bool) -> 'a -> 'a -> Xml.xml list -> state -> namespace -> string = fun op content value children state namespace ->
+    log_trace "run_if_operation";
     begin match children with
       | [
           Xml.Element ("then", [], then_children);
           Xml.Element ("else", [], else_children)
         ] ->
-            if content = value then
+            if op content value then
               print_sentences (Xml.Element ("", [], then_children)) state namespace
             else
               print_sentences (Xml.Element ("", [], else_children)) state namespace
       | children ->
-            if content = value then
+            if op content value then
               print_sentences (Xml.Element ("", [], children)) state namespace
             else
               ""
