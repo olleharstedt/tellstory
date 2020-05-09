@@ -60,10 +60,11 @@ module type TAG =
   end
 
 module type NAMESPACE =
-  functor (Macro : TAG) ->
+  functor (Macro : TAG) (Var : TAG) ->
   sig
     type t = {
-      name : string;
+      name      : string;
+      var_tbl   : Var.tbl;
       macro_tbl : Macro.tbl;
     }
     type tbl
@@ -72,10 +73,11 @@ module type NAMESPACE =
   end
 
 module MakeNamespace : NAMESPACE =
-  functor (T1 : TAG) ->
+  functor (T1 : TAG) (T2 : TAG) ->
   struct
     type t = {
-      name : string;
+      name      : string;
+      var_tbl   : T2.tbl;
       macro_tbl : T1.tbl;
     }
     type tbl = (string, t) Hashtbl.t
@@ -87,6 +89,7 @@ module MakeNamespace : NAMESPACE =
     let new_namespace name =
       {
         name;
+        var_tbl    = ((Hashtbl.create 20) : T2.tbl);
         macro_tbl  = ((Hashtbl.create 20) : T1.tbl);
       }
     (**
@@ -109,7 +112,11 @@ module MakeNamespace : NAMESPACE =
 
   end
 
-module MacroTag : TAG =
+module MacroTag :
+  sig
+    include TAG
+    val create : string -> Alt.t list -> t
+  end =
   struct
     type t = {
       name : string;
@@ -119,11 +126,20 @@ module MacroTag : TAG =
     let create name alts = {name; alts}
   end
 
-module Namespace = MakeNamespace(MacroTag)
+module VarTag :
+  sig
+    include TAG
+  end =
+  struct
+    type t = string
+    type tbl = (string, t) Hashtbl.t
+  end
+
+module Namespace = MakeNamespace(MacroTag)(VarTag)
 
 exception Internal_error of string
 
-let test = MacroTag.({name = "asd"; alts = [];})
+let test = MacroTag.create "test" []
 
 module Macro =
   struct
@@ -143,10 +159,10 @@ module Macro =
       | Some ("name", macro_name), Some ("namespace", namespace_name) ->
           let alts = Alt.parse_alts alts in
           let namespace = Namespace.get_namespace_or_create state namespace_name in
-          (MacroTag.({name = macro_name; alts}), Some namespace)
+          (MacroTag.create macro_name alts, Some namespace)
       | Some ("name", macro_name), None ->
           let alts = Alt.parse_alts alts in
-          ({name = macro_name; alts}, None)
+          MacroTag.create macro_name alts, None
       | None, _ ->
           raise (Macro_exception "Macro has no name attribute")
       | _, _ ->
