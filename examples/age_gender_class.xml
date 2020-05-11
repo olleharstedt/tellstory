@@ -4,10 +4,11 @@
 
     <macro name="eco">
         <alt>homeless</alt>
-        <alt>under class</alt>
-        <alt>worker class</alt>
-        <alt>middle class</alt>
-        <alt>upper class</alt>
+        <alt>under-class</alt>
+        <alt>worker-class</alt>
+        <alt>middle-class</alt>
+        <alt>upper middle-class</alt>
+        <alt>upper-class</alt>
         <alt>aristocrat</alt>
     </macro>
 
@@ -23,14 +24,17 @@
         <alt>unemployed</alt>
         <alt>farmer</alt>
         <alt>fighter</alt>
+        <alt>healer</alt>
         <alt>hunter</alt>
         <alt>knight</alt>
+        <alt>investor</alt>
         <alt>monk/nun</alt>
         <alt>musician</alt>
         <alt>ninja</alt>
         <alt>paladin</alt>
         <alt>pilot</alt>
         <alt>police</alt>
+        <alt>priest</alt>
         <alt>ranger</alt>
         <alt>rogue</alt>
         <alt>schaman</alt>
@@ -39,6 +43,7 @@
         <alt>sorcerer</alt>
         <alt>street artist</alt>
         <alt>student</alt>
+        <alt>tele evangelist</alt>
         <alt>thief</alt>
         <alt>trader</alt>
         <alt>trickster</alt>
