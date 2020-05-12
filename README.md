@@ -458,7 +458,7 @@ Currently work-in-progress.
     TODO: <print list="name" field="fieldname"/>
     TODO: <assert variable="" /> ? list_item?
     TODO: <loop graph="asd" until="" /> untilNode? untilFlag? untilnode, untilflag
-    TODO: <pick from="list" name="players" record="player" />
+    TODO: <pick from="list" name="players" record="player" />, <pick from="list" name="players" into="rand_player" />
     TODO: Equipment
     TODO: Decks where each card is a record
 

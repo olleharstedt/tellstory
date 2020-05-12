@@ -121,11 +121,21 @@ module Make(Dice : D) : T = struct
     alts : alt list
   }
 
+  (** Types for storing records *)
+  type record = {
+    name   : string;
+    values : (string, string) Hashtbl.t
+  }
+
+  type card =
+    | Alt of alt
+    | Record of record
+
   (** Data types for storing decks *)
   type deck = {
     name : string;
-    alts : alt list;  (* When an alt is chosen it's removed from alts and put in trash. *)
-    trash : alt list;
+    cards : card list;  (* When an alt is chosen it's removed from alts and put in trash. *)
+    trash : card list;
     shuffle_on_empty : bool;
   }
 
@@ -145,12 +155,6 @@ module Make(Dice : D) : T = struct
     name : string;
     nodes : graph_node list;
     current_node : int;
-  }
-
-  (** Types for storing records *)
-  type record = {
-    name   : string;
-    values : (string, string) Hashtbl.t
   }
 
   (** Type for storing <dice> tags *)
@@ -262,17 +266,22 @@ module Make(Dice : D) : T = struct
   let print_deck (deck : deck) =
     log_trace (sprintf "%s\n" deck.name);
     log_trace "alts:\n";
-    List.iter (fun alt ->
-      if List.length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
-      (* TODO: Throws exception *)
-      log_trace (sprintf "<alt>%s</alt>" alt.content);
-      match List.nth alt.attributes 0 with
-      | exception Failure _ ->
-          log_trace (sprintf "<alt>%s</alt>" alt.content)
-      | attr ->
-          log_trace (sprintf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content)
+    List.iter (fun (card : card) : unit ->
+      match card with
+        | Alt alt ->
+          if List.length alt.attributes > 1 then raise (Alt_exception "More then 1 attributes for alt: can't print");
+          (* TODO: Throws exception *)
+          log_trace (sprintf "<alt>%s</alt>" alt.content);
+          begin match List.nth alt.attributes 0 with
+            | exception Failure _ ->
+              log_trace (sprintf "<alt>%s</alt>" alt.content)
+            | attr ->
+              log_trace (sprintf "<alt %s='%s'>%s</alt>\n" (fst attr) (snd attr) alt.content)
+          end;
+        | Record record ->
+          raise (Tag_exception "Record card not implemented")
     )
-    deck.alts 
+    deck.cards
 
   (**
    * Fetch node which tag name = tag_name
@@ -948,18 +957,28 @@ module Make(Dice : D) : T = struct
     in
 
     (* Abort or shuffle if no cards are left in deck *)
-    let deck = begin match List.length deck.alts, deck.shuffle_on_empty with
-      | 0, true -> {deck with alts = deck.trash; trash = []}
+    let deck = begin match List.length deck.cards, deck.shuffle_on_empty with
+      | 0, true -> {deck with cards = deck.trash; trash = []}
       | 0, false -> raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
       | _, _ -> deck
     end in
-    let cards = get_possible_alts deck.alts in
-    let pick_nr = Dice.dice (List.length cards) in
-    let card = List.nth cards pick_nr in
+    let alts : alt list =
+      get_possible_alts
+      (List.map
+        (fun (c : card) : alt -> 
+          match c with 
+            | Alt alt -> alt
+            | Record r -> raise (Tag_exception "Record card not yet implemented")
+        )
+        deck.cards
+      )
+    in
+    let pick_nr : int = Dice.dice (List.length alts) in
+    let card : card = Alt (List.nth alts pick_nr) in
 
     match card with
     | exception Not_found -> raise (Deck_exception ("Found no card"))
-    | card ->
+    | Alt alt ->
         (* Create a new deck without the card we picked *)
         (* Card = alt in this context *)
         (* Filter logic:
@@ -973,18 +992,19 @@ module Make(Dice : D) : T = struct
         let new_alts = List.filter (fun alt ->
           i := !i + 1;
           !i != pick_nr
-        ) deck.alts in
-        let new_deck = {deck with alts = new_alts; trash = card :: deck.trash} in
+        ) deck.cards in
+        let new_deck = {deck with cards = new_alts; trash = card :: deck.trash} in
         log_trace "old_deck: ";
         log_trace "new deck: ";
         print_deck new_deck;
         Hashtbl.remove namespace.deck_tbl deck.name;
         Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
         (* Build Xml.xml <alt> out of record *)
-        let alt = Xml.Element ("alt", card.attributes, [Xml.PCData card.content]) in
+        let alt : Xml.xml = Xml.Element ("alt", alt.attributes, [Xml.PCData alt.content]) in
         let result : string = eval_alt alt state namespace in
         log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
         result
+    | Record r -> raise (Tag_exception "Record card not yet implemented")
 
   (**
    * @param graph
@@ -1903,15 +1923,17 @@ module Make(Dice : D) : T = struct
         (* <deck> *)
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
-            let alts = parse_alts alts in
-            store_deck {name; alts; shuffle_on_empty = false; trash = [];} namespace.deck_tbl;
+            let alts : alt list = parse_alts alts in
+            let cards : card list = List.map (fun a : card -> Alt a) alts in
+            store_deck {name; cards; shuffle_on_empty = false; trash = [];} namespace.deck_tbl;
             ""
 
         (* <deck name="name" shuffle="true"> *)
         | Xml.Element ("deck", [("name", name); ("shuffle", _)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
             let alts = parse_alts alts in
-            store_deck {name; alts; shuffle_on_empty = true; trash = [];} namespace.deck_tbl;
+            let cards : card list = List.map (fun a : card -> Alt a) alts in
+            store_deck {name; cards; shuffle_on_empty = true; trash = [];} namespace.deck_tbl;
             ""
 
         | Xml.Element ("deck", _, _) ->
