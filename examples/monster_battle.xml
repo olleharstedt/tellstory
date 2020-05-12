@@ -14,11 +14,15 @@
     <hitpoints>{%d6 + %d6}</hitpoints>
   </record>
 
-  <!-- Randomize the monster -->
+  <!-- Indirection -->
+  <macro name="attackroll">
+    <alt>{%d6}</alt>
+  </macro>
+
   <record name="monster">
     <name>Tiny troll</name>
-    <attack>2</attack>
-    <hitpoints>20</hitpoints>
+    <attack>{%d3}</attack>
+    <hitpoints>{%d3 + %d3}</hitpoints>
   </record>
 
   <print>--- Player stats ---</print>
@@ -77,7 +81,7 @@
     <node id="2" connections="2,3">
       <print>Corridor</print>
     </node>
-    <node id="3" connections="3">
+    <node id="3" connections="2">
       <print>Room</print>
       <loop until="endbattle">
         <print>{@battle}</print>

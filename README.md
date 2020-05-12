@@ -460,6 +460,7 @@ Currently work-in-progress.
     TODO: <loop graph="asd" until="" /> untilNode? untilFlag? untilnode, untilflag
     TODO: <pick from="list" name="players" record="player" />
     TODO: Equipment
+    TODO: Decks where each card is a record
 
 Possible future features
 ------------------------
