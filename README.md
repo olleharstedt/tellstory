@@ -430,7 +430,7 @@ TODO: Graph nodes can set flags, e.g. to exit a loop.
 
 TODO: Nodes with `<input>` in node to choose connection in graph.
 
-TODO: connections can be inline expression
+TODO: Connections can be inline expression, e.g. dice or input value
 
 #### WIP
 

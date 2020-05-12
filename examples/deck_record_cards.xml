@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story>
+  <deck name="monsterdeck">
+    <record name="monster">
+      <name>Troll</name>
+      <personality>nice</personality>
+    </record>
+    <record name="monster">
+      <name>Orc</name>
+      <personality>nasty</personality>
+    </record>
+    <record name="monster">
+      <name>Goblin</name>
+      <personality>normal</personality>
+    </record>
+  </deck>
+
+  <print>{$monsterdeck}</print>
+  <print>{monster.name} with a {monster.personality} personality.</print>
+  <br/>
+
+  <print>{$monsterdeck}</print>
+  <print>{monster.name} with a {monster.personality} personality.</print>
+  <br/>
+
+  <print>{$monsterdeck}</print>
+  <print>{monster.name} with a {monster.personality} personality.</print>
+  <br/>
+</story>

@@ -544,6 +544,21 @@ module Make(Dice : D) : T = struct
         ) alts in
         alts2
 
+  (**
+   * @param cards
+   * @return card list
+   *)
+  let get_possible_cards (cards : card list) : card list = 
+    match cards with
+      | [] -> []
+      | _ ->
+          List.filter
+          (fun (card : card) : bool -> match card with
+            | Alt alt -> flags_is_ok alt.attributes
+            | _ -> true
+          )
+          cards
+
 
   (**
    * Chose an alt to use, depending on flags
@@ -635,7 +650,7 @@ module Make(Dice : D) : T = struct
    * @param alts Xml.Element list
    * @return alt list
    *)
-  let parse_alts alts =
+  let parse_alts (xmls : Xml.xml list) : alt list =
     List.map (fun alt -> match alt with
       | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
           {content; attributes}
@@ -643,7 +658,7 @@ module Make(Dice : D) : T = struct
           {content = ""; attributes}
       | _ ->
           raise (Alt_exception "Illegal alt in macro/deck")
-    ) alts 
+    ) xmls 
 
   (**
     id : int;
@@ -950,7 +965,7 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace
    * @return string
    *)
-  let rec eval_deck deck_name (state : state) (namespace : namespace) =
+  let rec eval_deck (deck_name : string) (state : state) (namespace : namespace) =
     log_trace "eval_deck\n";
     let deck = try Hashtbl.find namespace.deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
@@ -962,21 +977,32 @@ module Make(Dice : D) : T = struct
       | 0, false -> raise (Deck_exception (sprintf "No more cards in deck '%s'." deck_name));
       | _, _ -> deck
     end in
-    let alts : alt list =
-      get_possible_alts
-      (List.map
-        (fun (c : card) : alt -> 
-          match c with 
-            | Alt alt -> alt
-            | Record r -> raise (Tag_exception "Record card not yet implemented")
-        )
-        deck.cards
-      )
-    in
-    let pick_nr : int = Dice.dice (List.length alts) in
-    let card : card = Alt (List.nth alts pick_nr) in
+    let filtered_cards : card list = get_possible_cards deck.cards in
+    let pick_nr        : int       = Dice.dice (List.length filtered_cards) in
+    let picked_card    : card      = List.nth filtered_cards pick_nr in
 
-    match card with
+    (* Filter out picked card *)
+    let i         : int ref   = ref (-1) in
+    let new_cards : card list = List.filter
+      (fun _ ->
+        i := !i + 1;
+        !i != pick_nr
+      )
+      deck.cards
+    in
+
+    (* New deck with picked card moved to trash *)
+    let new_deck : deck = {
+      deck with
+      cards = new_cards;
+      trash = picked_card :: deck.trash
+    } in
+
+    (* Store new deck in namespace *)
+    Hashtbl.remove namespace.deck_tbl deck.name;
+    Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
+
+    match picked_card with
     | exception Not_found -> raise (Deck_exception ("Found no card"))
     | Alt alt ->
         (* Create a new deck without the card we picked *)
@@ -988,23 +1014,19 @@ module Make(Dice : D) : T = struct
          *   content = content AND attributes are equal (name && content of attribues are equal)
          *)
         (** TODO: Start from 0 or 1? Previously used Core, but won't compile on ARM. *)
-        let i = ref (-1) in
-        let new_alts = List.filter (fun alt ->
-          i := !i + 1;
-          !i != pick_nr
-        ) deck.cards in
-        let new_deck = {deck with cards = new_alts; trash = card :: deck.trash} in
         log_trace "old_deck: ";
         log_trace "new deck: ";
         print_deck new_deck;
-        Hashtbl.remove namespace.deck_tbl deck.name;
-        Hashtbl.add namespace.deck_tbl new_deck.name new_deck;
         (* Build Xml.xml <alt> out of record *)
         let alt : Xml.xml = Xml.Element ("alt", alt.attributes, [Xml.PCData alt.content]) in
         let result : string = eval_alt alt state namespace in
         log_trace (sprintf "eval_deck: result of eval_alt = %s\n" result);
         result
-    | Record r -> raise (Tag_exception "Record card not yet implemented")
+    | Record record ->
+        (* Push record in card to namespace *)
+        Hashtbl.replace namespace.record_tbl record.name record;
+        log_trace "inserted record name";
+        ""
 
   (**
    * @param graph
@@ -1550,6 +1572,23 @@ module Make(Dice : D) : T = struct
       Hashtbl.add namespace.var_tbl name content
 
   (**
+   * Parse xml list into cards.
+   *)
+   and parse_cards (xmls : Xml.xml list) (state : state) (namespace : namespace) : card list =
+    List.map
+      (fun (xml : Xml.xml) : card -> match xml with
+        | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
+            Alt {content; attributes}
+        | Xml.Element ("record", [("name", name)], alts) -> 
+            Record (parse_record name alts state namespace)
+        | Xml.Element (tag, _, _) ->
+            raise (Deck_exception ("Cannot parse card with tag " ^ tag))
+        | Xml.PCData text ->
+            raise (Deck_exception ("Deck can't contain only text: " ^ text))
+      )
+      xmls
+
+  (**
    * Parse name and XML and return a record
    *
    * @param string name
@@ -1923,16 +1962,14 @@ module Make(Dice : D) : T = struct
         (* <deck> *)
         | Xml.Element ("deck", [("name", name)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
-            let alts : alt list = parse_alts alts in
-            let cards : card list = List.map (fun a : card -> Alt a) alts in
+            let cards : card list = parse_cards alts state namespace in
             store_deck {name; cards; shuffle_on_empty = false; trash = [];} namespace.deck_tbl;
             ""
 
         (* <deck name="name" shuffle="true"> *)
         | Xml.Element ("deck", [("name", name); ("shuffle", _)], alts) when (deck_is_ok name alts namespace.deck_tbl) ->
             log_trace "print_sentences: store deck";
-            let alts = parse_alts alts in
-            let cards : card list = List.map (fun a : card -> Alt a) alts in
+            let cards : card list = parse_cards alts state namespace in
             store_deck {name; cards; shuffle_on_empty = true; trash = [];} namespace.deck_tbl;
             ""
 
@@ -2129,11 +2166,12 @@ module Make(Dice : D) : T = struct
             (*string_of_exn ex*)
             ""
       in 
-      if result <> "" then begin
+      if String.trim result <> "" then begin
         log_trace "print_tags: printing result";
         printf "%s" result;
         flush_all ();
       end;
+      if result = "\n" then print_endline "";
       ""
 
   (**
@@ -2233,7 +2271,7 @@ module Make(Dice : D) : T = struct
    * @param namespace namespace option
    * @return string
    *)
-  and eval_term term state namespace =
+  and eval_term (term : Ast.term) (state : state) (namespace : namespace) : string =
     log_trace "eval_term";
     let open Ast in
     match term with
