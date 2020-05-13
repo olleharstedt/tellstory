@@ -106,6 +106,7 @@
       <loop until="endbattle">
         <print>{@battle}</print>
       </loop>
+      <reset type="graph" name="battle" />
     </node>
   </graph>
 

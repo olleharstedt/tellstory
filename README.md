@@ -434,6 +434,10 @@ TODO: Nodes with `<input>` in node to choose connection in graph.
 
 TODO: Connections can be inline expression, e.g. dice or input value
 
+TODO: Reset graph to start over
+
+    <reset type="graph" name="graph_with_start" />
+
 #### WIP
 
 Currently work-in-progress.

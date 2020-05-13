@@ -155,6 +155,7 @@ module Make(Dice : D) : T = struct
     name : string;
     nodes : graph_node list;
     current_node : int;
+    start_node : int option;
   }
 
   (** Type for storing <dice> tags *)
@@ -1977,19 +1978,34 @@ module Make(Dice : D) : T = struct
             raise (Deck_exception "Invalid deck definition")
 
         | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
-            let nodes = parse_nodes nodes in
-            let current_node = 1 in
-            store_graph {name; nodes; current_node} namespace.graph_tbl;
+            let nodes : graph_node list = parse_nodes nodes in
+            let current_node : int = 1 in
+            let start_node : int option = None in
+            store_graph {name; nodes; current_node; start_node} namespace.graph_tbl;
             ""
 
         | Xml.Element ("graph", [("name", name); ("start", start)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
             let nodes : graph_node list = parse_nodes nodes in
             let current_node : int      = int_of_string start in
-            store_graph {name; nodes; current_node} namespace.graph_tbl;
+            let start_node : int option = Some current_node in
+            store_graph {name; nodes; current_node; start_node} namespace.graph_tbl;
             ""
 
         | Xml.Element ("graph", _, _) ->
             raise (Graph_exception "Not a valid graph declaration")
+
+        (* Reset graph to start node *)
+        | Xml.Element ("reset", [("type", "graph"); ("name", graph_name)], []) ->
+            let graph : graph = try Hashtbl.find namespace.graph_tbl graph_name with
+              | Not_found -> raise (Graph_exception (sprintf "<reset>: Found no graph with name '%s'" graph_name))
+            in
+            let reset_to : int = match graph.start_node with
+              | None -> 1
+              | Some i -> i
+            in
+            let new_graph : graph = {graph with current_node = reset_to} in
+            Hashtbl.replace namespace.graph_tbl new_graph.name new_graph;
+            ""
 
         (* <dice> *)
         | Xml.Element ("dice", attrs, []) ->
