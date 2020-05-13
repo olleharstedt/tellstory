@@ -19,19 +19,22 @@
     <alt>{%d6}</alt>
   </macro>
 
-  <record name="monster">
-    <name>Tiny troll</name>
-    <attack>{%d3}</attack>
-    <hitpoints>{%d3 + %d3}</hitpoints>
-  </record>
+  <deck name="monsterdeck">
+    <record name="monster">
+      <name>tiny troll</name>
+      <attack>{%d3}</attack>
+      <hitpoints>{%d6 + %d6}</hitpoints>
+    </record>
+  </deck>
 
   <print>--- Player stats ---</print>
   <print>Name: {player.name}</print>
   <print>Attack: {player.attack}</print>
   <print>Hit-points: {player.hitpoints}</print>
 
-  <!-- Assumes list item "player" is set -->
-  <!-- Assumes list item "monster" is set -->
+  <!-- Attack flow -->
+  <!-- Assumes record "player" is set -->
+  <!-- Assumes record "monster" is set -->
   <!-- Assumes variable "path" is set to 0 -->
   <variable name="path" value="0" />
   <clear type="flag" name="endbattle" ignore-not-found="1" />
@@ -49,6 +52,7 @@
     </node>
     <node id="2" connections="0">
       <print>Player flees!</print>
+      <setFlag name="endbattle" />
     </node>
   </graph>
 
@@ -61,14 +65,19 @@
         <set variable="path" value="0" />
         <print>{@player_attack}</print>
         <print>{@player_attack}</print>
-        <if content="{monster.hitpoints}" lessThan="0">
+        <if content="{monster.hitpoints}" lessThan="1">
           <print>The monster is defeated</print>
           <setFlag name="endbattle" />
         </if>
     </node>
     <node id="2" connections="1">
       <print>The monster attacks back</print>
-      <set record="monster" field="hitpoints" value="{player.hitpoints - monster.attack}" />
+      <set record="player" field="hitpoints" value="{player.hitpoints - monster.attack}" />
+      <print>Player has {player.hitpoints} hitpoints left</print>
+      <if content="{player.hitpoints}" lessThan="1">
+        <print>Player DED</print>
+        <setFlag name="endbattle" />
+      </if>
     </node>
   </graph>
 
@@ -79,17 +88,19 @@
       <print>Welcome to the dungeon! Please respect the rules.</print>
     </node>
     <node id="2" connections="2,3">
-      <print>Corridor</print>
+      <print>Corridor leading south</print>
     </node>
     <node id="3" connections="2">
-      <print>Room</print>
+      <print>Room with monster - prepare for battle!</print>
+      <print>{$monsterdeck}You meet a {monster.name}.</print>
       <loop until="endbattle">
         <print>{@battle}</print>
       </loop>
     </node>
   </graph>
 
-  <loop until="gameover">
+  <loop times="5">
     <print>{@dungeon}</print>
+    <sleep time="1"/>
   </loop>
 </story>

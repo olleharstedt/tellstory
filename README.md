@@ -231,6 +231,8 @@ When all cards have been "picked", the deck can't be used again unless you set a
 
 TODO: Rename alt to card.
 
+TODO: Support for records in deck, that are put into record namespace.
+
 #### Dice
 
 To roll a dice, you need to first define its name and number of sides, like so:
