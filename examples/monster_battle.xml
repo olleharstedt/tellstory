@@ -21,6 +21,7 @@
   <print>Name: {player.name}</print>
   <print>Attack: {player.attack}</print>
   <print>Hit-points: {player.hitpoints}</print>
+  <print>--------------------</print>
 
   <!-- Define the monster deck -->
   <deck name="monsterdeck">
@@ -111,8 +112,10 @@
     </node>
   </graph>
 
+  <input name="hitenter" label="Hit enter to enter dungeon..." validation=""/>
+
   <!-- Loop dungeon 10 times (TODO: until gameover?) -->
-  <loop times="10">
+  <loop times="5">
     <print>{@dungeon}</print>
     <sleep time="1"/>
   </loop>
