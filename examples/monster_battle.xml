@@ -2,9 +2,11 @@
 <story newline="print">
   <print>Monster battle!</print>
 
+  <!-- We use two dice in this game -->
   <dice name="d6" sides="6" />
   <dice name="d3" sides="3" />
 
+  <!-- Command-line input -->
   <input name="name" label="Name of player: " validation="[a-zA-Z]+" />
 
   <!-- Randomize player statistics -->
@@ -14,30 +16,36 @@
     <hitpoints>{%d6 + %d6}</hitpoints>
   </record>
 
-  <!-- Indirection -->
-  <macro name="attackroll">
-    <alt>{%d6}</alt>
-  </macro>
-
-  <deck name="monsterdeck">
-    <record name="monster">
-      <name>tiny troll</name>
-      <attack>{%d3}</attack>
-      <hitpoints>{%d6 + %d6}</hitpoints>
-    </record>
-  </deck>
-
+  <!-- Show the stats -->
   <print>--- Player stats ---</print>
   <print>Name: {player.name}</print>
   <print>Attack: {player.attack}</print>
   <print>Hit-points: {player.hitpoints}</print>
 
-  <!-- Attack flow -->
+  <!-- Define the monster deck -->
+  <deck name="monsterdeck">
+    <record name="monster">
+      <name>tiny troll</name>
+      <attack>{%d3}</attack>
+      <hitpoints>{%d3}</hitpoints>
+    </record>
+    <record name="monster">
+      <name>troll</name>
+      <attack>{%d3}</attack>
+      <hitpoints>{%d6}</hitpoints>
+    </record>
+    <record name="monster">
+      <name>orc</name>
+      <attack>{%d3}</attack>
+      <hitpoints>{%d6 + %d3}</hitpoints>
+    </record>
+  </deck>
+
+  <!-- Attack flow with three nodes: Choose action, attack and flee -->
   <!-- Assumes record "player" is set -->
   <!-- Assumes record "monster" is set -->
   <!-- Assumes variable "path" is set to 0 -->
   <variable name="path" value="0" />
-  <clear type="flag" name="endbattle" ignore-not-found="1" />
   <graph name="player_attack" start="0">
     <node id="0" connections="{path}">
       <print>1. Attack</print>
@@ -56,22 +64,26 @@
     </node>
   </graph>
 
-  <!-- Battle flow -->
+  <!-- Battle flow with three nodes: Start, player attack and monster attack-->
+  <!-- Assumes record "player" is set -->
+  <!-- Assumes record "monster" is set -->
   <graph name="battle" start="0">
     <node id="0" connections="1">/start/</node>
     <node id="1" connections="2">
         <print>Player {player.name} attacks</print>
         <!-- Always reset path to 0 before starting player attack graph. -->
         <set variable="path" value="0" />
+        <!-- Run attack graph twice - once for choice input and once for executing the choice -->
         <print>{@player_attack}</print>
         <print>{@player_attack}</print>
+        <!-- Check if monster died - if yes, end battle -->
         <if content="{monster.hitpoints}" lessThan="1">
           <print>The monster is defeated</print>
           <setFlag name="endbattle" />
         </if>
     </node>
     <node id="2" connections="1">
-      <print>The monster attacks back</print>
+      <print>The monster attacks</print>
       <set record="player" field="hitpoints" value="{player.hitpoints - monster.attack}" />
       <print>Player has {player.hitpoints} hitpoints left</print>
       <if content="{player.hitpoints}" lessThan="1">
@@ -81,25 +93,24 @@
     </node>
   </graph>
 
-  <!-- Dungone flow -->
+  <!-- Dungone flow with three nodes: start, corridor and room with monster -->
   <graph name="dungeon" start="0">
     <node id="0" connections="1">/start/</node>
-    <node id="1" connections="2">
-      <print>Welcome to the dungeon! Please respect the rules.</print>
-    </node>
-    <node id="2" connections="2,3">
+    <node id="1" connections="1,2">
       <print>Corridor leading south</print>
     </node>
-    <node id="3" connections="2">
+    <node id="2" connections="2">
       <print>Room with monster - prepare for battle!</print>
       <print>{$monsterdeck}You meet a {monster.name}.</print>
+      <clear type="flag" name="endbattle" />
       <loop until="endbattle">
         <print>{@battle}</print>
       </loop>
     </node>
   </graph>
 
-  <loop times="5">
+  <!-- Loop dungeon 10 times (TODO: until gameover?) -->
+  <loop times="10">
     <print>{@dungeon}</print>
     <sleep time="1"/>
   </loop>
