@@ -106,6 +106,7 @@
       <loop until="endbattle">
         <print>{@battle}</print>
       </loop>
+      <!-- Always start from player attack at next battle -->
       <reset type="graph" name="battle" />
     </node>
   </graph>
