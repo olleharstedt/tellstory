@@ -2164,7 +2164,7 @@ module Make(Dice : D) : T = struct
             print_endline (Printexc.get_backtrace ());
             flush_all ();
             (*string_of_exn ex*)
-            ""
+            exit 1;
       in 
       if String.trim result <> "" then begin
         log_trace "print_tags: printing result";
