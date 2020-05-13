@@ -914,10 +914,10 @@ module Make(Dice : D) : T = struct
     in
 
     (* Check if ignore-not-found is set to 1 *)
-    let ignore_not_found = match find_attribute attrs "ignore-not-found" with
+    let ignore_not_found = true in (*match find_attribute attrs "ignore-not-found" with
       | Some ("ignore-not-found", "1") -> true
       | Some _ | None -> false
-    in
+    in *)
 
     let typ = find_attribute attrs "type" in
     match typ with
