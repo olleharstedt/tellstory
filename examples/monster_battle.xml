@@ -100,7 +100,7 @@
     <node id="1" connections="1,2">
       <print>Corridor leading south</print>
     </node>
-    <node id="2" connections="2">
+    <node id="2" connections="1">
       <print>Room with monster - prepare for battle!</print>
       <!-- Pick a card from monsterdeck and put it in slot "monster" -->
       <pick from="monsterdeck" into="monster"/>
