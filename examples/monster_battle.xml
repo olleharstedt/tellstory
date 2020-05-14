@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story newline="print">
-  <print>Monster battle!</print>
+  <print>Monster battle! In a dungeon!</print>
 
   <!-- We use two dice in this game -->
   <dice name="d6" sides="6" />
@@ -25,17 +25,17 @@
 
   <!-- Define the monster deck -->
   <deck name="monsterdeck">
-    <card name="monster">
+    <card>
       <name>tiny troll</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d3}</hitpoints>
     </card>
-    <card name="monster">
+    <card>
       <name>troll</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d6}</hitpoints>
     </card>
-    <card name="monster">
+    <card>
       <name>orc</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d6 + %d3}</hitpoints>
@@ -102,7 +102,9 @@
     </node>
     <node id="2" connections="2">
       <print>Room with monster - prepare for battle!</print>
-      <print>{$monsterdeck}You meet a {monster.name}.</print>
+      <!-- Pick a card from monsterdeck and put it in slot "monster" -->
+      <pick from="monsterdeck" into="monster"/>
+      <print>You meet a {monster.name}.</print>
       <clear type="flag" name="endbattle" />
       <loop until="endbattle">
         <print>{@battle}</print>
@@ -119,4 +121,5 @@
     <print>{@dungeon}</print>
     <sleep time="1"/>
   </loop>
+  <print>You're out of the dungeon!</print>
 </story>

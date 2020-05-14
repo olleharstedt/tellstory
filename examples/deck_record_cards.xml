@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story>
   <deck name="monsterdeck">
-    <record name="monster">
+    <card name="monster">
       <name>Troll</name>
       <personality>nice</personality>
-    </record>
-    <record name="monster">
+    </card>
+    <card name="monster">
       <name>Orc</name>
       <personality>nasty</personality>
-    </record>
-    <record name="monster">
+    </card>
+    <card name="monster">
       <name>Goblin</name>
       <personality>normal</personality>
-    </record>
+    </card>
   </deck>
 
   <print>{$monsterdeck}</print>
