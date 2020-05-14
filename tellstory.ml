@@ -1580,7 +1580,8 @@ module Make(Dice : D) : T = struct
       (fun (xml : Xml.xml) : card -> match xml with
         | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
             Alt {content; attributes}
-        | Xml.Element ("record", [("name", name)], alts) -> 
+        | Xml.Element ("record", [("name", name)], alts)
+        | Xml.Element ("card", [("name", name)], alts) -> 
             Record (parse_record name alts state namespace)
         | Xml.Element (tag, _, _) ->
             raise (Deck_exception ("Cannot parse card with tag " ^ tag))
@@ -1937,7 +1938,8 @@ module Make(Dice : D) : T = struct
             ""
 
         (* <record> *)
-        | Xml.Element ("record", attrs, children) ->
+        | Xml.Element ("record", attrs, children)
+        | Xml.Element ("card", attrs, children) ->
             let record_name = find_attribute attrs "name" in
             let namespace_name = find_attribute attrs "namespace" in
             begin match record_name, namespace_name with
@@ -2139,7 +2141,8 @@ module Make(Dice : D) : T = struct
             Hashtbl.replace namespace.var_tbl var_name value;
             ""
 
-        | Xml.Element ("set", [("record", record_name); ("field", field_name); ("value", new_value)], []) ->
+        | Xml.Element ("set", [("record", record_name); ("field", field_name); ("value", new_value)], [])
+        | Xml.Element ("set", [("card", record_name); ("field", field_name); ("value", new_value)], []) ->
             let record : record = try Hashtbl.find namespace.record_tbl record_name with
               | Not_found -> raise (Tag_exception (sprintf "Found no record with name %s in <set> tag" record_name))
             in

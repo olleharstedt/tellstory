@@ -10,11 +10,11 @@
   <input name="name" label="Name of player: " validation="[a-zA-Z]+" />
 
   <!-- Randomize player statistics -->
-  <record name="player">
+  <card name="player">
     <name>{name}</name>
     <attack>{%d6 + %d6}</attack>
     <hitpoints>{%d6 + %d6}</hitpoints>
-  </record>
+  </card>
 
   <!-- Show the stats -->
   <print>--- Player stats ---</print>
@@ -25,26 +25,26 @@
 
   <!-- Define the monster deck -->
   <deck name="monsterdeck">
-    <record name="monster">
+    <card name="monster">
       <name>tiny troll</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d3}</hitpoints>
-    </record>
-    <record name="monster">
+    </card>
+    <card name="monster">
       <name>troll</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d6}</hitpoints>
-    </record>
-    <record name="monster">
+    </card>
+    <card name="monster">
       <name>orc</name>
       <attack>{%d3}</attack>
       <hitpoints>{%d6 + %d3}</hitpoints>
-    </record>
+    </card>
   </deck>
 
   <!-- Attack flow with three nodes: Choose action, attack and flee -->
-  <!-- Assumes record "player" is set -->
-  <!-- Assumes record "monster" is set -->
+  <!-- Assumes card "player" is set -->
+  <!-- Assumes card "monster" is set -->
   <!-- Assumes variable "path" is set to 0 -->
   <variable name="path" value="0" />
   <graph name="player_attack" start="0">
@@ -56,7 +56,7 @@
     <node id="1" connections="0">
       <!-- Player attacks the monster -->
       <print>{player.name} attacks! {player.attack} damage to {monster.name}.</print>
-      <set record="monster" field="hitpoints" value="{monster.hitpoints - player.attack}" />
+      <set card="monster" field="hitpoints" value="{monster.hitpoints - player.attack}" />
       <print>Hitpoints left: {monster.hitpoints}</print>
     </node>
     <node id="2" connections="0">
@@ -66,8 +66,8 @@
   </graph>
 
   <!-- Battle flow with three nodes: Start, player attack and monster attack-->
-  <!-- Assumes record "player" is set -->
-  <!-- Assumes record "monster" is set -->
+  <!-- Assumes card "player" is set -->
+  <!-- Assumes card "monster" is set -->
   <graph name="battle" start="0">
     <node id="0" connections="1">/start/</node>
     <node id="1" connections="2">
@@ -85,7 +85,7 @@
     </node>
     <node id="2" connections="1">
       <print>The monster attacks</print>
-      <set record="player" field="hitpoints" value="{player.hitpoints - monster.attack}" />
+      <set card="player" field="hitpoints" value="{player.hitpoints - monster.attack}" />
       <print>Player has {player.hitpoints} hitpoints left</print>
       <if content="{player.hitpoints}" lessThan="1">
         <print>Player DED</print>
