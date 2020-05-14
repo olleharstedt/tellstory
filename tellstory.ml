@@ -123,10 +123,14 @@ module Make(Dice : D) : T = struct
 
   (** Types for storing records *)
   type record = {
-    name   : string;
+    name   : string option;
     values : (string, string) Hashtbl.t
   }
 
+  (**
+   * NB: <card> is also a synonym to <record> tag.
+   * This type is about allowing different tags inside a deck.
+   *)
   type card =
     | Alt of alt
     | Record of record
@@ -961,12 +965,13 @@ module Make(Dice : D) : T = struct
    * Choose card from deck and remove it from the deck.
    * Return card content.
    *
+   * @param string into - Used with tag <pick> when record name does not determin into which record variable card is put.
    * @param deck_name string
    * @param state state
    * @param namespace namespace
    * @return string
    *)
-  let rec eval_deck (deck_name : string) (state : state) (namespace : namespace) =
+  let rec eval_deck ?(into : string = "") (deck_name : string) (state : state) (namespace : namespace) : string =
     log_trace "eval_deck\n";
     let deck = try Hashtbl.find namespace.deck_tbl deck_name with
       | Not_found -> raise (Deck_exception (sprintf "Found no deck with name '%s'." deck_name))
@@ -1025,8 +1030,16 @@ module Make(Dice : D) : T = struct
         result
     | Record record ->
         (* Push record in card to namespace *)
-        Hashtbl.replace namespace.record_tbl record.name record;
-        log_trace "inserted record name";
+        if into <> "" then
+          Hashtbl.replace namespace.record_tbl into record
+        else begin
+          let name : string = match record.name with
+            | Some s -> s
+            | None -> raise (Deck_exception "Found no name for record in deck")
+          in
+          Hashtbl.replace namespace.record_tbl name record
+        end;
+        log_trace "inserted record";
         ""
 
   (**
@@ -1580,9 +1593,11 @@ module Make(Dice : D) : T = struct
       (fun (xml : Xml.xml) : card -> match xml with
         | Xml.Element ("alt", attributes, [Xml.PCData content]) ->
             Alt {content; attributes}
-        | Xml.Element ("record", [("name", name)], alts)
-        | Xml.Element ("card", [("name", name)], alts) -> 
-            Record (parse_record name alts state namespace)
+        | Xml.Element ("record", [("name", name)], fields)
+        | Xml.Element ("card", [("name", name)], fields) -> 
+            Record (parse_record (Some name) fields state namespace)
+        | Xml.Element ("card", [], fields) -> 
+            Record (parse_record None fields state namespace)
         | Xml.Element (tag, _, _) ->
             raise (Deck_exception ("Cannot parse card with tag " ^ tag))
         | Xml.PCData text ->
@@ -1593,11 +1608,11 @@ module Make(Dice : D) : T = struct
   (**
    * Parse name and XML and return a record
    *
-   * @param string name
-   * @param Xml.xml list alts
+   * @param string option name
+   * @param Xml.xml list children - Record fields
    * @return record
    *)
-  and parse_record (name : string) (children : Xml.xml list) (state : state) (namespace : namespace) : record =
+  and parse_record (name : string option) (children : Xml.xml list) (state : state) (namespace : namespace) : record =
     (* Assume that if first child is <alt>, it's an <alt>-record *)
     let use_alt : bool = match List.hd children with
       | Xml.Element ("alt", _, _) -> true
@@ -1628,11 +1643,11 @@ module Make(Dice : D) : T = struct
           let content : string = eval_content content state namespace in
           Hashtbl.add record.values name content
       | Xml.Element (var_name, _, []) ->
-          raise (Record_exception (sprintf "No empty content allowed in '%s' for record '%s'" var_name name))
+          raise (Record_exception (sprintf "No empty content allowed in '%s' for record" var_name))
       | Xml.Element (var_name, _, _) ->
-          raise (Record_exception (sprintf "No attributes allowed in '%s' for record '%s'" var_name name))
+          raise (Record_exception (sprintf "No attributes allowed in '%s' for record" var_name))
       | _ ->
-          raise (Record_exception (sprintf "Unknown error in record '%s'" name))
+          raise (Record_exception (sprintf "Unknown error in record"))
     ) (Xml.children alt);
     record
 
@@ -1645,7 +1660,7 @@ module Make(Dice : D) : T = struct
    * @return unit
    *)
   and store_record (name : string) (alts : Xml.xml list) (record_tbl : record_tbl) (state : state) (namespace : namespace) : unit =
-    let record : record = parse_record name alts state namespace in
+    let record : record = parse_record (Some name) alts state namespace in
 
     (* Add record to records hash table *)
     Hashtbl.add record_tbl name record
@@ -1687,7 +1702,7 @@ module Make(Dice : D) : T = struct
     match list_type with
       | "record" ->
           List.map (fun xml -> match xml with
-            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record name alts state namespace)
+            | Xml.Element ("record", [("name", name)], alts) -> Record (parse_record (Some name) alts state namespace)
             | _ -> raise (Tag_exception "Unsupported record list element")
           ) children
       | s -> raise (Tag_exception (sprintf "Unknown list type: %s" s))
@@ -1706,7 +1721,12 @@ module Make(Dice : D) : T = struct
     else begin
       (* Store all list items. *)
       List.iter (fun item -> match item with
-        | Record record -> Hashtbl.add namespace.record_tbl record.name record
+        | Record record ->
+            let name : string = match record.name with
+              | Some s -> s
+              | None -> raise (Deck_exception "Could not store list item, found no name for record")
+            in
+            Hashtbl.add namespace.record_tbl name record
         | _ -> raise (Tag_exception "Unsupprted item type in store_list")
       ) list_.items;
       Hashtbl.add namespace.list_tbl name list_
@@ -1978,6 +1998,10 @@ module Make(Dice : D) : T = struct
 
         | Xml.Element ("deck", _, _) ->
             raise (Deck_exception "Invalid deck definition")
+
+        | Xml.Element ("pick", [("from", deck_name); ("into", record_name)], _) ->
+            ignore(eval_deck ~into:record_name deck_name state namespace);
+            ""
 
         | Xml.Element ("graph", [("name", name)], nodes) when (graph_is_ok name nodes namespace.graph_tbl) ->
             let nodes : graph_node list = parse_nodes nodes in
