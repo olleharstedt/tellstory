@@ -33,6 +33,12 @@ module type DICE = sig
   val dice : int -> int
 end
 
+module type IO = sig
+  val print_string : string -> unit
+  val print_endline : string -> unit
+  val flush : unit -> unit
+end
+
 (**
  * Module type for Tellstory module produced by functor Make
  *)
@@ -55,7 +61,7 @@ module type T = sig
   (*val eval_deck : string -> state -> namespace -> string*)
 end
 
-module Make(Dice : DICE) : T = struct
+module Make(Dice : DICE) (Io : IO) : T = struct
   exception No_node_content of string
   exception Not_implemented
   exception Internal_error of string
@@ -2069,8 +2075,8 @@ module Make(Dice : DICE) : T = struct
         (* <input name="variablename" label="some question"/> *)
         | Xml.Element ("input", [("name", name);("label", label)], []) ->
             let label : string = eval_content label state namespace in
-            printf "%s" label;
-            flush_all ();
+            Io.print_string label;
+            Io.flush ();
             let buffer = input_line stdin in
             Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
             ""
@@ -2079,8 +2085,8 @@ module Make(Dice : DICE) : T = struct
         | Xml.Element ("input", [("name", name);("label", label); ("validation", validation)], []) ->
             let regexp : Str.regexp = Str.regexp validation in
             let label  : string = eval_content label state namespace in
-            printf "%s" label;
-            flush_all ();
+            Io.print_string label;
+            Io.flush ();
             let matches : bool ref  = ref false in
             while not !matches do
               let buffer : string     = input_line stdin in
@@ -2088,8 +2094,8 @@ module Make(Dice : DICE) : T = struct
               if !matches then
                 Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer))
               else begin
-                printf "%s" label;
-                flush_all ();
+                Io.print_string label;
+                Io.flush ();
               end
             done;
             ""
@@ -2203,18 +2209,18 @@ module Make(Dice : DICE) : T = struct
             eval_content content state namespace
       end with
         | ex ->
-            print_endline (Printexc.to_string ex);
-            print_endline (Printexc.get_backtrace ());
-            flush_all ();
+            Io.print_endline (Printexc.to_string ex);
+            Io.print_endline (Printexc.get_backtrace ());
+            Io.flush ();
             (*string_of_exn ex*)
             exit 1;
       in 
       if String.trim result <> "" then begin
         log_trace "print_tags: printing result";
-        printf "%s" result;
-        flush_all ();
+        Io.print_string result;
+        Io.flush ();
       end;
-      if result = "\n" then print_endline "";
+      if result = "\n" then Io.print_endline "";
       ""
 
   (**
@@ -2267,9 +2273,9 @@ module Make(Dice : DICE) : T = struct
   and file_to_string filename (state : state) =
     let xml : Xml.xml = try Xml.parse_file filename with
       | Xml.Error (msg, pos) ->
-          print_endline (sprintf "Error while parsing XML file '%s'" filename);
+          Io.print_endline (sprintf "Error while parsing XML file '%s'" filename);
           print_int (Xml.line pos);
-          print_endline (": " ^ Xml.error_msg msg);
+          Io.print_endline (": " ^ Xml.error_msg msg);
           exit 0;
     in
     let story : Xml.xml = fetch_node xml "story" in

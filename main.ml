@@ -17,9 +17,14 @@ let _ =
   Printexc.record_backtrace true;
 
   (** Create module with dice function module *)
-  let module Tellstory = Tellstory.Make(
-    struct
+  let module Tellstory = Tellstory.Make
+    (struct
       let dice n = Random.int n
+    end)
+    (struct
+      let print_string = print_string
+      let print_endline = print_endline
+      let flush = flush_all
     end
   ) in
 
