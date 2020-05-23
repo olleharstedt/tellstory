@@ -29,7 +29,7 @@ let log_debug msg =
  *
  * @since 2015-03-26
  *)
-module type D = sig
+module type DICE = sig
   val dice : int -> int
 end
 
@@ -55,7 +55,7 @@ module type T = sig
   (*val eval_deck : string -> state -> namespace -> string*)
 end
 
-module Make(Dice : D) : T = struct
+module Make(Dice : DICE) : T = struct
   exception No_node_content of string
   exception Not_implemented
   exception Internal_error of string
