@@ -502,10 +502,11 @@ Possible future features
 Multiplayer
 -----------
 
-* Use WebSocket to connect
+* Use WebSocket to connect, no TLS
 * `<lobby>` tag, halt execution until done
   Text above, input bottom
   Save all history? Not so long anyway?
+* `players` a reserved list of `player` records
 * Buttons or text commands, like in IRC? `/start`
 * Two frames, on for chat, one for game?
 * List of open session (not using password)
