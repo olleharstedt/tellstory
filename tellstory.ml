@@ -34,8 +34,11 @@ module type DICE = sig
 end
 
 module type IO = sig
+  (* Broadcast to all channels in websocket implementation *)
   val print_string : string -> unit
   val print_endline : string -> unit
+  val input_line : in_channel -> string
+  (*val input_line_player : in_channel -> int -> string*)
   val flush : unit -> unit
 end
 
@@ -905,7 +908,7 @@ module Make(Dice : DICE) (Io : IO) : T = struct
    * @return string
    *)
   let eval_input (variable_name : string) (state : state) (namespace : namespace) =
-    let buffer = input_line stdin in
+    let buffer = Io.input_line stdin in
     Hashtbl.add namespace.var_tbl variable_name (String.trim buffer);
     ""
 
@@ -2077,7 +2080,7 @@ module Make(Dice : DICE) (Io : IO) : T = struct
             let label : string = eval_content label state namespace in
             Io.print_string label;
             Io.flush ();
-            let buffer = input_line stdin in
+            let buffer = Io.input_line stdin in
             Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer));
             ""
 
@@ -2089,7 +2092,7 @@ module Make(Dice : DICE) (Io : IO) : T = struct
             Io.flush ();
             let matches : bool ref  = ref false in
             while not !matches do
-              let buffer : string     = input_line stdin in
+              let buffer : string     = Io.input_line stdin in
               matches := Str.string_match regexp buffer 0;
               if !matches then
                 Hashtbl.add namespace.var_tbl name (String.escaped (String.trim buffer))

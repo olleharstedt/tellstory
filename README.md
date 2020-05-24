@@ -511,7 +511,10 @@ Multiplayer
 * List of open session (not using password)
 * PHP for user reg, as tones of tales?
 * Modal popup for input? Input for only one player or everyone? `prompt`, `confirm`, `alert`
+* `<ask player="1" for="What's yourname?" variable="playername" validation=""/>` or `<prompt ... />`
+* `<vote for="Which direction to go?" alternatives="1,2,3" variable="direction" />`
 * "Waiting for input, player 1..."
+* Non-blocking input? Input for all players?
 * Who's moderator? Or administrator?
 * How to access each separate player?
 * Private message? /msg

@@ -24,6 +24,7 @@ let _ =
     (struct
       let print_string = print_string
       let print_endline = print_endline
+      let input_line = input_line
       let flush = flush_all
     end)
   in
