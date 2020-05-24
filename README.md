@@ -499,6 +499,31 @@ Possible future features
 * Non-turn based play?
 * No clear separation between tags that declare something and tags to do something?
 
+Multiplayer
+-----------
+
+* Use WebSocket to connect
+* `<lobby>` tag, halt execution until done
+  Text above, input bottom
+  Save all history? Not so long anyway?
+* Buttons or text commands, like in IRC? `/start`
+* Two frames, on for chat, one for game?
+* List of open session (not using password)
+* PHP for user reg, as tones of tales?
+* Modal popup for input? Input for only one player or everyone? `prompt`, `confirm`, `alert`
+* "Waiting for input, player 1..."
+* Who's moderator? Or administrator?
+* How to access each separate player?
+* Private message? /msg
+* Assuming discord or sim is used?
+* Add style to `print` like bold, italic, font-size?
+* Pics, sound, ... An adventure is a ZIP-file with XMls and assets.
+
+Pseudo-code
+
+    Read XML
+    Start websocket server
+
 TODO
 ----
 

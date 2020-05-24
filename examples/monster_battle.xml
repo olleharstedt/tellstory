@@ -118,7 +118,7 @@
 
   <!-- Loop dungeon 10 times (TODO: until gameover?) -->
   <loop times="5">
-    <print>{@dungeon}</print>
+    <move graph="dungeon"/>
     <sleep time="1"/>
   </loop>
   <print>You're out of the dungeon!</print>

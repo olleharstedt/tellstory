@@ -25,8 +25,8 @@ let _ =
       let print_string = print_string
       let print_endline = print_endline
       let flush = flush_all
-    end
-  ) in
+    end)
+  in
 
   (*
   let inter = Unix.getenv "INTERACTIVE" in
