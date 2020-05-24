@@ -5,6 +5,7 @@
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"></link>
     <script src="js/jquery-3.5.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <!-- Linked from compiled websocket_js.ml -->
     <script src="js/tellstory.js"></script>
   </head>
   <body>
@@ -78,23 +79,5 @@
         <p>Footer</p>
       </div>
     </div>
-
-    <script>
-$(document).ready(() => {
-  /** @type WebSocket */
-  const ws = new WebSocket("ws://127.0.0.1:8080");
-  console.log("ws readystate =", ws.readyState);
-
-  // Connection opened
-  ws.addEventListener('open', (event) => {
-    ws.send('Hello Server!');
-  });
-
-  // Listen for messages
-  ws.addEventListener('message', (event) => {
-    console.log('Message from server ', event.data);
-  });
-});
-    </script>
   </body>
 </html>
