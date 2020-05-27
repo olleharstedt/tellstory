@@ -10,8 +10,16 @@ let _ =
   to_json buffer value;
   let content : string = Buffer.contents buffer in
   print_endline content;
+  (*
   let buf : Lexing.lexbuf = Lexing.from_string (Buffer.contents buffer) in
   let value : t = of_json (Deriving_Json_lexer.init_lexer buf) in
+  *)
+  let value : t =
+       content
+    |> Lexing.from_string
+    |> Deriving_Json_lexer.init_lexer
+    |> of_json
+  in
   match value with
   | One -> print_endline "One!"
   | Two i -> print_endline ("Number: " ^ string_of_int i)
