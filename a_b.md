@@ -27,6 +27,16 @@ List all possible combinations of a > b stories.
 
 10. Can you believe two hen used to be friends until the new coq arrived? Then the pecking order came.
 
+11. TODO: Two tribes working together, then turning on each other, with one coming out on top.
+
+12. TODO: A teenage couple, sleeping in an abandoned house in the forest. They share secrets. The boy says something and the girl looks chocked. "Why would you say that?" "I'm sorry, I just... I thought we were being honest?" "Sure, but..."
+
+13. The fight had gone on for hours, from roof top to roof top, in the forest, between houses, in a mascerade party, on the streets. All that was needed was one little mistake to end it all, but it didn't happen. Until Yoko Omo came. The ninja slipped just a tiny bit on the wet pavement, and the shadow cut his throat. It was over.
+
+14. Doctor? Nurse? TODO
+
+How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
+
 ---
 
     a > b

@@ -83,3 +83,25 @@ In the African savanna, a middle-aged barbarian woman and a young, rich celebret
   Actor: Run faster!
 
 ---
+
+## 2
+
+> 76, female, middle-class, trader
+>
+> 38, male, upper-class, soldier
+>
+> 66, female, upper-class, trader
+>
+> helicopter
+>
+> gorilla
+
+A gorilla in a helicopter is not an easy thing to handle. Two older CEOs sat on the opposite side of a soldier and this gorilla, both thinking the same thing: Why the hell did I think this was a good idea?
+
+Solider: Don't worry, we'll soon be there.
+
+(CEO 1 nods.)
+
+CEO 1 (to CEO 2): So this is a medical company?
+
+(CEO 2 stays silent.)
