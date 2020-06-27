@@ -27,13 +27,17 @@ List all possible combinations of a > b stories.
 
 10. Can you believe two hen used to be friends until the new coq arrived? Then the pecking order came.
 
-11. TODO: Two tribes working together, then turning on each other, with one coming out on top.
+11. The pastoral and agricultural tribes had lived in peace and cooperation for generations, but when Ugaza's daughter refused to marry Akkbar's son, the nomads invaded.
 
-12. TODO: A teenage couple, sleeping in an abandoned house in the forest. They share secrets. The boy says something and the girl looks chocked. "Why would you say that?" "I'm sorry, I just... I thought we were being honest?" "Sure, but..."
+12. A teenage couple, sleeping in an abandoned house in the forest. They share secrets. The boy says something and the girl looks chocked. "Why would you say that?" "I'm sorry, I just... I thought we were being honest?" "Sure, but... that's just really, really weird." "Weird good?" "No, not weird good. God!" "OK, I'm sorry! No, don't go." "I'm gonna call my dad."
 
 13. The fight had gone on for hours, from roof top to roof top, in the forest, between houses, in a mascerade party, on the streets. All that was needed was one little mistake to end it all, but it didn't happen. Until Yoko Omo came. The ninja slipped just a tiny bit on the wet pavement, and the shadow cut his throat. It was over.
 
 14. Doctor? Nurse? TODO
+
+15. Two black holes are circuling each other for a million years until one finally swallows the other with a galactic bang.
+
+16. The two kids sit still and stare in each other eyes. They're staring. They're staring. They keep staring. John cracks up and starts laughing. "I won!", says Gretha.
 
 How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
 
