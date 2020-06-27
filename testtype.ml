@@ -1,6 +1,6 @@
 type test = One | Two of int | Three of string
 [@@deriving json]
-type fest = One | Two of int | Three of float
+type fest = One | Five of int | Three of float
 [@@deriving json]
 
 (**
@@ -13,7 +13,7 @@ let _ =
   let content : string = Buffer.contents buffer in
   print_endline content;
 
-  let value : fest = Two 2 in
+  let value : fest = Five 2 in
   let buffer : Buffer.t = Buffer.create 255 in
   fest_to_json buffer value;
   let content2 : string = Buffer.contents buffer in
