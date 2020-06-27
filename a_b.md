@@ -21,14 +21,18 @@ List all possible combinations of a > b stories.
 
 7. The farmers and the traders had been at peace for hundreds of years, but after the storm, the farmers started to demand lower taxes, and the traders were eventually pushed to a lower strata in society.
 
+8. TODO: There is normally no hierarchy between ghosts. After all, why would there be? They're dead. But being dead doesn't mean you don't have anything to lose, something Robert the ghost was about to discover.
 
+9. It's easy to be married, until the power games begin. Treating your kids as pawn in a game. Manipulating your common friends. My daughter used to love me. She will again, I'm sure of it. Just a rough spot right now. Her mother has the upper hand. I've accepted it. Darkening of the light, it's called. Long night of the soul. To be dramatic.
 
-TODO: There is normally no hierarchy between ghosts. After all, why would there be? They're dead. But being dead doesn't mean you don't have anything to lose.
+10. Can you believe two hen used to be friends until the new coq arrived? Then the pecking order came.
 
 ---
 
     a > b
     a b
+
+1. It was a story of revolution and equality. TODO
 
 ---
 

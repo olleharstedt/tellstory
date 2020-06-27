@@ -78,7 +78,7 @@ In the African savanna, a middle-aged barbarian woman and a young, rich celebret
 
   Actor (panting): It's called "actor".
 
-A scream hears in the distance.
+(A scream hears in the distance.)
 
   Actor: Run faster!
 
