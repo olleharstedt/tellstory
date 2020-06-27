@@ -34,7 +34,7 @@ In the African savanna, a middle-aged barbarian woman and a young, rich celebret
 
   Barbarian: Put your gun down, Mr police man.
 
-  Police: Who the hell are you? And why are you dressed like that?o
+  Police: Who the hell are you? And why are you dressed like that?
   
   Barbarian: I'm a barbarian!
 
@@ -42,6 +42,44 @@ In the African savanna, a middle-aged barbarian woman and a young, rich celebret
 
   Barbarian: A barbarian.
 
-  Police: OK, shut up right now, I tell you.
+  Police: OK, shut up right now, I tell you. This doesn't make any sense. Am I dreaming?
+
+  Barbarian: You're not dreaming, Mr police man.
+
+  Actor (whispers): Mr police man...
+
+  Barbarian: Why don't you tell us what your name is?
+
+  Police: My name? (Sweating, slight pause.) My name is Robert.
+
+  Barbarian: That's good, Robert. What's the last thing you remember?
+
+(Slight pause while zebras are running in the background.)
+
+  Police: A helicopter?
+
+  Actor (to himself): Those drugs are fucking amazing.
+
+  Barbarian: What was in the helicopter?
+
+  Police: My wife?
+
+  Barbarian: That's right, Mr police man Robert. Your wife.
+
+  Police: I am very confused!
+
+  Actor: Put down your gun and we'll explain.
+
+(Police throws his gun on the ground, in which instance the barbarian and actor immediately starts running the opposite direction.)
+
+  Police: Hey! Hey, what's going on? Why are you running from me? I'll shoot! Where the hell is my gun...?
+
+  Barbarian (to the actor while running): Well spoken, Mr pretender.
+
+  Actor (panting): It's called "actor".
+
+A scream hears in the distance.
+
+  Actor: Run faster!
 
 ---
