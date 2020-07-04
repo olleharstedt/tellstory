@@ -2,7 +2,17 @@ List all possible combinations of a > b stories.
 
 `a > b` signifies that `a` has higher status than `b`.
 
-`a` and `b` in two and three steps.
+`a` and `b` in one step.
+
+    a b
+
+1. Waiting for Godo
+
+2. A soccer game that never ends.
+
+---
+
+`a` and `b` in two and two steps.
 
     a b
     a > b
@@ -38,6 +48,8 @@ List all possible combinations of a > b stories.
 15. Two black holes are circuling each other for a million years until one finally swallows the other with a galactic bang.
 
 16. The two kids sit still and stare in each other eyes. They're staring. They're staring. They keep staring. John cracks up and starts laughing. "I won!", says Gretha.
+
+17. Two subgeniuses considered themselves equal in brilliance and imagination, until one day, one of them wrote 100 a/b-stories in under twelve hours. From that moment on, it was obvious who was superior.
 
 How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
 
@@ -92,3 +104,21 @@ How many ways can status and power really change? Formally, informally. Looks, m
     a > b > c
     a b > c
     a b c
+
+TODO: Add location (position), e.g.
+
+    (a b)
+
+`a` and `b` share location
+
+    (a) (b)
+
+`a` and `b` are in different locations, but still equal in status.
+
+    (a) > (b)
+
+Different location, different status.
+
+    (a > b)
+
+Same location, different status.

@@ -96,7 +96,7 @@ In the African savanna, a middle-aged barbarian woman and a young, rich celebret
 >
 > gorilla
 
-A gorilla in a helicopter is not an easy thing to handle. Two older CEOs sat on the opposite side of a soldier and this gorilla, both thinking the same thing: Why the hell did I think this was a good idea?
+A gorilla in a helicopter is not an easy thing to handle. Two older CEOs sat on the opposite side of a soldier and this gorilla, both thinking the same thing: Why the hell did I agree to this?
 
 Solider: Don't worry, we'll soon be there.
 
@@ -105,3 +105,11 @@ Solider: Don't worry, we'll soon be there.
 CEO 1 (to CEO 2): So this is a medical company?
 
 (CEO 2 stays silent.)
+
+CEO 1: (Nods) Yeah, I knew that. I knew it. (Stares at the gorilla. The gorilla stares back.) What's his name again?
+
+Solider: Her name is Charlie.
+
+CEO 1: Ah, it's a female. Charlie? Aha, aha.
+
+
