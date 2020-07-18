@@ -1,8 +1,12 @@
-List all possible combinations of a > b stories.
+(Copyright: Creative commons: https://creativecommons.org/licenses/)
+
+Explanation of syntax:
 
 `a > b` signifies that `a` has higher status than `b`.
 
 `a b` signifies that `a` and `b` have the same status.
+
+`a` can signify an individual or a group.
 
 ## `a` and `b` in one step.
 
@@ -13,8 +17,6 @@ List all possible combinations of a > b stories.
 2. A soccer game that never ends.
 
 3. Bett and Louis worked as waiters all life. They both died on the same day.
-
----
 
 ## `a` and `b` in two and two steps.
 
@@ -70,6 +72,12 @@ List all possible combinations of a > b stories.
 
     a > b
     b > a
+
+1. Being on top of the world after a robery, until the detective finds you and puts you in jail. Shoot!
+
+2. Go back in time to rewrite history, make Trump your servant.
+
+3. 
 
 ---
 
