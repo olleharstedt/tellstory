@@ -18,6 +18,8 @@ Explanation of syntax:
 
 3. Bett and Louis worked as waiters all life. They both died on the same day.
 
+TODO
+
 ## `a` and `b` in two and two steps.
 
     a b
@@ -77,9 +79,24 @@ Explanation of syntax:
 
 2. Go back in time to rewrite history, make Trump your servant.
 
-3. 
+3. King Lear giving his kingdom to his daughter, which later betrays him.
+
+4. 
 
 ---
+
+    a b
+    a
+
+---
+
+    a > b
+    a
+
+---
+
+    a > b
+    b
 
 ## `a` and `b` in three steps.
 
