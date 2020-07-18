@@ -51,14 +51,26 @@ List all possible combinations of a > b stories.
 
 17. Two subgeniuses considered themselves equal in brilliance and imagination, until one day, one of them wrote 100 a/b-stories in under twelve hours. From that moment on, it was obvious who was superior.
 
-How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
-
 ---
 
     a > b
     a b
 
-1. It was a story of revolution and equality. TODO
+1. It was a story of revolution and equality when the farmers rose to claim their part in the partlament.
+
+2. "Alright, I'll do it, but not unless you grant me a position on the board, OK?"
+
+3. Markus was providing for Linda. They had that special tax exemption for married couples. But Linda also wanted to contribute. She got a job.
+
+4. Painting a stelleben with the apple on the banana. Painting a stelleben with the apple besides the banana.
+
+5. When a child, the father is superior. When grown up, the father is an equal.
+
+6. The greatest mountain will not be great forever, for the earth always changes.
+
+7. Being in love means someone else has the upper hand. Until they too fall. But maybe being able to give yourself is to be superior?
+
+8. 
 
 ---
 
@@ -122,3 +134,6 @@ Different location, different status.
     (a > b)
 
 Same location, different status.
+
+How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
+

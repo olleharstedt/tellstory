@@ -112,4 +112,10 @@ Solider: Her name is Charlie.
 
 CEO 1: Ah, it's a female. Charlie? Aha, aha.
 
+Solider: She's five years old now. Birthday yesterday, in fact.
 
+CEO 1: Ah!
+
+(Silence.)
+
+CEO 1: I've never seen this part of the country. Fascinating.
