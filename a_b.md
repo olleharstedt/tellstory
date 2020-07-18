@@ -16,7 +16,7 @@ List all possible combinations of a > b stories.
 
 ---
 
-`a` and `b` in two and two steps.
+## `a` and `b` in two and two steps.
 
     a b
     a > b
@@ -35,25 +35,11 @@ List all possible combinations of a > b stories.
 
 7. The farmers and the traders had been at peace for hundreds of years, but after the storm, the farmers started to demand lower taxes, and the traders were eventually pushed to a lower strata in society.
 
-8. TODO: There is normally no hierarchy between ghosts. After all, why would there be? They're dead. But being dead doesn't mean you don't have anything to lose, something Robert the ghost was about to discover.
+8. It's easy to be married, until the power games begin. Treating your kids as pawn in a game. Manipulating your common friends. My daughter used to love me. She will again, I'm sure of it. Just a rough spot right now. Her mother has the upper hand. I've accepted it. Darkening of the light, it's called. Long night of the soul. To be dramatic.
 
-9. It's easy to be married, until the power games begin. Treating your kids as pawn in a game. Manipulating your common friends. My daughter used to love me. She will again, I'm sure of it. Just a rough spot right now. Her mother has the upper hand. I've accepted it. Darkening of the light, it's called. Long night of the soul. To be dramatic.
+9. Two black holes are circuling each other for a million years until one finally swallows the other with a galactic bang.
 
-10. Can you believe two hen used to be friends until the new coq arrived? Then the pecking order came.
-
-11. The pastoral and agricultural tribes had lived in peace and cooperation for generations, but when Ugaza's daughter refused to marry Akkbar's son, the nomads invaded.
-
-12. A teenage couple, sleeping in an abandoned house in the forest. They share secrets. The boy says something and the girl looks chocked. "Why would you say that?" "I'm sorry, I just... I thought we were being honest?" "Sure, but... that's just really, really weird." "Weird good?" "No, not weird good. God!" "OK, I'm sorry! No, don't go." "I'm gonna call my dad."
-
-13. The fight had gone on for hours, from roof top to roof top, in the forest, between houses, in a mascerade party, on the streets. All that was needed was one little mistake to end it all, but it didn't happen. Until Yoko Omo came. The ninja slipped just a tiny bit on the wet pavement, and the shadow cut his throat. It was over.
-
-14. Doctor? Nurse? TODO
-
-15. Two black holes are circuling each other for a million years until one finally swallows the other with a galactic bang.
-
-16. The two kids sit still and stare in each other eyes. They're staring. They're staring. They keep staring. John cracks up and starts laughing. "I won!", says Gretha.
-
-17. Two subgeniuses considered themselves equal in brilliance and imagination, until one day, one of them wrote 100 a/b-stories in under twelve hours. From that moment on, it was obvious who was superior.
+10. The two kids sit still and stare in each other eyes. They're staring. They're staring. They keep staring. John cracks up and starts laughing. "I won!", says Gretha.
 
 ---
 
@@ -87,12 +73,7 @@ List all possible combinations of a > b stories.
 
 ---
 
-    a > b
-    a b
-
----
-
-`a` and `b` in three steps.
+## `a` and `b` in three steps.
 
     a b
     a > b
@@ -155,3 +136,16 @@ TODO: Capital letters for groups, small letters for individuals.
     A > b
 
 
+## Unused
+
+Can you believe two hen used to be friends until the new coq arrived? Then the pecking order came.
+
+There is normally no hierarchy between ghosts. After all, why would there be? They're dead. But being dead doesn't mean you don't have anything to lose, something Robert the ghost was about to discover.
+
+The pastoral and agricultural tribes had lived in peace and cooperation for generations, but when Ugaza's daughter refused to marry Akkbar's son, the nomads invaded.
+
+A teenage couple, sleeping in an abandoned house in the forest. They share secrets. The boy says something and the girl looks chocked. "Why would you say that?" "I'm sorry, I just... I thought we were being honest?" "Sure, but... that's just really, really weird." "Weird good?" "No, not weird good. God!" "OK, I'm sorry! No, don't go." "I'm gonna call my dad."
+
+The fight had gone on for hours, from roof top to roof top, in the forest, between houses, in a mascerade party, on the streets. All that was needed was one little mistake to end it all, but it didn't happen. Until Yoko Omo came. The ninja slipped just a tiny bit on the wet pavement, and the shadow cut his throat. It was over.
+
+Two subgeniuses considered themselves equal in brilliance and imagination, until one day, one of them wrote 100 a/b-stories in under twelve hours. From that moment on, it was obvious who was superior.
