@@ -2,13 +2,17 @@ List all possible combinations of a > b stories.
 
 `a > b` signifies that `a` has higher status than `b`.
 
-`a` and `b` in one step.
+`a b` signifies that `a` and `b` have the same status.
+
+## `a` and `b` in one step.
 
     a b
 
 1. Waiting for Godo
 
 2. A soccer game that never ends.
+
+3. Bett and Louis worked as waiters all life. They both died on the same day.
 
 ---
 
@@ -62,46 +66,51 @@ List all possible combinations of a > b stories.
 
 3. Markus was providing for Linda. They had that special tax exemption for married couples. But Linda also wanted to contribute. She got a job.
 
-4. Painting a stelleben with the apple on the banana. Painting a stelleben with the apple besides the banana.
+4. Painting a stelleben with the apple on top of the banana. Painting a stelleben with the apple besides the banana.
 
 5. When a child, the father is superior. When grown up, the father is an equal.
 
 6. The greatest mountain will not be great forever, for the earth always changes.
 
-7. Being in love means someone else has the upper hand. Until they too fall. But maybe being able to give yourself is to be superior?
+7. Being in love means someone else has the upper hand. Until they too fall. But maybe being able to give yourself is to be superior? The truth was inside her all along.
 
-8. 
+8. After years of practicing, she got accepted in the audition, as she had always dreamt of.
+
+9. In the perfect anarchist society, all hierarchy is abolished.
+
+10. SPOILER: The little mermaid got her legs in the end. (Fun fact: Not in Andersen's original story.)
 
 ---
 
     a > b
     b > a
 
-
+---
 
     a > b
     a b
+
+---
+
+`a` and `b` in three steps.
+
+    a b
+    a > b
+    a b
+
+    a > b
+    a b
+    a > b
+
+    a > b
+    a b
+    b > a
 
     a > b
     b > a
-
-    a b
-    a > b
-    a b
-
-    a > b
-    a b
     a > b
 
-    a > b
-    a b
-    b > a
-
-    a > b
-    b > a
-    a > b
-
-`a`, `b` and `c` in two and three steps.
+`a`, `b` and `c` in two steps.
 
     a b c
     a b > c
@@ -135,5 +144,14 @@ Different location, different status.
 
 Same location, different status.
 
-How many ways can status and power really change? Formally, informally. Looks, money, contacts, information, manipulation.
+How many ways can status and power really change? Formally, informally. Looks, body, talent, money, contacts, manipulation, information, sports, style.
+
+TODO: Capital letters for groups, small letters for individuals.
+
+    A > b
+    A b
+
+    (A) > (b)
+    A > b
+
 
