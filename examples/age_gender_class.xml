@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <story namespace="age_gender_class">
     <dice name="age" sides="99" />
+    <dice name="t5" sides="5" />
+    <dice name="t10" sides="10" />
+    <dice name="t30" sides="30" />
+    <dice name="t100" sides="100" />
+
+    <macro name="agebracket">
+        <alt>infant</alt>
+        <alt>small child ({%t5 + 3})</alt>
+        <alt>child ({%t5 + 8})</alt>
+        <alt>teenager ({%t10 + 12})</alt>
+        <alt>young adult ({%t10 + 20})</alt>
+        <alt>adult ({%t30 + 20})</alt>
+        <alt>senior ({%t30 + 50})</alt>
+        <alt>aging ({%t30 + 80})</alt>
+        <alt>ancient ({%t30 + 100})</alt>
+        <alt>undead ({%t100 + 300})</alt>
+    </macro>
 
     <macro name="eco">
         <alt>homeless</alt>
@@ -232,7 +249,7 @@
 
     <loop rand="3">
         <include file="examples/gender.xml" />
-        <sentence>{%age}, {gender\def}, {#eco}, {#class}, {$corevalue}</sentence>
+        <sentence>{#agebracket}, {gender\def}, {#eco}, {#class}, {$corevalue}</sentence>
         <br/>
     </loop>
 
