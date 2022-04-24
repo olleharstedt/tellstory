@@ -19,11 +19,13 @@
         <alt>barbarian</alt>
         <alt>cleric</alt>
         <alt>clerk</alt>
+        <alt>developer</alt>
         <alt>doctor</alt>
         <alt>druid</alt>
         <alt>unemployed</alt>
         <alt>farmer</alt>
         <alt>fighter</alt>
+        <alt>fire fighter</alt>
         <alt>healer</alt>
         <alt>hunter</alt>
         <alt>knight</alt>
@@ -43,6 +45,8 @@
         <alt>sorcerer</alt>
         <alt>street artist</alt>
         <alt>student</alt>
+        <alt>surgeon</alt>
+        <alt>teacher</alt>
         <alt>tele evangelist</alt>
         <alt>thief</alt>
         <alt>trader</alt>
