@@ -55,6 +55,92 @@
         <alt>wizard</alt>
     </macro>
 
+    <deck name="corevalue">
+        <alt>ACCEPTANCE - to be accepted as I am</alt>
+        <alt>ACCURACY - to be accurate in my opinions and beliefs</alt>
+        <alt>ACHIEVEMENT - to have important accomplishments</alt>
+        <alt>ADVENTURE - to have new and exciting experiences</alt>
+        <alt>ATTRACTIVENESS - to be physically attractive</alt>
+        <alt>AUTHORITY - to be in charge of and responsible for others</alt>
+        <alt>AUTONOMY - to be self-determined and independent</alt>
+        <alt>BEAUTY - to appreciate beauty around me</alt>
+        <alt>CARING - to take care of others</alt>
+        <alt>CHALLENGE - to take on difficult tasks and problems</alt>
+        <alt>CHANGE - to have a life full of change and variety</alt>
+        <alt>COMFORT - to have a pleasant and comfortable life</alt>
+        <alt>COMMITMENT - to make enduring, meaningful commitments</alt>
+        <alt>COMPASSION - to feel and act on concern for others</alt>
+        <alt>CONTRIBUTION - to make a lasting contribution in the world</alt>
+        <alt>COOPERATION - to work collaboratively with others</alt>
+        <alt>COURTESY - to be considerate and polite toward others</alt>
+        <alt>CREATIVITY - to have new and original ideas</alt>
+        <alt>DEPENDABILITY - to be reliable and trustworthy</alt>
+        <alt>DUTY - to carry out my duties and obligations</alt>
+        <alt>ECOLOGY - to live in harmony with the environment</alt>
+        <alt>EXCITEMENT - to have a life full of thrills and stimulation</alt>
+        <alt>FAITHFULNESS - to be loyal and true in relationships</alt>
+        <alt>FAME - to be known and recognized</alt>
+        <alt>FAMILY - to have a happy, loving family</alt>
+        <alt>FITNESS - to be physically fit and strong</alt>
+        <alt>FLEXIBILITY - to adjust to new circumstances easily</alt>
+        <alt>FORGIVING - to be forgiving of others</alt>
+        <alt>FRIENDSHIP - to have close, supportive friends</alt>
+        <alt>FUN - to play and have fun</alt>
+        <alt>GENEROSITY - to give what I have to others</alt>
+        <alt>GENUIN - to act in a manner that is true to who I am</alt>
+        <alt>GOD’S WILL - to seek and obey the will of God</alt>
+        <alt>GROWT - to keep changing and growing</alt>
+        <alt>HEALTH - to be physically well and healthy</alt>
+        <alt>HELPFULNESS - to be helpful to others</alt>
+        <alt>HONESTY - to be honest and truthful</alt>
+        <alt>HOPE - to maintain a positive and optimistic outlook</alt>
+        <alt>HUMILITY - to be modest and unassuming</alt>
+        <alt>HUMOR - to see the humorous side of myself and the world</alt>
+        <alt>INDEPENDENCE - to be free from dependence on others</alt>
+        <alt>INDUSTRY - to work hard and well at my life tasks</alt>
+        <alt>INNER PEACE - to experience personal peace</alt>
+        <alt>INTIMACY - to share my innermost experiences with others</alt>
+        <alt>JUSTICE - to promote fair and equal treatment for all</alt>
+        <alt>KNOWLEDGE - to learn and contribute valuable knowledge</alt>
+        <alt>LEISURE - to take time to relax and enjoy</alt>
+        <alt>LOVED - to be loved by those close to me</alt>
+        <alt>LOVING - to give love to others</alt>
+        <alt>MASTERY - to be competent in my everyday activities</alt>
+        <alt>MINDFULNESS - to live conscious and mindful of the present moment</alt>
+        <alt>MODERATION - to avoid excesses and find a middle ground</alt>
+        <alt>MONOGAMY - to have one close, loving relationship</alt>
+        <alt>NON-CONFORMITY - to question and challenge authority and norms</alt>
+        <alt>NURTURANCE - to take care of and nurture others</alt>
+        <alt>OPENNESS - to be open to new experiences, ideas, and options</alt>
+        <alt>ORDER - to have a life that is well-ordered and organized</alt>
+        <alt>PASSION - to have deep feelings about ideas, activities, or people</alt>
+        <alt>PLEASURE - to feel good</alt>
+        <alt>POPULARITY - to be well-liked by many people</alt>
+        <alt>POWER - to have control over others</alt>
+        <alt>PURPOSE - to have meaning and direction in my life</alt>
+        <alt>RATIONALITY - to be guided by reason and logic</alt>
+        <alt>REALISM - to see and act realistically and practically</alt>
+        <alt>RESPONSIBILITY - to make and carry out responsible decisions</alt>
+        <alt>RISK - to take risks and chances</alt>
+        <alt>ROMANCE - to have intense, exciting love in my life</alt>
+        <alt>SAFETY - to be safe and secure</alt>
+        <alt>SELF-ACCEPTANCE - to accept myself as I am</alt>
+        <alt>SELF-CONTROL - to be disciplined in my own actions</alt>
+        <alt>SELF-ESTEEM - to feel good about myself</alt>
+        <alt>SELF-KNOWLEDGE - to have a deep and honest understanding of myself</alt>
+        <alt>SERVICE - to be of service to others</alt>
+        <alt>SEXUALITY - to have an active and satisfying sex life</alt>
+        <alt>SIMPLICITY - to live life simply, with minimal needs</alt>
+        <alt>SOLITUDE - to have time and space where I can be apart from others</alt>
+        <alt>SPIRITUALITY - to grow and mature spiritually</alt>
+        <alt>STABILITY - to have a life that stays fairly consistent</alt>
+        <alt>TOLERANCE - to accept and respect those who differ from me</alt>
+        <alt>TRADITION - to follow respected patterns of the past</alt>
+        <alt>VIRTUE - to live a morally pure and excellent life</alt>
+        <alt>WEALTH - to have plenty of money</alt>
+        <alt>WORLD PEACE - to work to promote peace in the world</alt>
+    </deck>
+
     <macro name="place">
         <alt>light forest</alt>
         <alt>dark forest</alt>
@@ -146,7 +232,7 @@
 
     <loop rand="3">
         <include file="examples/gender.xml" />
-        <sentence>{%age}, {gender\def}, {#eco}, {#class}</sentence>
+        <sentence>{%age}, {gender\def}, {#eco}, {#class}, {$corevalue}</sentence>
         <br/>
     </loop>
 
