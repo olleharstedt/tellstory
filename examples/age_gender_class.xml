@@ -166,7 +166,9 @@
         <alt>grass land</alt>
         <alt>farming land</alt>
         <alt>small village</alt>
-        <alt>space ship</alt>
+        <alt>ancient space ship</alt>
+        <alt>modern space ship</alt>
+        <alt>broken space ship</alt>
         <alt>the moon</alt>
         <alt>mars</alt>
         <alt>asteroid belt</alt>
@@ -245,6 +247,7 @@
         <alt>ghost</alt>
         <alt>Siri from iPhone</alt>
         <alt>a voice without a body</alt>
+        <alt>god of thunder</alt>
     </macro>
 
     <loop rand="3">
