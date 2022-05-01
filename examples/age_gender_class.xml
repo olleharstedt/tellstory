@@ -201,19 +201,12 @@
 
     <!--
     <macro name="antagonist">
-        <alt>demon from hell</alt>
-        <alt>ancient dragon</alt>
-        <alt>stone troll</alt>
         <alt>corrupt politician</alt>
-        <alt>coppurp military</alt>
         <alt>revoluationary guerilla</alt>
         <alt>drug cartell</alt>
         <alt>alien race</alt>
-        <alt>anti-christ child</alt>
         <alt>salesman</alt>
-        <alt>serial killer</alt>
         <alt>assassin</alt>
-        <alt>secret cult</alt>
         <alt>witch</alt>
         <alt>evil sorcerer</alt>
     </macro>
@@ -223,12 +216,13 @@
         <alt>ancient dragon</alt>
         <alt>smiling cat</alt>
         <alt>dog</alt>
+        <alt>demon from hell</alt>
         <alt>sheep</alt>
         <alt>cow</alt>
         <alt>lion</alt>
         <alt>chicken</alt>
         <alt>mammoth</alt>
-        <alt>troll</alt>
+        <alt>stone troll</alt>
         <alt>orc</alt>
         <alt>goblin</alt>
         <alt>bear</alt>
@@ -248,7 +242,24 @@
         <alt>Siri from iPhone</alt>
         <alt>a voice without a body</alt>
         <alt>god of thunder</alt>
+        <alt>anti-christ</alt>
+        <alt>secret cult</alt>
+        <alt>serial killer</alt>
+        <alt>the military</alt>
+        <alt>the cavallery</alt>
     </macro>
+
+    <!-- TODO
+        Personality attributes:
+            Affect lability/stability
+            Highly emotional and expressive/logical, dry
+            Risk averse/addicted
+            Neuroticity/worried/calm
+            Paranoid/trusty
+            Cheap/generous
+
+        Disease? Mental, physical.
+    -->
 
     <loop rand="3">
         <include file="examples/gender.xml" />
