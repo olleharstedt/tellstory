@@ -14,9 +14,19 @@ Explanation of syntax:
 
 1. Waiting for Godo
 
-2. A soccer game that never ends.
+2. A soccer game that never ends. It just goes on forever, without anyone scoring.
 
 3. Bett and Louis worked as waiters all life. They both died on the same day.
+
+4. A king and a queen with equal amount of power - forever.
+
+5. A couple that gets along with everything, and shares everything equally.
+
+6. The roman and persian empire, fighting at the border, without anyone gaining any ground.
+
+7. Western front during WW1.
+
+8. 
 
 TODO
 
