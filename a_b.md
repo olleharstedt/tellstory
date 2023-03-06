@@ -8,6 +8,8 @@ Explanation of syntax:
 
 `a` can signify an individual or a group.
 
+Compare with: Power distance
+
 ## `a` and `b` in one step.
 
     a b
@@ -87,7 +89,7 @@ TODO
 
 1. Being on top of the world after a robery, until the detective finds you and puts you in jail. Shoot!
 
-2. Go back in time to rewrite history, make Trump your servant.
+2. Go back in time to rewrite history, make Trump your servant. (Back to the future movie)
 
 3. King Lear giving his kingdom to his daughter, which later betrays him.
 
