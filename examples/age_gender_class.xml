@@ -249,6 +249,67 @@
         <alt>the cavallery</alt>
     </macro>
 
+    <macro name="inventory">
+        <alt>Empty wallet</alt>
+        <alt>Ring</alt>
+        <alt>Amulet</alt>
+        <alt>Book</alt>
+        <alt>Gun</alt>
+        <alt>Note</alt>
+        <alt>Invitation</alt>
+        <alt>Map</alt>
+        <alt>Will</alt>
+        <alt>Watch</alt>
+        <alt>Magic wand</alt>
+        <alt>Bullet</alt>
+        <alt>Fishing rod</alt>
+        <alt>Dildo</alt>
+        <alt>Blanket</alt>
+        <alt>Pillow</alt>
+        <alt>Cloke</alt>
+        <alt>Stuffed animal</alt>
+        <alt>Tent</alt>
+        <alt>Bread</alt>
+        <alt>Beer</alt>
+        <alt>Poison</alt>
+        <alt>Magic spell</alt>
+        <alt>Invoice</alt>
+        <alt>Conscription paper</alt>
+        <alt>Letter from car insurance</alt>
+        <alt>Credentials</alt>
+        <alt>Passport</alt>
+        <alt>Evidence</alt>
+        <alt>Passport</alt>
+        <alt>Sword</alt>
+        <alt>Boomerang</alt>
+        <alt>Pogostick</alt>
+        <alt>Clown nose</alt>
+        <alt>Pot</alt>
+        <alt>Makeup</alt>
+        <alt>Book of recipe</alt>
+        <alt>Wig</alt>
+        <alt>Sunglasses</alt>
+        <alt>Pipe</alt>
+        <alt>Basketball</alt>
+        <alt>iPhone 5</alt>
+        <alt>Laptop</alt>
+        <alt>Harddrive</alt>
+        <alt>iPod</alt>
+        <alt>Casette</alt>
+        <alt>Video tape</alt>
+        <alt>Pager</alt>
+        <alt>Matches</alt>
+        <alt>Deck of cards</alt>
+        <alt>Taxi</alt>
+        <alt>Bottle</alt>
+        <alt>Trenchcoat</alt>
+        <alt>Vampire teeth</alt>
+        <alt>Fake blood</alt>
+        <alt>An apple</alt>
+        <alt>Dice</alt>
+        <alt>Money</alt>
+    </macro>
+
     <!-- TODO
         Personality attributes:
             Affect lability/stability
