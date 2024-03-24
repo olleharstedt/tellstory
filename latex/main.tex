@@ -1,0 +1,330 @@
+\documentclass[11pt,a4paper,twocolumn]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{longtable}
+\usepackage{supertabular}
+\usepackage[table]{xcolor}    % loads also »colortbl«
+
+\title{Tellstory}
+\author{Olle Harstedt}
+
+\begin{document}
+\maketitle
+\section{Tables}
+This is some text.
+\rowcolors{2}{gray!25}{white}
+
+% \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D8 & Age\\
+    1 & Infant\\
+    2 & Toddler\\
+    2 & Child\\
+    3 & Teenager\\
+    4 & Young adult\\
+    5 & Middle-aged\\
+    6 & Senior\\
+    7 & Ancient\\
+\end{tabular}
+
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D6 & Gender\\
+    1-3 & Female\\
+    4-6 & Male\\
+\end{tabular}
+
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D8 & Economical status\\
+    1 & Homeless\\
+    2 & Poor\\
+    3 & Working class\\
+    4 & Middle class\\
+    5 & Upper middle class\\
+    6 & Upper class\\
+    7 & Aristocrat\\
+    8 & Royalty\\
+\end{tabular}
+
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D100 & Occupation\\
+    1 & Actor\\
+    2 & Artist\\
+    3 & Assassin\\
+    4 & Barbarian\\
+    5 & Cleric\\
+    6 & Clerk\\
+    7 & Developer\\
+    8 & Doctor\\
+    9 & Druid\\
+    10 & Unemployed\\
+    11 & Farmer\\
+    12 & Fighter\\
+    13 & Fire fighter\\
+    15 & Healer\\
+    16 & Hunter\\
+    17 & Knight\\
+    18 & Investor\\
+    19 & Monk/nun\\
+    20 & Musician\\
+    21 & Ninja\\
+    22 & Paladin\\
+    24 & Pilot\\
+    25 & Police\\
+    26 & Priest\\
+    27 & Ranger\\
+    28 & Rogue\\
+    29 & Schaman\\
+    30 & Scientist\\
+    31 & Soldier\\
+    32 & Sorcerer\\
+    33 & Street artist\\
+    34 & Student\\
+    35 & Surgeon\\
+    36 & Teacher\\
+    37 & Tele evangelist\\
+    38 & Thief\\
+    39 & Trader\\
+    40 & Trickster\\
+    41 & Warlock\\
+    42 & Wizard\\
+\end{tabular}
+
+%\begin{tabular}{cl}
+\begin{supertabular}{cl}
+    %\rowcolor{gray!50}
+    D100 & Core value\\
+    1 & Acceptance\\
+    2 & Accuracy\\
+    3 & Achievement\\
+    4 & Adventure\\
+    5 & Attractiveness\\
+    6 & Authority\\
+    7 & Autonomy\\
+    9 & Beauty\\
+    10 & Caring\\
+    11 & Challenge\\
+    12 & Change\\
+    13 & Comfort\\
+    14 & Commitment\\
+    15 & Compassion\\
+    16 & Contribution\\
+    17 & Cooperation\\
+    18 & Courtesy\\
+    19 & Creativity\\
+    20 & Dependability\\
+    21 & Duty\\
+    22 & Ecology\\
+    23 & Excitement\\
+    24 & Faithfulness\\
+    25 & Fame\\
+    26 & Family\\
+    27 & Fitness\\
+    28 & Flexibility\\
+    29 & Forgiving\\
+    30 & Friendship\\
+    31 & Fun\\
+    32 & Generosity\\
+    33 & Genuin\\
+    34 & Gods will\\
+    35 & Growt\\
+    36 & Health\\
+    37 & Helpfulness\\
+    38 & Honesty\\
+    39 & Hope\\
+    40 & Humility\\
+    41 & Humor\\
+    42 & Independence\\
+    43 & Industry\\
+    44 & Inner peace\\
+    45 & Intimacy\\
+    46 & Justice\\
+    47 & Knowledge\\
+    48 & Leisure\\
+    49 & Loved\\
+    50 & Loving\\
+    51 & Mastery\\
+    52 & Mindfulness\\
+    53 & Moderation\\
+    54 & Monogamy\\
+    55 & No\\
+    56 & Nurturance\\
+    57 & Openness\\
+    58 & Order\\
+    59 & Passion\\
+    60 & Pleasure\\
+    61 & Popularity\\
+    62 & Power\\
+    63 & Purpose\\
+    64 & Rationality\\
+    65 & Realism\\
+    66 & Responsibility\\
+    67 & Risk\\
+    68 & Romance\\
+    69 & Safety\\
+    70 & Self-acceptance\\
+    71 & Self-control\\
+    72 & Self-esteem\\
+    73 & Self-knowledge\\
+    74 & Service\\
+    75 & Sexuality\\
+    76 & Simplicity\\
+    77 & Solitude\\
+    78 & Spirituality\\
+    79 & Stability\\
+    80 & Tolerance\\
+    81 & Tradition\\
+    82 & Virtue\\
+    83 & Wealth\\
+    84 & World peace\\
+\end{supertabular}
+
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D100 & Location\\
+    1 & Light forest\\
+    2 & Dark forest\\
+    3 & Dead forest\\
+    4 & Ancient forest\\
+    5 & Grass land\\
+    6 & Farming land\\
+    7 & Small village\\
+    8 & Ancient space ship\\
+    9 & Modern space ship\\
+    10 & Broken space ship\\
+    11 & The moon\\
+    12 & Mars\\
+    13 & Asteroid belt\\
+    14 & Dungeon\\
+    15 & Basement\\
+    16 & Mountain\\
+    17 & Dragon's den\\
+    18 & Troll's den\\
+    19 & Bottom of a well\\
+    20 & Concrete bunker\\
+    21 & Luxury bunker\\
+    22 & Sky-scraper office\\
+    23 & Ghost house\\
+    24 & Shed in forest\\
+    25 & Tree hut\\
+    26 & Indian hut\\
+    27 & Empty church\\
+    28 & Castle ruin\\
+    29 & Village ruin\\
+    30 & Snow storm\\
+    31 & Desert\\
+    32 & Swamp\\
+    33 & Prison island\\
+    34 & Empty island\\
+    35 & Tower\\
+    36 & Light house\\
+    37 & Helicopter\\
+    38 & Private jet\\
+\end{tabular}
+
+\begin{tabular}{cl}
+    \rowcolor{gray!50}
+    D100 & Interacting object\\
+    1 & Ancient dragon\\
+    2 & Smiling cat\\
+    3 & Dog\\
+    4 & Demon from hell\\
+    5 & Sheep\\
+    6 & Cow\\
+    7 & Lion\\
+    8 & Chicken\\
+    9 & Mammoth\\
+    10 & Stone troll\\
+    11 & Orc\\
+    12 & Goblin\\
+    13 & Bear\\
+    14 & Skeleton\\
+    15 & Demon\\
+    16 & Monkey\\
+    17 & Gorilla\\
+    18 & Elephant\\
+    19 & Neanderthale\\
+    20 & Robot\\
+    21 & hAL from 2001\\
+    22 & Talking energy cloud\\
+    23 & The pope\\
+    24 & Police\\
+    25 & Anarchist punk-rocker\\
+    26 & Ghost\\
+    27 & siri from iPhone\\
+    28 & A voice without a body\\
+    29 & God of thunder\\
+    30 & Anti-christ\\
+    31 & Secret cult\\
+    32 & Serial killer\\
+    33 & The military\\
+    34 & The cavallery\\
+\end{tabular}
+
+\begin{supertabular}{cl}
+    \rowcolor{gray!50}
+    D100 & Inventory\\
+    1 &Empty wallet\\
+    2 &Ring\\
+    3 &Amulet\\
+    4 &Book\\
+    5 &Gun\\
+    6 &Note\\
+    7 &Invitation\\
+    8 &Map\\
+    9 &Will\\
+    10 &Watch\\
+    11 &Magic wand\\
+    12 &Bullet\\
+    13 &Fishing rod\\
+    14 &Dildo\\
+    15 &Blanket\\
+    16 &Pillow\\
+    17 &Cloke\\
+    18 &Stuffed animal\\
+    19 &Tent\\
+    20 &Bread\\
+    21 &Beer\\
+    22 &Poison\\
+    23 &Magic spell\\
+    24 &Invoice\\
+    25 &Conscription paper\\
+    26 &Letter from car insurance\\
+    27 &Credentials\\
+    28 &Passport\\
+    29 &Evidence\\
+    30 &Passport\\
+    31 &Sword\\
+    32 &Boomerang\\
+    33 &Pogostick\\
+    34 &Clown nose\\
+    35 &Pot\\
+    36 &Makeup\\
+    37 &Book of recipe\\
+    38 &Wig\\
+    39 &Sunglasses\\
+    40 &Pipe\\
+    41 &Basketball\\
+    42 &iPhone 5\\
+    43 &Laptop\\
+    44 &Harddrive\\
+    45 &iPod\\
+    46 &Casette\\
+    47 &Video tape\\
+    48 &Pager\\
+    49 &Matches\\
+    50 &Deck of cards\\
+    51 &Taxi\\
+    52 &Bottle\\
+    53 &Trenchcoat\\
+    54 &Vampire teeth\\
+    55 &Fake blood\\
+    56 &An apple\\
+    57 &Dice\\
+    58 &Money\\
+\end{supertabular}
+
+\end{document}
